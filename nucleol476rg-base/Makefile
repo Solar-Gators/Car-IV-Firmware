@@ -95,7 +95,7 @@ INCLUDES =  \
 -I../Resources/Drivers/CMSIS/Include
 
 #######################################
-# CFLAGS
+# hardware definitions
 #######################################
 # cpu
 CPU = -mcpu=cortex-m4
@@ -103,7 +103,9 @@ FPU = -mfpu=fpv4-sp-d16
 FLOAT-ABI = -mfloat-abi=hard
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 
-# macros for gcc
+#######################################
+# compile flags
+#######################################
 # AS defines
 AS_DEFINES = 
 
@@ -113,9 +115,9 @@ DEFINES =  \
 -DSTM32L476xx
 
 # compile gcc flags
-ASFLAGS = $(MCU) $(AS_DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CXXFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+ASFLAGS = $(MCU) $(AS_DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
+CFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
+CXXFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
