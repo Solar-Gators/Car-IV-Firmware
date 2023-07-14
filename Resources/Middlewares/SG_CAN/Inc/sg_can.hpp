@@ -9,12 +9,15 @@
 #define SG_CAN_HPP_
 
 #define STM32L4xx       /* Development only, remove in final project */
-#define CAN1
+#define CAN1            /* Development only, remove in final project */
 
-
+#ifdef STM32L4xx
 #include "stm32l4xx_hal_can.h"
+#endif
+
 #include <stdint.h>
 #include <etl/map.h>
+#include "cmsis_os.h"
 
 namespace SolarGators {
 
@@ -32,22 +35,46 @@ public:
     void (*rxCallback)(uint8_t data[]);         /* pointer to rx callback function */
 };
 
-class CANManager {
+class CANNode {
 public:
-    CANManager() = default;
-    CANManager(CAN_HandleTypeDef* hcan);
-    ~CANManager() = default;
-    int32_t Init();
-    int32_t Send(SolarGators::CANMessage* msg);
-    int32_t AddRxMessage(SolarGators::CANMessage* msg);
-    int32_t AddRxMessages(SolarGators::CANMessage* msg[], uint32_t numMsgs);
-    int32_t AddInterface(CAN_HandleTypeDef* hcan);
+    CANNode() = default;
+    CANNode(CAN_HandleTypeDef* hcan);
+    CANNode(CANNode &other) = delete;               /* Copying is banned */
+    void operator=(const CANNode &) = delete;       /* = assignment is banned */
+
+    static int32_t Init();
+
+    static int32_t Send(SolarGators::CANMessage* msg);
+
+    static int32_t AddRxMessage(SolarGators::CANMessage* msg);
+
+    static int32_t AddRxMessages(SolarGators::CANMessage* msg[], uint32_t len);
+
+    static int32_t AddInterface(CAN_HandleTypeDef* hcan);
+
+    static int32_t SetRxFlag(CAN_HandleTypeDef* hcan);
+
     void HandleReceive();
+
 protected:
-    uint32_t numMsgs = 0;
-    uint32_t numInterfaces = 0;
-    CAN_HandleTypeDef* interfaces[2] = {nullptr, nullptr};
-    ::etl::map<uint32_t, SolarGators::CANMessage*, 64> rxMessages;
+    static osEventFlagsId_t can_rx_event_;
+    static osThreadId_t rx_task_handle_;
+    static uint32_t rx_task_buffer_[128];
+    static StaticTask_t rx_task_control_block_;
+    static const osThreadAttr_t rx_task_attributes_ = {
+        .name = "CAN RX Handler",
+        .cb_mem = &rx_task_control_block_,
+        .cb_size = sizeof(rx_task_control_block_),
+        .stack_mem = &rx_task_buffer_[0],
+        .stack_size = sizeof(rx_task_buffer_),
+        .priority = (osPriority_t) osPriorityRealtime,
+    };
+
+    static uint32_t num_interfaces_;
+    static CAN_HandleTypeDef* interfaces_[2];
+
+    static uint32_t num_msgs_;
+    static ::etl::map<uint32_t, SolarGators::CANMessage*, 64> rx_messages_;
 };
 
 }   /* namespace SolarGators */
@@ -55,17 +82,26 @@ protected:
 #endif  /* SG_CAN_HPP_ */
 
 
-SolarGators::CANManager::CANManager(CAN_HandleTypeDef* hcan) {
-    interfaces[0] = hcan;
-    numInterfaces = 1;
+
+
+
+
+uint32_t SolarGators::CANNode::num_interfaces_ = 0;
+uint32_t SolarGators::CANNode::num_msgs_ = 0;
+CAN_HandleTypeDef* SolarGators::CANNode::interfaces_[2] = {nullptr, nullptr};
+
+
+SolarGators::CANNode::CANNode(CAN_HandleTypeDef* hcan) {
+    interfaces_[0] = hcan;
+    num_interfaces_ = 1;
 }
 
-int32_t SolarGators::CANManager::Init() {
-    for (uint32_t i = 0; i < numInterfaces; i++)
-        HAL_CAN_Start(interfaces[i]);
+int32_t SolarGators::CANNode::Init() {
+    for (uint32_t i = 0; i < num_interfaces_; i++)
+        HAL_CAN_Start(interfaces_[i]);
 }
 
-int32_t SolarGators::CANManager::Send(SolarGators::CANMessage* msg) {
+int32_t SolarGators::CANNode::Send(SolarGators::CANMessage* msg) {
     // Wait for one interface to become free
 
     CAN_TxHeaderTypeDef hal_can_header = {
@@ -77,18 +113,44 @@ int32_t SolarGators::CANManager::Send(SolarGators::CANMessage* msg) {
     };
 
     uint32_t tx_mailbox;
-    HAL_CAN_AddTxMessage(interfaces[0], &hal_can_header, msg->data, &tx_mailbox);
+    HAL_CAN_AddTxMessage(interfaces_[0], &hal_can_header, msg->data, &tx_mailbox);
 
     return 0;
 }
 
-int32_t SolarGators::CANManager::AddRxMessage(SolarGators::CANMessage* msg) {
-    rxMessages.insert(etl::make_pair(msg->can_id, msg));
+int32_t SolarGators::CANNode::AddRxMessage(SolarGators::CANMessage* msg) {
+    rx_messages_.insert(etl::make_pair(msg->can_id, msg));
     return 0;
 }
+
+int32_t SolarGators::CANNode::AddRxMessages(SolarGators::CANMessage* msg[], uint32_t len) {
+    int32_t error_code = 0;
+    for (uint32_t i = 0; i < len; i++)
+        error_code += SolarGators::CANNode::AddRxMessage(msg[i]);
+    return error_code;
+}
+
+int32_t SolarGators::CANNode::SetRxFlag(CAN_HandleTypeDef *hcan) {
+    osEventFlagsSet(can_rx_event_, 0x1);
+    return 0;
+}
+
+void SolarGators::CANNode::HandleReceive() {
+    while (1) {
+        // Wait for rx flag to be set in IRQ
+        osEventFlagsWait(can_rx_event_, 0x1, osFlagsWaitAny, osWaitForever);
+
+
+    }
+}
+
+
+
+
+
 
 
 // Put in user code
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    
+    SolarGators::CANNode::SetRxFlag(hcan);
 }
