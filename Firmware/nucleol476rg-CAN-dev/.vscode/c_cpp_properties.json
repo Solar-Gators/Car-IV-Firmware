@@ -3,22 +3,39 @@
         {
             "name": "STM32L476xx",
             "includePath": [
-                "${workspaceFolder}/**",
-                "../Tools/gcc-arm-none-eabi-10.3-2021.10/arm-none-eabi/include/**",
-                "../Tools/gcc-arm-none-eabi-10.3-2021.10/lib/gcc/arm-none-eabi/10.3.1/include/**"
+                "Core/Inc",
+                "User/Inc",
+                "../../Resources/Drivers/CMSIS/Include/",
+                "../../Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
+                "../../Resources/Drivers/CMSIS/RTOS2/**",
+                "../../Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
+                "../../Resources/Drivers/segger-rtt-master/RTT",
+                "../../Resources/Drivers/SG_Drivers/Inc",
+                "../../Resources/Middlewares/Third_Party/etl/include",
+                "../../Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
+                "../../Tools/gcc-arm-none-eabi-10.3-2021.10-linux/**"
             ],
             "defines": [
                 "USE_HAL_DRIVER",
                 "STM32L476xx"
             ],
-            "compilerPath": "Tools/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi-g++",
+            "compilerPath": "../../Tools/gcc-arm-none-eabi-10.3-2021.10-linux/bin/arm-none-eabi-g++",
             "cStandard": "c11",
             "cppStandard": "c++20",
-            "intelliSenseMode": "gcc-arm",
+            "intelliSenseMode": "windows-gcc-arm",
             "browse": {
                 "path": [
                     "${workspaceFolder}",
-                    "../Tools/gcc-arm-none-eabi-10.3-2021.10"
+                    "User/Inc",
+                    "../../Resources/Drivers/CMSIS/Include/",
+                    "../../Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
+                    "../../Resources/Drivers/CMSIS/RTOS2/**",
+                    "../../Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
+                    "../../Resources/Drivers/segger-rtt-master/RTT",
+                    "../../Resources/Drivers/SG_Drivers/Inc",
+                    "../../Resources/Middlewares/Third_Party/etl/include",
+                    "../../Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
+                    "../../Tools/gcc-arm-none-eabi-10.3-2021.10-linux/**"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

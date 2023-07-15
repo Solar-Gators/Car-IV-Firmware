@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "STM32L4xx Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "build/${workspaceFolderBasename}.hex",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "device": "STM32L476RG",
+            "interface": "swd",
+            "armToolchainPath": "${workspaceRoot}/../../Tools/gcc-arm-none-eabi-10.3-2021.10-windows/bin/",
+        }
+    ]
+}

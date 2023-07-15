@@ -1,7 +1,9 @@
 ######################################
-# target
+# host
 ######################################
-TARGET = $(notdir $(patsubst %/,%,$(CURDIR)))
+# Specify windows or linux
+PLATFORM = windows
+JFLASH_PATH = C:/Program Files/SEGGER/JLink/JFlash.exe
 
 ######################################
 # building variables
@@ -9,10 +11,15 @@ TARGET = $(notdir $(patsubst %/,%,$(CURDIR)))
 DEBUG = 1
 OPT = -Og
 
+######################################
+# target
+######################################
+TARGET = $(notdir $(patsubst %/,%,$(CURDIR)))
+
 #################################
 # GNU ARM Embedded Toolchain
 #################################
-GCC_PATH = ../../Tools/gcc-arm-none-eabi-10.3-2021.10/bin
+GCC_PATH = ../../Tools/gcc-arm-none-eabi-10.3-2021.10-$(PLATFORM)/bin
 PREFIX = arm-none-eabi-
 CC = $(GCC_PATH)/$(PREFIX)gcc
 CXX = $(GCC_PATH)/$(PREFIX)g++
@@ -28,22 +35,20 @@ A2L = $(GCC_PATH)/$(PREFIX)addr2line
 #######################################
 # paths
 #######################################
-# Build path
 BUILD_DIR = build
 RESOURCES_DIR = ../../Resources
+DRIVERS_DIR = $(RESOURCES_DIR)/Drivers
+MIDDLEWARES_DIR = $(RESOURCES_DIR)/Middlewares
+RTOS_DIR = $(MIDDLEWARES_DIR)/Third_Party/FreeRTOS
 
 ######################################
 # sources and includes
 ######################################
 # C sources
 C_SOURCES =  \
-Core/Src/main.c \
-Core/Src/freertos.c \
-Core/Src/stm32l4xx_it.c \
-Core/Src/stm32l4xx_hal_msp.c \
-Core/Src/stm32l4xx_hal_timebase_tim.c \
-Core/Src/system_stm32l4xx.c \
+$(wildcard Core/Src/*.c) \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
+$(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c \
@@ -60,20 +65,17 @@ $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/list.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/queue.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/tasks.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/timers.c \
+$(wildcard $(RTOS_DIR)/Source/*.c) \
+$(wildcard $(RESOURCES_DIR)/Drivers/segger-rtt-master/RTT/*.c) \
 $(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 $(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
 $(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 
+
 # C++ sources
 CXX_SOURCES = \
-User/Src/user.cpp
+$(wildcard User/Src/*.cpp) \
+$(wildcard $(DRIVERS_DIR)/SG_Drivers/Src/*.cpp) \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -89,11 +91,16 @@ INCLUDES =  \
 -IUser/Inc \
 -I$(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Inc \
 -I$(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
+-I$(RESOURCES_DIR)/Drivers/CMSIS/Include \
+-I$(RESOURCES_DIR)/Drivers/CMSIS/Device/ST/STM32L4xx/Include \
+-I$(RESOURCES_DIR)/Drivers/segger-rtt-master/RTT \
+-I$(RESOURCES_DIR)/Drivers/segger-rtt-master/Config \
+-I$(RESOURCES_DIR)/Drivers/SG_Drivers/Inc \
+-I$(RESOURCES_DIR)/Middlewares/Third_Party/etl/include \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/include \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
--I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I$(RESOURCES_DIR)/Drivers/CMSIS/Device/ST/STM32L4xx/Include \
--I$(RESOURCES_DIR)/Drivers/CMSIS/Include
+-I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+
 
 #######################################
 # hardware definitions
@@ -189,3 +196,9 @@ $(BUILD_DIR):
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
+
+#######################################
+# flash onto target
+#######################################
+flash:
+	"$(JFLASH_PATH)" -openprj"$(BUILD_DIR)/$(TARGET).jflash" -open"$(BUILD_DIR)/$(TARGET).hex" -auto -jflash
