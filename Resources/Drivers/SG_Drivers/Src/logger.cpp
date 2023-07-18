@@ -1,6 +1,6 @@
 #include "logger.hpp"
 
-void SolarGators::Logger::LogInfo(const char * sFormat, ...) {
+void Logger::LogInfo(const char * sFormat, ...) {
     uint32_t timestamp = HAL_GetTick();
     SEGGER_RTT_printf(0, "%10u [INFO] ", timestamp);
 
@@ -10,7 +10,7 @@ void SolarGators::Logger::LogInfo(const char * sFormat, ...) {
     va_end(ParamList);
 }
 
-void SolarGators::Logger::LogDebug(const char * sFormat, ...) {
+void Logger::LogDebug(const char * sFormat, ...) {
     uint32_t timestamp = HAL_GetTick();
     SEGGER_RTT_printf(0, "%10u [DEBUG] ", timestamp);
 
@@ -20,7 +20,7 @@ void SolarGators::Logger::LogDebug(const char * sFormat, ...) {
     va_end(ParamList);
 }
 
-void SolarGators::Logger::LogWarning(const char * sFormat, ...) {
+void Logger::LogWarning(const char * sFormat, ...) {
     uint32_t timestamp = HAL_GetTick();
     SEGGER_RTT_printf(0, "%10u [WARNING] ", timestamp);
 
@@ -30,7 +30,7 @@ void SolarGators::Logger::LogWarning(const char * sFormat, ...) {
     va_end(ParamList);
 }
 
-void SolarGators::Logger::LogError(const char * sFormat, ...) {
+void Logger::LogError(const char * sFormat, ...) {
     uint32_t timestamp = HAL_GetTick();
     SEGGER_RTT_printf(0, "%10u [ERROR] ", timestamp);
 

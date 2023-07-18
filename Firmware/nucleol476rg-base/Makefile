@@ -94,7 +94,7 @@ INCLUDES =  \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 -I$(RESOURCES_DIR)/Drivers/CMSIS/Device/ST/STM32L4xx/Include \
 -I$(RESOURCES_DIR)/Drivers/CMSIS/Include \
--I$(RESOURCES_DIR)/Middlewares/Third_Party/etl/include/etl \
+-I$(RESOURCES_DIR)/Middlewares/Third_Party/etl/include/etl
 
 #######################################
 # hardware definitions

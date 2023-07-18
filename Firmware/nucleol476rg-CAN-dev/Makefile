@@ -14,7 +14,7 @@ OPT = -Og
 ######################################
 # target
 ######################################
-TARGET = $(notdir $(patsubst %/,%,$(CURDIR)))
+TARGET = nucleol476rg-CAN-dev
 
 #################################
 # GNU ARM Embedded Toolchain
@@ -65,11 +65,12 @@ $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c \
 $(RESOURCES_DIR)/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c \
+$(wildcard $(DRIVERS_DIR)/SG_Drivers/Src/*.c) \
 $(wildcard $(RTOS_DIR)/Source/*.c) \
 $(wildcard $(RESOURCES_DIR)/Drivers/segger-rtt-master/RTT/*.c) \
 $(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 $(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
 
 
 # C++ sources
@@ -125,7 +126,7 @@ DEFINES =  \
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
 CFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
-CXXFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage
+CXXFLAGS = $(MCU) $(DEFINES) $(INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -fstack-usage -std=c++17
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
