@@ -11,6 +11,7 @@
 #include "main.h"
 #include "stdint.h"
 #include "etl/map.h"
+#include "etl/memory.h"
 #include "cmsis_os.h"
 
 #include "logger.hpp"
@@ -19,17 +20,26 @@
 
 class CANMessage {
 public:
-    CANMessage(uint32_t can_id, uint32_t id_type, uint32_t len):
-        can_id(can_id), id_type(id_type), len(len) {
+    CANMessage(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t len):
+        can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len)
+    {
         mutex_id_ = osMutexNew(&mutex_attributes_);
     };
+
     CANMessage(uint32_t can_id, 
                 uint32_t id_type, 
+                uint32_t rtr_mode,
                 uint32_t len,
                 void (*rxCallback)(uint8_t data[])):
-        can_id(can_id), id_type(id_type), len(len), rxCallback(rxCallback) {
+        can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len), rxCallback(rxCallback)
+    {
         mutex_id_ = osMutexNew(&mutex_attributes_);
     };
+
+    void LoadData(uint8_t data[], uint32_t len) {
+        this->len = len;
+        etl::mem_copy(&data[0], len, &this->data[0]);
+    }
 
     uint32_t            can_id;             /* CAN ID, can be standard or extended */
     uint32_t            id_type;            /* CAN ID type, 0 if standard ID, 4 if extended ID */
@@ -37,8 +47,8 @@ public:
     uint32_t            len;                /* payload data length */
     uint8_t             data[8];            /* payload data array, maximum of 8 bytes */
     void (*rxCallback)(uint8_t data[]);     /* pointer to rx callback function */
-
     osMutexId_t         mutex_id_;          /* mutex id for message */
+
 protected:
     StaticSemaphore_t   mutex_control_block_;
     const osMutexAttr_t mutex_attributes_ = {
@@ -72,7 +82,7 @@ protected:
     /* Tx1 task definitions */
     static inline osEventFlagsId_t can_tx1_event_ = osEventFlagsNew(NULL);
     static inline osThreadId_t tx1_task_handle_;
-    static inline uint32_t tx1_task_buffer_[1024];
+    static inline uint32_t tx1_task_buffer_[2048];
     static inline StaticTask_t tx1_task_control_block_;
     constexpr static const osThreadAttr_t tx1_task_attributes_ = {
         .name = "CAN Tx1 Handler",
@@ -86,7 +96,7 @@ protected:
     /* Tx2 task definitions */
     static inline osEventFlagsId_t can_tx2_event_ = osEventFlagsNew(NULL);
     static inline osThreadId_t tx2_task_handle_;
-    static inline uint32_t tx2_task_buffer_[1024];
+    static inline uint32_t tx2_task_buffer_[2048];
     static inline StaticTask_t tx2_task_control_block_;
     constexpr static const osThreadAttr_t tx2_task_attributes_ = {
         .name = "CAN Tx2 Handler",
@@ -100,7 +110,7 @@ protected:
     /* Rx1 task definitions */
     static inline osEventFlagsId_t can_rx1_event_ = osEventFlagsNew(NULL);
     static inline osThreadId_t rx1_task_handle_;
-    static inline uint32_t rx1_task_buffer_[1024];
+    static inline uint32_t rx1_task_buffer_[2048];
     static inline StaticTask_t rx1_task_control_block_;
     constexpr static const osThreadAttr_t rx1_task_attributes_ = {
         .name = "CAN Rx1 Handler",
@@ -114,7 +124,7 @@ protected:
     /* Rx2 task definitions */
     static inline osEventFlagsId_t can_rx2_event_ = osEventFlagsNew(NULL);
     static inline osThreadId_t rx2_task_handle_;
-    static inline uint32_t rx2_task_buffer_[1024];
+    static inline uint32_t rx2_task_buffer_[2048];
     static inline StaticTask_t rx2_task_control_block_;
     constexpr static const osThreadAttr_t rx2_task_attributes_ = {
         .name = "CAN Rx2 Handler",

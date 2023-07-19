@@ -18,10 +18,11 @@ int32_t CANNode::Start() {
     error_code = HAL_CAN_Start(hcan1_);
     if (error_code != 0) { return error_code; }
 
-    error_code = HAL_CAN_Start(hcan2_);
+    //error_code = HAL_CAN_Start(hcan2_);
     if (error_code != 0) { return error_code; }
 
-    HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
+    HAL_CAN_ActivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
+    //HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
 
     return 0;
 }
@@ -55,10 +56,20 @@ int32_t CANNode::AddRxMessage(CANMessage* msg) {
     
     // Update filter stuff
     CAN_FilterTypeDef sFilterConfig;
+    // CAN_FilterTypeDef sFilterConfig = {
+    //     .FilterActivation = CAN_FILTER_ENABLE,
+    //     .FilterMode = CAN_FILTERMODE_IDLIST,
+    //     .FilterMaskIdHigh = 
+    //     .FilterScale = CAN_FILTERSCALE_32BIT,
+    //     .FilterBank = num_rx_msgs_,
+    //     .FilterFIFOAssignment = CAN_FILTER_FIFO0,
+    // };
     sFilterConfig.FilterActivation = CAN_FILTER_ENABLE; /*Enable the filter*/
     sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;   /*Mask mode*/
     sFilterConfig.FilterMaskIdHigh = 0;
     sFilterConfig.FilterMaskIdLow = 0;                  /*Accept everything*/
+    sFilterConfig.FilterIdHigh = 0,
+    sFilterConfig.FilterIdLow = 0,
     sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;  /*One 32-bit filter*/
     sFilterConfig.FilterBank = 0;                       /*Init bank 0*/
     sFilterConfig.FilterFIFOAssignment = 0;             /*Assign to FIFO 0*/
@@ -117,18 +128,18 @@ void CANNode::Tx2Send(void *argument) {
         osEventFlagsWait(can_tx2_event_, 0x1, osFlagsWaitAny, osWaitForever);
 
         // Spinlock until a tx mailbox is empty
-        while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan2_));
+        // while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan2_));
 
-        uint32_t txMailbox;
-        CAN_TxHeaderTypeDef txHeader = {
-            .StdId = tx_msg_->can_id,
-            .ExtId = tx_msg_->can_id,
-            .IDE = tx_msg_->id_type,
-            .RTR = tx_msg_->rtr_mode,
-            .DLC = tx_msg_->len,
-        };
+        // uint32_t txMailbox;
+        // CAN_TxHeaderTypeDef txHeader = {
+        //     .StdId = tx_msg_->can_id,
+        //     .ExtId = tx_msg_->can_id,
+        //     .IDE = tx_msg_->id_type,
+        //     .RTR = tx_msg_->rtr_mode,
+        //     .DLC = tx_msg_->len,
+        // };
 
-        HAL_CAN_AddTxMessage(hcan2_, &txHeader, tx_msg_->data, &txMailbox);
+        // HAL_CAN_AddTxMessage(hcan2_, &txHeader, tx_msg_->data, &txMailbox);
     }
 }
 
@@ -139,19 +150,22 @@ void CANNode::Rx1Receive(void *argument) {
         CAN_RxHeaderTypeDef rxHeader;
         uint8_t rxData[8];
 
-        while (HAL_CAN_GetRxFifoFillLevel(hcan1_, CAN_RX_FIFO0)) {
-            HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, rxData);
-            CANMessage* rx_msg = (*rx_messages_.find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId)).second;
-
-            if (rx_msg != nullptr) {
-                osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-                for (uint32_t i = 0; i < rx_msg->len; i++)
-                    rx_msg->data[i] = rxData[i];
-                osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+        while(HAL_CAN_GetRxFifoFillLevel(hcan1_, CAN_RX_FIFO0)) {
+            if (HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, &rxData[0]) != HAL_OK) {
+                Error_Handler();
             }
-            
-            HAL_CAN_ActivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
         }
+
+        CANMessage* rx_msg = rx_messages_[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
+
+        if (rx_msg != nullptr) {
+            osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+            for (uint32_t i = 0; i < rx_msg->len; i++)
+                rx_msg->data[i] = rxData[i];
+            osMutexRelease(rx_msg->mutex_id_);
+        }
+
+        HAL_CAN_ActivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
     }
 }
 
@@ -159,28 +173,22 @@ void CANNode::Rx2Receive(void *argument) {
     while (1) {
         osEventFlagsWait(can_rx2_event_, 0x1, osFlagsWaitAny, osWaitForever);
 
-        CAN_RxHeaderTypeDef rxHeader;
-        uint8_t rxData[8];
+        // CAN_RxHeaderTypeDef rxHeader;
+        // uint8_t rxData[8];
 
-        while (HAL_CAN_GetRxFifoFillLevel(hcan2_, CAN_RX_FIFO0)) {
-            HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, rxData);
-            CANMessage* rx_msg = (*rx_messages_.find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId)).second;
+        // while (HAL_CAN_GetRxFifoFillLevel(hcan2_, CAN_RX_FIFO0)) {
+        //     HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, rxData);
+        //     CANMessage* rx_msg = (*rx_messages_.find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId)).second;
 
-            if (rx_msg != nullptr) {
-                osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-                for (uint32_t i = 0; i < rx_msg->len; i++)
-                    rx_msg->data[i] = rxData[i];
-                osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-            }
+        //     if (rx_msg != nullptr) {
+        //         osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+        //         for (uint32_t i = 0; i < rx_msg->len; i++)
+        //             rx_msg->data[i] = rxData[i];
+        //         osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+        //     }
             
-            HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
-        }
+        //     HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
+        // }
     }
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-    Logger::LogInfo("CAN message received\n");
-    CANNode::SetRxFlag(hcan);
-    HAL_CAN_DeactivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
-}
