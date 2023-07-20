@@ -97,6 +97,7 @@ INCLUDES =  \
 -I$(RESOURCES_DIR)/Drivers/segger-rtt-master/RTT \
 -I$(RESOURCES_DIR)/Drivers/segger-rtt-master/Config \
 -I$(RESOURCES_DIR)/Drivers/SG_Drivers/Inc \
+-I$(RESOURCES_DIR)/Middlewares/Third_Party/ \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/etl/include \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/include \
 -I$(RESOURCES_DIR)/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
