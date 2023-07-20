@@ -16,7 +16,7 @@
 
 #include "logger.hpp"
 
-#define MAX_RX_MSGS 64                      /* Size of Rx message map */
+#define MAX_RX_MSGS 28                      /* Size of Rx message map, (num filter banks) * 2 */
 
 class CANMessage {
 public:

@@ -12,6 +12,51 @@ int32_t CANNode::Start() {
     rx1_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Rx1Receive, NULL, &rx1_task_attributes_);
     rx2_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Rx2Receive, NULL, &rx2_task_attributes_);
 
+    // Add all Rx messages to filters. Each filter bank can accept 2 IDs in 32-bit mode
+    uint32_t n = 0;
+    uint32_t filter_pair[2] = { 0x0, 0x0 };
+
+    for (auto iter = rx_messages_.begin(); iter != rx_messages_.end(); ++iter) {
+        if (iter->second->id_type == CAN_ID_STD) {
+            filter_pair[n % 2] = iter->first << 21;
+        }
+        else {
+            filter_pair[n % 2] = (iter->first << 3) & iter->second->id_type & iter->second->rtr_mode;
+        }
+
+        if (n % 2 == 1) {
+            CAN_FilterTypeDef sFilterConfig = {
+                .FilterIdHigh = filter_pair[0] >> 16,
+                .FilterIdLow = filter_pair[0],
+                .FilterMaskIdHigh = filter_pair[1] >> 16,
+                .FilterMaskIdLow = filter_pair[1],
+                .FilterFIFOAssignment = CAN_FILTER_FIFO0,
+                .FilterBank = n / 2,
+                .FilterMode = CAN_FILTERMODE_IDLIST,
+                .FilterScale = CAN_FILTERSCALE_32BIT,
+                .FilterActivation = CAN_FILTER_ENABLE,
+            };
+            HAL_CAN_ConfigFilter(hcan1_, &sFilterConfig);
+        }
+        n++;
+    }
+
+    // Catch last ID if odd number of IDs
+    if (n % 2 == 1) {
+        CAN_FilterTypeDef sFilterConfig = {
+            .FilterIdHigh = filter_pair[0] >> 16,
+            .FilterIdLow = filter_pair[0],
+            .FilterMaskIdHigh = filter_pair[1] >> 16,
+            .FilterMaskIdLow = filter_pair[1],
+            .FilterFIFOAssignment = CAN_FILTER_FIFO0,
+            .FilterBank = n / 2,
+            .FilterMode = CAN_FILTERMODE_IDLIST,
+            .FilterScale = CAN_FILTERSCALE_32BIT,
+            .FilterActivation = CAN_FILTER_ENABLE,
+        };
+        HAL_CAN_ConfigFilter(hcan1_, &sFilterConfig);
+    }
+
     // Start HAL CAN modules
     uint32_t error_code;
 
@@ -49,31 +94,10 @@ int32_t CANNode::GetRxData(uint32_t can_id, uint8_t buf[]) {
 }
 
 int32_t CANNode::AddRxMessage(CANMessage* msg) {
-    if (num_rx_msgs_ >= MAX_RX_MSGS)
+    if (num_rx_msgs_ == MAX_RX_MSGS)
         return -1;
-    else
-        rx_messages_.insert(etl::make_pair(msg->can_id, msg));
-    
-    // Update filter stuff
-    CAN_FilterTypeDef sFilterConfig;
-    // CAN_FilterTypeDef sFilterConfig = {
-    //     .FilterActivation = CAN_FILTER_ENABLE,
-    //     .FilterMode = CAN_FILTERMODE_IDLIST,
-    //     .FilterMaskIdHigh = 
-    //     .FilterScale = CAN_FILTERSCALE_32BIT,
-    //     .FilterBank = num_rx_msgs_,
-    //     .FilterFIFOAssignment = CAN_FILTER_FIFO0,
-    // };
-    sFilterConfig.FilterActivation = CAN_FILTER_ENABLE; /*Enable the filter*/
-    sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;   /*Mask mode*/
-    sFilterConfig.FilterMaskIdHigh = 0;
-    sFilterConfig.FilterMaskIdLow = 0;                  /*Accept everything*/
-    sFilterConfig.FilterIdHigh = 0,
-    sFilterConfig.FilterIdLow = 0,
-    sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;  /*One 32-bit filter*/
-    sFilterConfig.FilterBank = 0;                       /*Init bank 0*/
-    sFilterConfig.FilterFIFOAssignment = 0;             /*Assign to FIFO 0*/
-    HAL_CAN_ConfigFilter(hcan1_, &sFilterConfig);
+
+    rx_messages_.insert(etl::make_pair(msg->can_id, msg));
 
     num_rx_msgs_++;
     return 0;

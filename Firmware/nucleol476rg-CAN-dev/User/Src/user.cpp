@@ -36,8 +36,8 @@ void CPP_UserSetup(void) {
     uint8_t test_data[8] = { 'd', 'e', 'a', 'd', 'b', 'e', 'e', 'f' };
     msg1.LoadData(test_data, 8);
 
-    CANNode::Start();
     CANNode::AddRxMessage(&msg1);
+    CANNode::Start();
 
     regular_task_id = osThreadNew((osThreadFunc_t)regular_task1, NULL, &regular_task_attributes);
 
