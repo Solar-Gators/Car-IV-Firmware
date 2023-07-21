@@ -27,16 +27,19 @@ osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
 // Global variables
 CANNode node = CANNode(&hcan1, &hcan1);
-CANMessage msg1 = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
+CANMessage msg1_static = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
+CANMessage msg2_static = CANMessage(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
 
 
 /* CPP_UserSetup goes here */
 void CPP_UserSetup(void) {
 
     uint8_t test_data[8] = { 'd', 'e', 'a', 'd', 'b', 'e', 'e', 'f' };
-    msg1.LoadData(test_data, 8);
+    msg1_static.LoadData(test_data, 8);
 
-    CANNode::AddRxMessage(&msg1);
+    //CANNode::AddRxMessage(&msg1_static);
+    CANNode::AddRxMessage(&msg2_static);
+    //CANNode::SetAcceptAll();
     CANNode::Start();
 
     regular_task_id = osThreadNew((osThreadFunc_t)regular_task1, NULL, &regular_task_attributes);
@@ -49,11 +52,16 @@ void CPP_UserSetup(void) {
 /* RTOS task definitions go here */
 void periodic_task1(void) {
     Logger::LogInfo("Sending CAN message\n");
-    CANMessage msg2 = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
 
-    uint8_t msg2Data[8] = {1,2,3,4,5,6,7,8};
+    CANMessage msg1 = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
+    uint8_t msg1Data[8] = {1,2,3,4,5,6,7,8};
+    msg1.LoadData(msg1Data, 8);
+
+    CANMessage msg2 = CANMessage(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
+    uint8_t msg2Data[8] = {9,10,11,12,13,14,15,16};
     msg2.LoadData(msg2Data, 8);
-    
+
+    CANNode::Send(&msg1);
     CANNode::Send(&msg2);
 
     osEventFlagsSet(regular_event, 0x1);
@@ -70,9 +78,3 @@ void regular_task1(void) {
     }
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-    Logger::LogInfo("CAN message received\n");
-    CANNode::SetRxFlag(hcan);
-    HAL_CAN_DeactivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
-}
