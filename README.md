@@ -7,7 +7,7 @@
 2. Extract the zip, then copy the contents into your `Git\mingw64\bin` directory (located at `C:\Program Files` if you used the default Git installation path). Make sure not to overwrite any existing files.
 3. Run `make --version` in Git Bash to confirm make is successfully installed
 #### Solar Gators SDK
-1. Open Git Bash and run `git clone https://github.com/matlshen/Car-IV-Firmware.git`
+1. Open Git Bash and run `git clone https://github.com/matlshen/Car-IV-Firmware.git --recursive`
 2. Open `Firmware/nucleol476rg-base/Makefile` and change the host platform to `windows`
 3. In Git Bash, run `make -j12`
 4. Verify that the build completes and a .hex file appears in the `build` directory
