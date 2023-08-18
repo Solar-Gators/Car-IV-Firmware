@@ -1,43 +1,71 @@
 {
+    "env": {
+        // Edit project_path based on active project
+        "project_path": "Firmware/bms-prototype2",
+        "project_includes": [
+            "${project_path}/Core/Inc",
+            "${project_path}/User/Inc"
+        ],
+        "cubemx_includes": [
+            "Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
+            "Resources/Drivers/CMSIS/Include",
+            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
+            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy"
+        ],
+        "third_party_includes": [
+            "Resources/Drivers/segger-rtt-master/RTT",
+            "Resources/Drivers/segger-rtt-master/Config",
+            "Resources/Middlewares/Third_Party/etl/include",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+        ],
+        "user_includes": [
+            "Resources/Drivers/SG_Drivers/Inc"
+        ],
+        "cubemx_defines": [
+            "USE_HAL_DRIVER",
+            "STM32L476xx"
+        ],
+        "gccExePath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
+        "gccIncludePath": "C:\\msys64\\mingw64\\arm-none-eabi\\include"
+    },
     "configurations": [
         {
             "name": "STM32L476xx",
-            "includePath": [
-                "./Resources/Drivers/CMSIS/Include/",
-                "./Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
-                "./Resources/Drivers/CMSIS/RTOS2/**",
-                "./Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
-                "./Resources/Drivers/segger-rtt-master/RTT",
-                "./Resources/drivers/SG_Drivers/Inc",
-                "./Resources/Middlewares/Third_Party/etl/include",
-                "./Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
-                "./Tools/gcc-arm-none-eabi-10.3-2021.10-linux/**"
-            ],
-            "defines": [
-                "__cplusplus",
-                "USE_HAL_DRIVER",
-                "STM32L476xx"
-            ],
-            "compilerPath": "./Tools/gcc-arm-none-eabi-10.3-2021.10-linux/bin/arm-none-eabi-g++",
-            "cStandard": "c11",
-            "cppStandard": "c++20",
             "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${cubemx_includes}",
+                "${gccIncludePath}",
+                "${third_party_includes}",
+                "${user_includes}",
+                "${project_includes}"
+            ],
             "browse": {
                 "path": [
-                    "${workspaceFolder}",
-                    "./Resources/Drivers/CMSIS/Include/",
-                    "./Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
-                    "./Resources/Drivers/CMSIS/RTOS2/**",
-                    "./Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
-                    "./Resources/Drivers/segger-rtt-master/RTT",
-                    "./Resources/drivers/SG_Drivers/Inc",
-                    "./Resources/Middlewares/Third_Party/etl/include",
-                    "./Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
-                    "./Tools/gcc-arm-none-eabi-10.3-2021.10-linux/**"
+                    "${cubemx_includes}",
+                    "${gccIncludePath}",
+                    "${third_party_includes}",
+                    "${user_includes}",
+                    "${project_includes}"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            }
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "${cubemx_defines}",
+                "${user_cDefines}",
+                "${user_asmDefines}"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
         }
     ],
     "version": 4
