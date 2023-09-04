@@ -1,7 +1,6 @@
 {
     "env": {
-        // Edit project_path based on active project
-        "project_path": "Firmware/bms-prototype2",
+        "project_path": "Firmware/nucleol476rg-CAN-dev",
         "project_includes": [
             "${project_path}/Core/Inc",
             "${project_path}/User/Inc"
@@ -20,15 +19,21 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
+        "compiler_includes": [
+            "C:/msys64/mingw64/arm-none-eabi/include"
+        ],
         "user_includes": [
             "Resources/Drivers/SG_Drivers/Inc"
         ],
+        "gccIncludePath": "C:\\msys64\\mingw64\\arm-none-eabi\\include",
         "cubemx_defines": [
             "USE_HAL_DRIVER",
             "STM32L476xx"
         ],
         "gccExePath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
-        "gccIncludePath": "C:\\msys64\\mingw64\\arm-none-eabi\\include"
+        "cubemx_driver_sources": [
+            "Resources/Drivers/STM32L4xx_HAL_Driver/Src",
+        ]
     },
     "configurations": [
         {
@@ -43,18 +48,13 @@
             ],
             "browse": {
                 "path": [
-                    "${cubemx_includes}",
-                    "${gccIncludePath}",
-                    "${third_party_includes}",
-                    "${user_includes}",
-                    "${project_includes}"
+                    "${includePath}",
+                    "${cubemx_driver_sources}",
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "${cubemx_defines}",
-                "${user_cDefines}",
-                "${user_asmDefines}"
+                "${cubemx_defines}"
             ],
             "compilerArgs": [
                 "-mcpu=cortex-m4",

@@ -1,218 +1,326 @@
 #include "sg_can.hpp"
 
-CANNode::CANNode(CAN_HandleTypeDef* hcan1, CAN_HandleTypeDef* hcan2) {
-    hcan1_ = hcan1;
-    hcan2_ = hcan2;
+/**
+  * @brief  Starts threads, starts CAN modules, enables interrupts
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANDevice::Start() {
+    tx_task_id_ = osThreadNew((osThreadFunc_t)&CANDevice::HandleTx, this, &tx_task_attributes_);
+    rx_task_id_ = osThreadNew((osThreadFunc_t)&CANDevice::HandleRx, this, &rx_task_attributes_);
+
+    if (HAL_CAN_Start(hcan_) != HAL_OK)
+        return HAL_ERROR;
+
+    // Enable interrupt
+    if (HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
 }
 
-int32_t CANNode::Start() {
-    // Start tasks
-    tx1_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Tx1Send, NULL, &tx1_task_attributes_);
-    tx2_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Tx2Send, NULL, &tx2_task_attributes_);
-    rx1_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Rx1Receive, NULL, &rx1_task_attributes_);
-    rx2_task_handle_ = osThreadNew((osThreadFunc_t)CANNode::Rx2Receive, NULL, &rx2_task_attributes_);
-
-    // Add all Rx messages to filters. Each filter bank can accept 2 IDs in 32-bit mode
-    uint32_t n = 0;
-    uint32_t filter_pair[2] = { 0x0, 0x0 };
-
-    for (auto iter = rx_messages_.begin(); iter != rx_messages_.end(); ++iter) {
-        if (iter->second->id_type == CAN_ID_STD) {
-            filter_pair[n % 2] = iter->first << 21;
-        }
-        else {
-            filter_pair[n % 2] = (iter->first << 3) & iter->second->id_type & iter->second->rtr_mode;
-        }
-
-        if (n % 2 == 1) {
-            CAN_FilterTypeDef sFilterConfig = {
-                .FilterIdHigh = filter_pair[0] >> 16,
-                .FilterIdLow = filter_pair[0],
-                .FilterMaskIdHigh = filter_pair[1] >> 16,
-                .FilterMaskIdLow = filter_pair[1],
-                .FilterFIFOAssignment = CAN_FILTER_FIFO0,
-                .FilterBank = n / 2,
-                .FilterMode = CAN_FILTERMODE_IDLIST,
-                .FilterScale = CAN_FILTERSCALE_32BIT,
-                .FilterActivation = CAN_FILTER_ENABLE,
-            };
-            HAL_CAN_ConfigFilter(hcan1_, &sFilterConfig);
-        }
-        n++;
+/**
+  * @brief  Sends CAN message
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANDevice::Send(CANMessage *msg) {
+    // Put message in queue, blocking if queue is full
+    if (osMessageQueuePut(tx_queue_, &msg, 0, TX_TIMEOUT) != osOK) {
+        HandleTxTimeout();
+        return HAL_ERROR;
     }
 
-    // Catch last ID if odd number of IDs
-    if (n % 2 == 1) {
-        CAN_FilterTypeDef sFilterConfig = {
-            .FilterIdHigh = filter_pair[0] >> 16,
-            .FilterIdLow = filter_pair[0],
-            .FilterMaskIdHigh = filter_pair[1] >> 16,
-            .FilterMaskIdLow = filter_pair[1],
-            .FilterFIFOAssignment = CAN_FILTER_FIFO0,
-            .FilterBank = n / 2,
-            .FilterMode = CAN_FILTERMODE_IDLIST,
-            .FilterScale = CAN_FILTERSCALE_32BIT,
-            .FilterActivation = CAN_FILTER_ENABLE,
-        };
-        HAL_CAN_ConfigFilter(hcan1_, &sFilterConfig);
-    }
-
-    // Start HAL CAN modules
-    uint32_t error_code;
-
-    error_code = HAL_CAN_Start(hcan1_);
-    if (error_code != 0) { return error_code; }
-
-    //error_code = HAL_CAN_Start(hcan2_);
-    if (error_code != 0) { return error_code; }
-
-    HAL_CAN_ActivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
-    //HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
-
-    return 0;
+    return HAL_OK;
 }
 
-int32_t CANNode::Send(CANMessage* msg) {
-    tx_msg_ = msg;
-    tx1_sent_ = false;
-    tx2_sent_ = false;
-
-    osEventFlagsSet(can_tx1_event_, 0x1);
-    osEventFlagsSet(can_tx2_event_, 0x1);
-
-    return 0;
+/**
+  * @brief  Returns CAN device status
+  * @retval CAN device status
+  */
+uint32_t CANDevice::GetStatus() {
+    return HAL_OK;
 }
 
-int32_t CANNode::GetRxData(uint32_t can_id, uint8_t buf[]) {
-    CANMessage* msg = (*rx_messages_.find(can_id)).second;
-    if (msg != nullptr) {
-        buf = msg->data;
-        return 0;
-    }
-    else
-        return -1;
+/**
+  * @brief  Sets Rx flag to activate Rx thread. Call from CANDeviceManager SetRxFlag().
+  */
+void CANDevice::SetRxFlag() {
+    osEventFlagsSet(rx_event_flag_, 0x1);
 }
 
-int32_t CANNode::AddRxMessage(CANMessage* msg) {
-    if (num_rx_msgs_ == MAX_RX_MSGS)
-        return -1;
-
-    rx_messages_.insert(etl::make_pair(msg->can_id, msg));
-
-    num_rx_msgs_++;
-    return 0;
-}
-
-int32_t CANNode::AddRxMessages(CANMessage* msg[], uint32_t len) {
-    uint32_t error_code = 0;
-
-    for (uint32_t i = 0; i < len; i++) {
-        error_code = CANNode::AddRxMessage(msg[i]);
-        if (error_code != 0) { return error_code; }
-    }
-
-    return 0;
-}
-
-int32_t CANNode::SetRxFlag(CAN_HandleTypeDef* hcan) {
-    HAL_CAN_DeactivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
-
-    if (hcan == hcan1_)
-        return osEventFlagsSet(can_rx1_event_, 0x1);
-    else if (hcan == hcan2_)
-        return osEventFlagsSet(can_rx2_event_, 0x1);
-    else    // Invalid CAN module
-        return -1;
-}
-
-void CANNode::Tx1Send(void *argument) {
+/**
+  * @brief  Tx thread. Sends message when Tx flag is set.
+  * @param  manager Pointer to CANDeviceManager object
+  */
+void CANDevice::HandleTx(void* argument) {
+    CANMessage* tx_msg;
     while (1) {
-        Logger::LogInfo("Sending...\n");
-        osEventFlagsWait(can_tx1_event_, 0x1, osFlagsWaitAny, osWaitForever);
+        // Block thread execution until message appears in queue
+        osMessageQueueGet(tx_queue_, &tx_msg, NULL, osWaitForever);
+
+        #ifdef USE_LOGGING
+        Logger::LogInfo("Tx thread sending...\n");
+        #endif
 
         // Spinlock until a tx mailbox is empty
-        while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan1_));
+        while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan_));
 
+        // Get message header from CANMessage object
+        osMutexAcquire(tx_msg->mutex_id_, osWaitForever);
         uint32_t txMailbox;
         CAN_TxHeaderTypeDef txHeader = {
-            .StdId = tx_msg_->can_id,
-            .ExtId = tx_msg_->can_id,
-            .IDE = tx_msg_->id_type,
-            .RTR = tx_msg_->rtr_mode,
-            .DLC = tx_msg_->len,
+            .StdId = tx_msg->can_id,
+            .ExtId = tx_msg->can_id,
+            .IDE = tx_msg->id_type,
+            .RTR = tx_msg->rtr_mode,
+            .DLC = tx_msg->len,
+            .TransmitGlobalTime = DISABLE,
         };
+        osMutexRelease(tx_msg->mutex_id_);
 
-        HAL_CAN_AddTxMessage(hcan1_, &txHeader, tx_msg_->data, &txMailbox);
+        // Request HAL message send
+        HAL_CAN_AddTxMessage(hcan_, &txHeader, tx_msg->data, &txMailbox);
     }
 }
 
-void CANNode::Tx2Send(void *argument) {
+/**
+  * @brief  Rx thread. Handles received message when Rx flag is set.
+  * @param  manager Pointer to CANDeviceManager object
+  */
+void CANDevice::HandleRx(void* argument) {
+    CANMessage* rx_msg;
     while (1) {
-        Logger::LogInfo("Sending...\n");
-        osEventFlagsWait(can_tx2_event_, 0x1, osFlagsWaitAny, osWaitForever);
+        // Block thread execution until Rx flag is set from ISR
+        osEventFlagsWait(rx_event_flag_, 0x1, osFlagsWaitAny, osWaitForever);      
 
-        // Spinlock until a tx mailbox is empty
-        // while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan2_));
-
-        // uint32_t txMailbox;
-        // CAN_TxHeaderTypeDef txHeader = {
-        //     .StdId = tx_msg_->can_id,
-        //     .ExtId = tx_msg_->can_id,
-        //     .IDE = tx_msg_->id_type,
-        //     .RTR = tx_msg_->rtr_mode,
-        //     .DLC = tx_msg_->len,
-        // };
-
-        // HAL_CAN_AddTxMessage(hcan2_, &txHeader, tx_msg_->data, &txMailbox);
-    }
-}
-
-void CANNode::Rx1Receive(void *argument) {
-    while (1) {
-        osEventFlagsWait(can_rx1_event_, 0x1, osFlagsWaitAny, osWaitForever);
-
+        #ifdef USE_LOGGING
+        Logger::LogInfo("Rx thread receiving...\n");
+        #endif
+        
         CAN_RxHeaderTypeDef rxHeader;
         uint8_t rxData[8];
 
-        while(HAL_CAN_GetRxFifoFillLevel(hcan1_, CAN_RX_FIFO0)) {
-            if (HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, &rxData[0]) != HAL_OK) {
+        // Retrieve all messages from FIFO
+        while(HAL_CAN_GetRxFifoFillLevel(hcan_, CAN_RX_FIFO0)) {
+            if (HAL_CAN_GetRxMessage(hcan_, CAN_RX_FIFO0, &rxHeader, &rxData[0]) != HAL_OK) {
                 Error_Handler();
+            }
+
+            // Find message in map and populate data
+            rx_msg = (*rx_messages_)[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
+            if (rx_msg != nullptr) {
+                osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+                for (uint32_t i = 0; i < rx_msg->len; i++)
+                    rx_msg->data[i] = rxData[i];
+                osMutexRelease(rx_msg->mutex_id_);
             }
         }
 
-        CANMessage* rx_msg = rx_messages_[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
+        #ifdef USE_LOGGING
+        Logger::LogInfo("RX Data: %x %x %x %x %x %x %x %x\n", rxData[0], rxData[1], rxData[2], rxData[3], rxData[4], rxData[5], rxData[6], rxData[7]);
+        #endif
 
-        if (rx_msg != nullptr) {
-            osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-            for (uint32_t i = 0; i < rx_msg->len; i++)
-                rx_msg->data[i] = rxData[i];
-            osMutexRelease(rx_msg->mutex_id_);
+        // Re-enable Rx interrupt
+        HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);
+    }
+}
+
+/**
+  * @brief  Tx timeout callback. Called when Tx/Rx timeout timer expires.
+  * @param  task_id Pointer to timed out thread.
+  */
+void CANDevice::HandleTxTimeout() {
+    #ifdef USE_LOGGING
+    Logger::LogError("Tx Timeout\n");
+    #endif
+
+    // Terminate thread
+    osThreadTerminate(tx_task_id_);
+
+    // Reset HAL CAN module
+    HAL_CAN_DeInit(hcan_);
+    HAL_CAN_MspDeInit(hcan_);
+    HAL_CAN_MspInit(hcan_);
+    HAL_CAN_Init(hcan_);
+
+    // Restart thread
+    tx_task_id_ = osThreadNew((osThreadFunc_t)&CANDevice::HandleTx, this, &tx_task_attributes_);
+
+    return;
+}
+
+/**
+  * @brief  Add CAN Device to CANController
+  * @param  device Pointer to CANDevice object
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddDevice(CANDevice *device) {
+    if (devices_.full())
+        return HAL_ERROR;
+    devices_.push_back(device);
+
+    // CANDevice needs pointer to rx_messages_
+    device->rx_messages_ = &rx_messages_;
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Add CAN message to CANController
+  * @param  msg Pointer to CANMessage object
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddRxMessage(CANMessage *msg) {
+    if (num_msgs_ >= MAX_RX_MSGS)
+        return HAL_ERROR;
+
+    // Add message to map
+    rx_messages_.insert(etl::make_pair(msg->can_id, msg));
+    num_msgs_++;
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Add CAN messages to CANController
+  * @param  msg Array of pointers to CANMessage objects
+  * @param  num_msgs Number of CANMessage objects in array
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddRxMessages(CANMessage *msg[], uint32_t num_msgs) {
+    if (num_msgs_ + num_msgs >= MAX_RX_MSGS)
+        return HAL_ERROR;
+
+    // Add messages to map
+    for (uint32_t i = 0; i < num_msgs; i++) {
+        rx_messages_.insert(etl::make_pair(msg[i]->can_id, msg[i]));
+    }
+    num_msgs_ += num_msgs;
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Set CANController to accept all messages as high priority
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddFilterAll() {
+    // Mask of 0 ignores all bits
+    CAN_FilterTypeDef sFilterConfig = {
+        .FilterIdHigh = 0,
+        .FilterIdLow = 0,
+        .FilterMaskIdHigh = 0,
+        .FilterMaskIdLow = 0,
+        .FilterFIFOAssignment = CAN_RX_FIFO0,
+        .FilterBank = 0,
+        .FilterMode = CAN_FILTERMODE_IDMASK,
+        .FilterScale = CAN_FILTERSCALE_32BIT,
+        .FilterActivation = CAN_FILTER_ENABLE,
+        .SlaveStartFilterBank = 0,
+    };
+
+    return HAL_CAN_ConfigFilter(devices_[0]->hcan_, &sFilterConfig);
+}
+
+/**
+  * @brief  Set CANController to accept messages with specified CAN ID.
+  * @param  can_id CAN ID to accept
+  * @param  id_type CAN ID type (CAN_ID_STD or CAN_ID_EXT)
+  * @param  rtr_mode CAN RTR mode (CAN_RTR_DATA or CAN_RTR_REMOTE)
+  * @param  priority FIFO priority (CAN_PRIORITY_NORMAL or CAN_PRIORITY_HIGH)
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority) {
+    // Define filter contents according to figure 523 in RM0351
+    uint32_t filter_id;
+    if (id_type == CAN_ID_STD) {
+        filter_id = (can_id << 5) | (rtr_mode << 3) | (id_type << 1);
+    }
+    else if (id_type == CAN_ID_EXT) {
+        filter_id = (can_id << 8) | id_type | rtr_mode;
+    }
+    else
+        return HAL_ERROR;
+
+    
+    
+    return HAL_OK;
+}
+
+/**
+  * @brief  Start all CAN devices
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::Start() {
+    for (auto device : devices_)
+        if (device->Start() != HAL_OK)
+            return HAL_ERROR;
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Send CAN message on all CAN devices
+  * @param  msg Pointer to CANMessage object
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::Send(CANMessage *msg) {
+    for (auto device : devices_)
+        if (device->Send(msg) != HAL_OK)
+            return HAL_ERROR;
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Send CAN message on CAN device
+  * @param  device Pointer to CANDevice object
+  * @param  msg Pointer to CANMessage object
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::SendOnDevice(CANDevice *device, CANMessage *msg) {
+    return device->Send(msg);
+}
+
+/**
+  * @brief  Get CAN message from CANController
+  * @param  can_id CAN ID of message to get
+  * @param  msg Pointer to CANMessage object
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::GetMessage(uint32_t can_id, CANMessage *msg) {
+    if (rx_messages_.find(can_id) == rx_messages_.end())
+        return HAL_ERROR;
+
+    msg = rx_messages_[can_id];
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  Get CAN device status
+  * @param  device Pointer to CANDevice object
+  * @retval CAN device status
+  */
+HAL_StatusTypeDef CANController::GetDeviceStatus(CANDevice *device) {
+    device->GetStatus();
+
+    return HAL_OK;
+}
+
+/**
+  * @brief  CAN Rx interrupt callback. Calls CANDeviceManager SetRxFlag().
+  * @param  hcan Pointer to CAN_HandleTypeDef object
+  */
+void CANController::RxCallback(CAN_HandleTypeDef *hcan) {
+    for (auto device : devices_)
+        if (device->hcan_ == hcan) {
+            device->SetRxFlag();
+            break;
         }
-
-        HAL_CAN_ActivateNotification(hcan1_, CAN_IT_RX_FIFO0_MSG_PENDING);
-    }
 }
 
-void CANNode::Rx2Receive(void *argument) {
-    while (1) {
-        osEventFlagsWait(can_rx2_event_, 0x1, osFlagsWaitAny, osWaitForever);
 
-        // CAN_RxHeaderTypeDef rxHeader;
-        // uint8_t rxData[8];
-
-        // while (HAL_CAN_GetRxFifoFillLevel(hcan2_, CAN_RX_FIFO0)) {
-        //     HAL_CAN_GetRxMessage(hcan1_, CAN_RX_FIFO0, &rxHeader, rxData);
-        //     CANMessage* rx_msg = (*rx_messages_.find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId)).second;
-
-        //     if (rx_msg != nullptr) {
-        //         osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-        //         for (uint32_t i = 0; i < rx_msg->len; i++)
-        //             rx_msg->data[i] = rxData[i];
-        //         osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
-        //     }
-            
-        //     HAL_CAN_ActivateNotification(hcan2_, CAN_IT_RX_FIFO0_MSG_PENDING);
-        // }
-    }
-}
-
+/*
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    CANController::RxCallback(hcan);
+}*/

@@ -1,39 +1,53 @@
 #include "logger.hpp"
 
 void Logger::LogInfo(const char * sFormat, ...) {
-    uint32_t timestamp = HAL_GetTick();
-    SEGGER_RTT_printf(0, "%10u [INFO] ", timestamp);
-
+    PrintHeader("INFO");
+#ifdef USE_FREERTOS
+    PrintThread();
+#endif
     va_list ParamList;
-    va_start(ParamList, sFormat);
-    SEGGER_RTT_vprintf(0, sFormat, &ParamList);
-    va_end(ParamList);
+    LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogDebug(const char * sFormat, ...) {
-    uint32_t timestamp = HAL_GetTick();
-    SEGGER_RTT_printf(0, "%10u [DEBUG] ", timestamp);
-
+    PrintHeader("DEBUG");
+#ifdef USE_FREERTOS
+    PrintThread();
+#endif
     va_list ParamList;
-    va_start(ParamList, sFormat);
-    SEGGER_RTT_vprintf(0, sFormat, &ParamList);
-    va_end(ParamList);
+    LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogWarning(const char * sFormat, ...) {
-    uint32_t timestamp = HAL_GetTick();
-    SEGGER_RTT_printf(0, "%10u [WARNING] ", timestamp);
-
+    PrintHeader("WARNING");
+#ifdef USE_FREERTOS
+    PrintThread();
+#endif
     va_list ParamList;
-    va_start(ParamList, sFormat);
-    SEGGER_RTT_vprintf(0, sFormat, &ParamList);
-    va_end(ParamList);
+    LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogError(const char * sFormat, ...) {
-    uint32_t timestamp = HAL_GetTick();
-    SEGGER_RTT_printf(0, "%10u [ERROR] ", timestamp);
+    PrintHeader("ERROR");
+#ifdef USE_FREERTOS
+    PrintThread();
+#endif
+    va_list ParamList;
+    LogCommon(sFormat, ParamList);
+}
 
+void Logger::PrintHeader(const char * sLevel) {
+    uint32_t timestamp = HAL_GetTick();
+    SEGGER_RTT_printf(0, "%10u [%s] ", timestamp, sLevel);
+}
+
+void Logger::PrintThread() {
+#ifdef USE_FREERTOS
+    SEGGER_RTT_printf(0, "[%s] ", osThreadGetName(osThreadGetId()));
+#endif
+}
+
+void Logger::LogCommon(const char * sFormat, ...) {
     va_list ParamList;
     va_start(ParamList, sFormat);
     SEGGER_RTT_vprintf(0, sFormat, &ParamList);

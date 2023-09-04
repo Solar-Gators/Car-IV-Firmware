@@ -1,5 +1,5 @@
 /*
- * CANMessage.hpp
+ * sg_can.hpp
  *
  *  Created on: July 10, 2023
  *      Author: Matthew Shen
@@ -11,12 +11,23 @@
 #include "main.h"
 #include "stdint.h"
 #include "etl/map.h"
-#include "etl/memory.h"
+#include "etl/vector.h"
 #include "cmsis_os.h"
 
 #include "logger.hpp"
 
-#define MAX_RX_MSGS 28                      /* Size of Rx message map, (num filter banks) * 2 */
+#define THREAD_PRIORITY osPriorityAboveNormal   /* Priority of Rx and Tx threads */
+
+#define TX_QUEUE_SIZE 3                         /* Size of Tx message queue */
+#define TX_TIMEOUT    10                        /* Timeout for tx thread in ms */
+
+#define NUM_FILTER_BANKS 14                     /* 14 filters on single CAN, 28 on dual CAN */
+#define MAX_RX_MSGS      28                     /* Size of Rx message map */
+
+#define CAN_PRIORITY_NORMAL 0                   /* Interrupt waits for FIFO full */
+#define CAN_PRIORITY_HIGH   1                   /* Interrupt waits for FIFO pending */
+#define CAN_FILTER_ALL      0                   /* Accept all messages */
+#define CAN_FILTER_CUSTOM   2                   /* Accept messages in rx_messages_ */
 
 class CANMessage {
 public:
@@ -52,106 +63,91 @@ public:
 protected:
     StaticSemaphore_t   mutex_control_block_;
     const osMutexAttr_t mutex_attributes_ = {
-        .name = "DMM",
+        .name = "CANMessage Mutex",
         .attr_bits = osMutexRecursive,
         .cb_mem = &mutex_control_block_,
         .cb_size = sizeof(mutex_control_block_),
     };
 };
 
-class CANNode {
+class CANDevice {
+    friend class CANController;
 public:
-    CANNode(CAN_HandleTypeDef* hcan1, CAN_HandleTypeDef* hcan2);    /* Constructor requires 2 HAL CAN instances */
-    CANNode(CANNode &other) = delete;                               /* Copying is banned */
-    void operator=(const CANNode &) = delete;                       /* = assignment is banned */
-
-    static int32_t Start();                                         /* Starts all tasks, calls HAL_CAN_Start on all interfaces */
-
-    static int32_t Send(CANMessage* msg);              /* Requests message send on all interfaces */
-
-    static int32_t GetRxData(uint32_t can_id, uint8_t buf[]);       /* Retrieve data from received message with specified ID */
-
-    static int32_t AddRxMessage(CANMessage* msg);      /* Adds message to receive list. Updates filter config to include message */
-
-    static int32_t AddRxMessages(CANMessage* msg[], uint32_t len);     /* Adds messages to receive list. Updates filter config to include messages */
-
-    static int32_t SetRxFlag(CAN_HandleTypeDef* hcan);              /* Notifies RX handler task that message has been received. Should be called from IRQ */
+    CANDevice(CAN_HandleTypeDef *hcan) { hcan_ = hcan; }
+    HAL_StatusTypeDef Start();
+    HAL_StatusTypeDef Send(CANMessage *msg);
+    uint32_t GetStatus();
+    void SetRxFlag();
+    osThreadId_t tx_task_id_;
+    osThreadId_t rx_task_id_;
 
 protected:
+    CAN_HandleTypeDef *hcan_;
+    etl::map<uint32_t, CANMessage*, MAX_RX_MSGS>* rx_messages_;
+    osMessageQueueId_t tx_queue_ = osMessageQueueNew(TX_QUEUE_SIZE, sizeof(CANMessage*), NULL);
+    etl::atomic<uint32_t> status_;      // TODO: handle this
+    osEventFlagsId_t rx_event_flag_ = osEventFlagsNew(NULL);
 
-    /* Tx1 task definitions */
-    static inline osEventFlagsId_t can_tx1_event_ = osEventFlagsNew(NULL);
-    static inline osThreadId_t tx1_task_handle_;
-    static inline uint32_t tx1_task_buffer_[2048];
-    static inline StaticTask_t tx1_task_control_block_;
-    constexpr static const osThreadAttr_t tx1_task_attributes_ = {
-        .name = "CAN Tx1 Handler",
-        .cb_mem = &tx1_task_control_block_,
-        .cb_size = sizeof(tx1_task_control_block_),
-        .stack_mem = &tx1_task_buffer_[0],
-        .stack_size = sizeof(tx1_task_buffer_),
-        .priority = (osPriority_t) osPriorityRealtime,
+    /* Tx thread definitions */
+    uint32_t tx_task_buffer[128];   // Size can be much smaller w/o logging
+    StaticTask_t tx_task_control_block_;
+    const osThreadAttr_t tx_task_attributes_ = {
+        .name = "CAN Tx Task",
+        .attr_bits = osThreadDetached,
+        .cb_mem = &tx_task_control_block_,
+        .cb_size = sizeof(tx_task_control_block_),
+        .stack_mem = &tx_task_buffer[0],
+        .stack_size = sizeof(tx_task_buffer),
+        .priority = (osPriority_t) THREAD_PRIORITY,
+        .tz_module = 0,
+        .reserved = 0,
     };
 
-    /* Tx2 task definitions */
-    static inline osEventFlagsId_t can_tx2_event_ = osEventFlagsNew(NULL);
-    static inline osThreadId_t tx2_task_handle_;
-    static inline uint32_t tx2_task_buffer_[2048];
-    static inline StaticTask_t tx2_task_control_block_;
-    constexpr static const osThreadAttr_t tx2_task_attributes_ = {
-        .name = "CAN Tx2 Handler",
-        .cb_mem = &tx2_task_control_block_,
-        .cb_size = sizeof(tx2_task_control_block_),
-        .stack_mem = &tx2_task_buffer_[0],
-        .stack_size = sizeof(tx2_task_buffer_),
-        .priority = (osPriority_t) osPriorityRealtime,
+    /* Rx thread definitions */
+    uint32_t rx_task_buffer[128];   // Size can be much smaller w/o logging
+    StaticTask_t rx_task_control_block_;
+    const osThreadAttr_t rx_task_attributes_ = {
+        .name = "CAN Rx Task",
+        .attr_bits = osThreadDetached,
+        .cb_mem = &rx_task_control_block_,
+        .cb_size = sizeof(rx_task_control_block_),
+        .stack_mem = &rx_task_buffer[0],
+        .stack_size = sizeof(rx_task_buffer),
+        .priority = (osPriority_t) THREAD_PRIORITY,
+        .tz_module = 0,
+        .reserved = 0,
     };
 
-    /* Rx1 task definitions */
-    static inline osEventFlagsId_t can_rx1_event_ = osEventFlagsNew(NULL);
-    static inline osThreadId_t rx1_task_handle_;
-    static inline uint32_t rx1_task_buffer_[2048];
-    static inline StaticTask_t rx1_task_control_block_;
-    constexpr static const osThreadAttr_t rx1_task_attributes_ = {
-        .name = "CAN Rx1 Handler",
-        .cb_mem = &rx1_task_control_block_,
-        .cb_size = sizeof(rx1_task_control_block_),
-        .stack_mem = &rx1_task_buffer_[0],
-        .stack_size = sizeof(rx1_task_buffer_),
-        .priority = (osPriority_t) osPriorityRealtime,
-    };
+    /* Tx thread */
+    void HandleTx(void* argument);
 
-    /* Rx2 task definitions */
-    static inline osEventFlagsId_t can_rx2_event_ = osEventFlagsNew(NULL);
-    static inline osThreadId_t rx2_task_handle_;
-    static inline uint32_t rx2_task_buffer_[2048];
-    static inline StaticTask_t rx2_task_control_block_;
-    constexpr static const osThreadAttr_t rx2_task_attributes_ = {
-        .name = "CAN Rx2 Handler",
-        .cb_mem = &rx2_task_control_block_,
-        .cb_size = sizeof(rx2_task_control_block_),
-        .stack_mem = &rx2_task_buffer_[0],
-        .stack_size = sizeof(rx2_task_buffer_),
-        .priority = (osPriority_t) osPriorityRealtime,
-    };
+    /* Rx thread */
+    void HandleRx(void* argument);
 
-    
-    static inline CAN_HandleTypeDef* hcan1_;            /* Pointer to HAL CAN module */
-    static inline CAN_HandleTypeDef* hcan2_;            /* Pointer to HAL CAN module */
+    /* Tx timeout handler thread */
+    void HandleTxTimeout();     // TODO: Test reset functionality
+};
 
-    static inline CANMessage* tx_msg_;     /* Current message to send */
-    static inline etl::atomic<bool> tx1_sent_ = true;   /* True if tx_msg_ was successfully sent on hcan1_, false if failed to send */
-    static inline etl::atomic<bool> tx2_sent_ = true;   /* True if tx_msgs_ was successfully sent on hcan2_, false if failed to send */
-    
-    static inline uint32_t num_rx_msgs_ = 0;                                                /* Number of stored Rx messages */
-    static inline etl::map<uint32_t, CANMessage*, MAX_RX_MSGS> rx_messages_;   /* Map to store all receivable messages */
-    static inline etl::atomic<bool> rx_func_executed_ = false;
-
-
-    static void Tx1Send(void *argument);     /* Receive hcan2_ message, update rx_messages_, call message funcptr */
-    static void Tx2Send(void *argument);        /* Send message on hcan2_ */
-    static void Rx1Receive(void *argument);     /* Receive hcan1_ message, update rx_messages_, call message funcptr */
-    static void Rx2Receive(void *argument);     /* Receive hcan2_ message, update rx_messages_, call message funcptr */
+class CANController {
+public:
+    static HAL_StatusTypeDef AddDevice(CANDevice *device);
+    static HAL_StatusTypeDef AddRxMessage(CANMessage *msg);
+    static HAL_StatusTypeDef AddRxMessages(CANMessage *msg[], uint32_t num_msgs);
+    static HAL_StatusTypeDef AddFilterAll();
+    static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority);      // TODO
+    static HAL_StatusTypeDef AddFilterIdRange(uint32_t can_id, uint32_t range, uint32_t id_type, uint32_t rtr_mode, uint32_t priority); // TODO
+    static HAL_StatusTypeDef Start();
+    static HAL_StatusTypeDef Send(CANMessage *msg);
+    static HAL_StatusTypeDef SendOnDevice(CANDevice *device, CANMessage *msg);
+    static HAL_StatusTypeDef GetMessage(uint32_t can_id, CANMessage *msg);
+    static HAL_StatusTypeDef GetDeviceStatus(CANDevice *device);    // TODO
+    static void RxCallback(CAN_HandleTypeDef *hcan);
+protected:
+    static inline etl::vector<CANDevice*, 3> devices_;
+    static inline etl::map<uint32_t, CANMessage*, MAX_RX_MSGS> rx_messages_;
+    static inline uint32_t num_msgs_ = 0;
+    static inline etl::vector<CAN_FilterTypeDef, 14> filters_;
+    static inline uint32_t num_filter_sections_ = 0;    // number of 16-bit filter sections used
 };
 
 #endif  /* SG_CAN_HPP_ */

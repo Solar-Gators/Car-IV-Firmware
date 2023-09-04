@@ -11,7 +11,4 @@ extern "C" void CPP_UserSetup(void);
 extern "C" CAN_HandleTypeDef hcan1;
 
 
-
-
-
 #endif /* USER_HPP_ */
