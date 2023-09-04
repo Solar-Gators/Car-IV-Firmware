@@ -1,0 +1,27 @@
+name: Nucleo L476RG CAN Dev
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Go to project directory
+        run: cd Firmware/nucleol476rg-CAN-dev
+
+      - name: Set up CMake
+        uses: threeal/cmake-action@1.3.0
+
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build

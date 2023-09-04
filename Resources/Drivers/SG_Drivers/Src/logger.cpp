@@ -2,36 +2,24 @@
 
 void Logger::LogInfo(const char * sFormat, ...) {
     PrintHeader("INFO");
-#ifdef USE_FREERTOS
-    PrintThread();
-#endif
     va_list ParamList;
     LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogDebug(const char * sFormat, ...) {
     PrintHeader("DEBUG");
-#ifdef USE_FREERTOS
-    PrintThread();
-#endif
     va_list ParamList;
     LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogWarning(const char * sFormat, ...) {
     PrintHeader("WARNING");
-#ifdef USE_FREERTOS
-    PrintThread();
-#endif
     va_list ParamList;
     LogCommon(sFormat, ParamList);
 }
 
 void Logger::LogError(const char * sFormat, ...) {
     PrintHeader("ERROR");
-#ifdef USE_FREERTOS
-    PrintThread();
-#endif
     va_list ParamList;
     LogCommon(sFormat, ParamList);
 }
@@ -48,6 +36,7 @@ void Logger::PrintThread() {
 }
 
 void Logger::LogCommon(const char * sFormat, ...) {
+    PrintThread();
     va_list ParamList;
     va_start(ParamList, sFormat);
     SEGGER_RTT_vprintf(0, sFormat, &ParamList);
