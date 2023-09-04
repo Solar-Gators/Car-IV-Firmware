@@ -1,8 +1,6 @@
 name: Nucleo L476RG CAN Dev
 on:
   push:
-    branches:
-      - main
 
 jobs:
   build:
@@ -14,14 +12,13 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Go to project directory
-        run: cd Firmware/nucleol476rg-CAN-dev
+      - name: Install Arm GNU Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '12.3.Rel1' # <-- The compiler release to use
 
-      - name: Set up CMake
-        uses: threeal/cmake-action@1.3.0
-
-      - name: Configure CMake
-        run: cmake -S . -B build
-
-      - name: Build
-        run: cmake --build build
+      - name: Build project
+        run: |
+          cd Firmware/nucleol476rg-CAN-dev
+          cmake -S . -B build
+          cmake --build build
