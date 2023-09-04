@@ -1,4 +1,4 @@
-name: Nucleo L476RG CAN Dev
+name: Build Action
 on:
   push:
 
@@ -17,7 +17,7 @@ jobs:
         with:
           release: '12.3.Rel1' # <-- The compiler release to use
 
-      - name: Build project
+      - name: Build nucleol476rg-CAN-dev project
         run: |
           cd Firmware/nucleol476rg-CAN-dev
           cmake -S . -B build

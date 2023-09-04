@@ -113,7 +113,6 @@ target_compile_options(${EXECUTABLE} PRIVATE
     -Wall
     -Wextra
     -Wno-unused-parameter
-    -Wno-pmf-conversions
     $<$<COMPILE_LANGUAGE:CXX>:
         -Wno-volatile
         -Wsuggest-override>

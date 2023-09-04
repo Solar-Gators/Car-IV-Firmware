@@ -1,3 +1,4 @@
+![workflow badge](https://github.com/Solar-Gators/Car-IV-Firmware/actions/workflows/nucleol476rg-CAN-dev.yml/badge.svg)
 ## Environment Setup for Windows
 #### Download Tools
 1. [Install Visual Studio Code](https://code.visualstudio.com/download). Recommended to also install the C/C++ Extension Pack, CMake Tools, Gitlens, and Hex Editor extensions.
