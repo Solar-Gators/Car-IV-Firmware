@@ -12,6 +12,7 @@
 #include "stdint.h"
 #include "etl/map.h"
 #include "etl/vector.h"
+#include "etl/deque.h"
 #include "cmsis_os.h"
 
 #include "logger.hpp"
@@ -146,8 +147,7 @@ protected:
     static inline etl::vector<CANDevice*, 3> devices_;
     static inline etl::map<uint32_t, CANMessage*, MAX_RX_MSGS> rx_messages_;
     static inline uint32_t num_msgs_ = 0;
-    static inline etl::vector<CAN_FilterTypeDef, 14> filters_;
-    static inline uint32_t num_filter_sections_ = 0;    // number of 16-bit filter sections used
+    static inline etl::deque<CAN_FilterTypeDef, NUM_FILTER_BANKS*2> filters_;
 };
 
 #endif  /* SG_CAN_HPP_ */

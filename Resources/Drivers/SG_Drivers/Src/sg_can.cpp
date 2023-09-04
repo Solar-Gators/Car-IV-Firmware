@@ -4,6 +4,7 @@
   * @brief  Starts threads, starts CAN modules, enables interrupts
   * @retval HAL status
   */
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
 HAL_StatusTypeDef CANDevice::Start() {
     tx_task_id_ = osThreadNew((osThreadFunc_t)&CANDevice::HandleTx, this, &tx_task_attributes_);
     rx_task_id_ = osThreadNew((osThreadFunc_t)&CANDevice::HandleRx, this, &rx_task_attributes_);
@@ -128,6 +129,7 @@ void CANDevice::HandleRx(void* argument) {
   * @brief  Tx timeout callback. Called when Tx/Rx timeout timer expires.
   * @param  task_id Pointer to timed out thread.
   */
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
 void CANDevice::HandleTxTimeout() {
     #ifdef USE_LOGGING
     Logger::LogError("Tx Timeout\n");
@@ -230,10 +232,14 @@ HAL_StatusTypeDef CANController::AddFilterAll() {
   * @retval HAL status
   */
 HAL_StatusTypeDef CANController::AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority) {
-    // Define filter contents according to figure 523 in RM0351
+    // If all filters are used and last filter has mask (second ID) value occupied
+    if (filters_.full() && filters_.front().FilterMaskIdLow != 0)
+        return HAL_ERROR;
+
+    // Define filter contents according to figure 523 in RM0351. Using 32-bit filters only
     uint32_t filter_id;
     if (id_type == CAN_ID_STD) {
-        filter_id = (can_id << 5) | (rtr_mode << 3) | (id_type << 1);
+        filter_id = (can_id << 21) | id_type | rtr_mode;
     }
     else if (id_type == CAN_ID_EXT) {
         filter_id = (can_id << 8) | id_type | rtr_mode;
@@ -241,16 +247,105 @@ HAL_StatusTypeDef CANController::AddFilterId(uint32_t can_id, uint32_t id_type, 
     else
         return HAL_ERROR;
 
-    
+    // If filter mask field of last filter is empty, populate that section of the filter
+    if (filters_.size() > 0 && filters_.front().FilterMaskIdLow == 0) {
+        filters_.front().FilterMaskIdHigh = (filter_id >> 16) & 0xFFFF;
+        filters_.front().FilterMaskIdLow = filter_id & 0xFFFF;
+        // If priority is already high, keep it high. If it is low, set it to the priority of the current ID
+        if (filters_.front().FilterFIFOAssignment == CAN_RX_FIFO1)
+            filters_.front().FilterFIFOAssignment = (priority == CAN_PRIORITY_HIGH) ? CAN_RX_FIFO0 : CAN_RX_FIFO1;
+    }
+    // Else, create a new filter
+    else {
+        CAN_FilterTypeDef sFilterConfig = {
+            .FilterIdHigh = (filter_id >> 16) & 0xFFFF,
+            .FilterIdLow = filter_id & 0xFFFF,
+            .FilterMaskIdHigh = 0,
+            .FilterMaskIdLow = 0,
+            .FilterFIFOAssignment = (priority == CAN_PRIORITY_HIGH) ? CAN_RX_FIFO0 : CAN_RX_FIFO1,
+            .FilterBank = filters_.size(),
+            .FilterMode = CAN_FILTERMODE_IDLIST,
+            .FilterScale = CAN_FILTERSCALE_32BIT,
+            .FilterActivation = CAN_FILTER_ENABLE,
+            .SlaveStartFilterBank = 0,
+        };
+        filters_.push_front(sFilterConfig);
+    }    
     
     return HAL_OK;
 }
 
 /**
-  * @brief  Start all CAN devices
+  * @brief  Set CANController to accept messages with specified CAN ID and mask.
+  * @param  can_id CAN ID to accept
+  * @param  id_type CAN ID type (CAN_ID_STD or CAN_ID_EXT)
+  * @param  rtr_mode CAN RTR mode (CAN_RTR_DATA or CAN_RTR_REMOTE)
+  * @param  priority FIFO priority (CAN_PRIORITY_NORMAL or CAN_PRIORITY_HIGH)
+  * @retval HAL status
+  */
+HAL_StatusTypeDef CANController::AddFilterIdRange(uint32_t can_id, uint32_t range, uint32_t id_type, uint32_t rtr_mode, uint32_t priority) {
+    if (filters_.full())
+        return HAL_ERROR;
+    if (range == 0)
+        return HAL_ERROR;
+
+    // Find position of rightmost 1 in range
+    int32_t n = -1;
+    uint32_t counter = range;
+    while (counter) {
+        counter >>= 1;
+        n++;
+    }
+    // If range is not a power of 2, go to the next position to capture the entire range
+    if (range > (uint32_t)(1 << n))
+        n++;
+    // Set id mask to be all ones except for the n least significant bits
+    uint32_t id_mask = (0xFFFFFFFF >> n) << n;
+    
+
+    // Define filter contents according to figure 523 in RM0351. Using 32-bit filters only
+    uint32_t filter_id;
+    uint32_t filter_mask;
+    if (id_type == CAN_ID_STD) {
+        filter_id = (can_id << 21) | id_type | rtr_mode;
+        filter_mask = id_mask << 21 | 0b110;
+    }
+    else if (id_type == CAN_ID_EXT) {
+        filter_id = (can_id << 8) | id_type | rtr_mode;
+        filter_mask = id_mask << 8 | 0b110;
+    }
+    else
+        return HAL_ERROR;
+
+    CAN_FilterTypeDef sFilterConfig = {
+        .FilterIdHigh = (filter_id >> 16) & 0xFFFF,
+        .FilterIdLow = filter_id & 0xFFFF,
+        .FilterMaskIdHigh = (filter_mask >> 16) & 0xFFFF,
+        .FilterMaskIdLow = filter_mask & 0xFFFF,
+        .FilterFIFOAssignment = (priority == CAN_PRIORITY_HIGH) ? CAN_RX_FIFO0 : CAN_RX_FIFO1,
+        .FilterBank = filters_.size(),
+        .FilterMode = CAN_FILTERMODE_IDMASK,
+        .FilterScale = CAN_FILTERSCALE_32BIT,
+        .FilterActivation = CAN_FILTER_ENABLE,
+        .SlaveStartFilterBank = 0,
+    };
+
+    filters_.push_back(sFilterConfig);
+    
+    return HAL_OK;
+}
+
+/**
+  * @brief  Start all CAN devices, configure filters
   * @retval HAL status
   */
 HAL_StatusTypeDef CANController::Start() {
+    // Add filters to each device
+    for (auto filter : filters_)
+        for (auto device : devices_)
+            HAL_CAN_ConfigFilter(device->hcan_, &filter);
+
+    // Start all devices
     for (auto device : devices_)
         if (device->Start() != HAL_OK)
             return HAL_ERROR;
@@ -287,6 +382,7 @@ HAL_StatusTypeDef CANController::SendOnDevice(CANDevice *device, CANMessage *msg
   * @param  msg Pointer to CANMessage object
   * @retval HAL status
   */
+#pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
 HAL_StatusTypeDef CANController::GetMessage(uint32_t can_id, CANMessage *msg) {
     if (rx_messages_.find(can_id) == rx_messages_.end())
         return HAL_ERROR;
