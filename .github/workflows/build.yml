@@ -17,8 +17,23 @@ jobs:
         with:
           release: '12.3.Rel1' # <-- The compiler release to use
 
-      - name: Build nucleol476rg-CAN-dev project
+      - name: Build bms-prototype2
+        run: |
+          cd Firmware/bms-prototype2
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
+
+      - name: Build nucleol476rg-base
+        run: |
+          cd Firmware/nucleol476rg-base
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
+
+      - name: Build nucleol476rg-CAN-dev
         run: |
           cd Firmware/nucleol476rg-CAN-dev
           cmake -S . -B build
           cmake --build build
+          cd ../..

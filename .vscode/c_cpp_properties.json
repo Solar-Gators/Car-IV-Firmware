@@ -1,6 +1,6 @@
 {
     "env": {
-        "project_path": "Firmware/nucleol476rg-CAN-dev",
+        "project_path": "Firmware/nucleol476rg-base",      // Change this according to active project
         "project_includes": [
             "${project_path}/Core/Inc",
             "${project_path}/User/Inc"

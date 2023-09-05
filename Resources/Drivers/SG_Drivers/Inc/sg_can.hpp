@@ -13,7 +13,7 @@
 #include "etl/map.h"
 #include "etl/vector.h"
 #include "etl/deque.h"
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 
 #include "logger.hpp"
 
