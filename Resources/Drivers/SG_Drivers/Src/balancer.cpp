@@ -45,6 +45,25 @@ HAL_StatusTypeDef Balancer::SetFrequency(uint32_t frequency) {
 }
 
 /**
+  * @brief  Sets the period of the send / recv channel pair.
+  * @param  period Period in ns.
+  * @retval HAL Status
+  */
+HAL_StatusTypeDef Balancer::SetPeriod(uint32_t period) {
+    TIM_Base_InitTypeDef sConfig;
+    sConfig.Prescaler = 0;
+    sConfig.CounterMode = TIM_COUNTERMODE_UP;
+    sConfig.Period = (uint32_t)(((uint64_t)SystemCoreClock * period) / 1000000000);
+    sConfig.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    sConfig.RepetitionCounter = 0;
+    sConfig.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    this->send_htim->Init = sConfig;
+    this->recv_htim->Init = sConfig;
+
+    return HAL_TIM_Base_Init(this->send_htim);
+}
+
+/**
   * @brief  Sets the duty cycle of the send / recv channel pair.
   * @param  ratio Duty cycle of send channel out of 100.
   * @retval HAL Status
@@ -54,7 +73,7 @@ HAL_StatusTypeDef Balancer::SetRatio(uint32_t ratio) {
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
 
@@ -113,6 +132,11 @@ HAL_StatusTypeDef Balancer::Start() {
         uint32_t primary_channel = (send_channel < recv_channel) ? send_channel : recv_channel;
         status = HAL_TIM_PWM_Start(this->send_htim, primary_channel);
         if (status != HAL_OK) { return status; }
+
+        // Wait for timer to trigger before starting complementary channel
+        this->send_htim->Instance->SR &= ~TIM_SR_UIF;
+        while (!(this->send_htim->Instance->SR & TIM_SR_UIF));
+
         status = HAL_TIMEx_PWMN_Start(this->send_htim, primary_channel);
         if (status != HAL_OK) { return status; }
         return HAL_OK;
@@ -131,10 +155,24 @@ HAL_StatusTypeDef Balancer::Stop() {
 
     if (this->adjacent_channels) {
         uint32_t primary_channel = (send_channel < recv_channel) ? send_channel : recv_channel;
-        status = HAL_TIM_PWM_Stop(this->send_htim, primary_channel);
-        if (status != HAL_OK) { return status; }
-        status = HAL_TIMEx_PWMN_Stop(this->send_htim, primary_channel);
-        if (status != HAL_OK) { return status; }
+
+        TIM_TypeDef* instance = this->send_htim->Instance;
+
+        // Disable complementary channel first
+        instance->CCER &= (~primary_channel & 0x1FU);
+
+        // Wait for primary channel to go low
+        while (instance->CNT < instance->CCR1);
+
+        // Disable timer, then disable capture/compare
+        this->send_htim->Instance->CR1 &= ~TIM_CR1_CEN;
+        this->send_htim->Instance->CCER &= (~(primary_channel << 2) & 0x1FU);
+
+        // status = HAL_TIM_PWM_Stop(this->send_htim, primary_channel);
+        // if (status != HAL_OK) { return status; }
+        // status = HAL_TIMEx_PWMN_Stop(this->send_htim, primary_channel);
+        // if (status != HAL_OK) { return status; }
+
         return HAL_OK;
     }
 

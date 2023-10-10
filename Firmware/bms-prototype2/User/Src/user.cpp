@@ -20,14 +20,26 @@ extern "C" void CPP_UserSetup(void);
 */
 
 void CPP_UserSetup(void) {
-    Balancer bal8to2;
-    bal8to2.Init(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_2N);
-    bal8to2.SetFrequency(1000000);
-    bal8to2.SetRatio(17);
-    bal8to2.SetDeadTime(30);
-    bal8to2.Start();
+    // Balancer bal8to2;
+    // bal8to2.Init(&htim1, TIM_CHANNEL_2, &htim1, TIM_CHANNEL_2N);
+    // bal8to2.SetPeriod(3000);
+    // bal8to2.SetRatio(83);
+    // bal8to2.SetDeadTime(150);
+
+    // bal8to2.Start();
+    // HAL_Delay(1);
+    // bal8to2.Stop();
+    
 
     while (1) {
+        // directCommand(0x14)
+        uint8_t cell1_data = 0x14;
+        HAL_I2C_Master_Transmit(&hi2c1, 0x10, &cell1_data, 1, HAL_MAX_DELAY);
         
+        uint8_t data[2];
+        HAL_I2C_Master_Receive(&hi2c1, 0x11, data, 2, HAL_MAX_DELAY);
+
+        Logger::LogInfo("Cell 1: %d", data[0]);
+        Logger::LogInfo("Cell 1: %d", data[1]);
     }
 }

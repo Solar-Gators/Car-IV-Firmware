@@ -19,6 +19,7 @@ public:
     HAL_StatusTypeDef Init(TIM_HandleTypeDef* send_htim, uint32_t send_channel,
                             TIM_HandleTypeDef* recv_htim , uint32_t recv_channel);
     HAL_StatusTypeDef SetFrequency(uint32_t frequency);
+    HAL_StatusTypeDef SetPeriod(uint32_t period);
     HAL_StatusTypeDef SetRatio(uint32_t ratio);
     HAL_StatusTypeDef SetDeadTime(uint32_t deadtime);
     HAL_StatusTypeDef Start();

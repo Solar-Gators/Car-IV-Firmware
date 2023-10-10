@@ -3,6 +3,7 @@
 
 #include "main.h"
 
+#include "logger.hpp"
 #include "balancer.hpp"
 
 extern "C" I2C_HandleTypeDef hi2c1;
