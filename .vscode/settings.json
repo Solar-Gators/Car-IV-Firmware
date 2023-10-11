@@ -13,7 +13,12 @@
         "unordered_set": "cpp",
         "vector": "cpp",
         "rope": "cpp",
-        "slist": "cpp"
+        "slist": "cpp",
+        "stm32f4xx_hal.h": "c",
+        "stm32f4xx_hal_conf.h": "c",
+        "stm32f4xx_hal_rcc.h": "c",
+        "stm32f4xx_hal_def.h": "c",
+        "fatfs.h": "c"
     },
     "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe"

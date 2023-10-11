@@ -1,0 +1,16 @@
+name: C++ Unit Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'true'
+    - run: ./scripts/install.sh
+    - run: make test

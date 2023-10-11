@@ -1,0 +1,6 @@
+[submodule "tests/cpputest"]
+	path = tests/cpputest
+	url = https://github.com/cpputest/cpputest.git
+[submodule "src/etl"]
+	path = src/etl
+	url = https://github.com/ETLCPP/etl

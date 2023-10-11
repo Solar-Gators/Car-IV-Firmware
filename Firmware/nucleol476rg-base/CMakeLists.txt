@@ -74,8 +74,7 @@ add_executable(${EXECUTABLE} ${GLOB_SOURCES} ${RECURSE_SOURCES} ${DRIVER_SOURCES
 # Define startup ASM file and linker script
 ########################################################################
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_L)
-set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/startup_${MCU_MODEL_L}.s)
-set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld)
+set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/*.ld)
 
 ########################################################################
 # Language settings
