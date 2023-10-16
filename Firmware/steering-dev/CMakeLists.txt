@@ -10,9 +10,9 @@ set(CMAKE_BUILD_TYPE Debug)
 # MCU information
 # Edit this section based on the target platform
 ########################################################################
-set(MCU_FAMILY STM32L4xx)
-set(MCU_MODEL STM32L476xx)
-set(MCU_PART STM32L476RGTx)
+set(MCU_FAMILY STM32F4xx)
+set(MCU_MODEL STM32F446xx)
+set(MCU_PART STM32L476RCTX)
 
 set(CPU_PARAMETERS
     -mcpu=cortex-m4
@@ -34,6 +34,7 @@ set(THIRD_PARTY_INCLUDES
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/Config
     ${RESOURCES_DIR}/Middlewares/Third_Party/etl/include
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
@@ -57,7 +58,10 @@ file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c)
 file(GLOB DRIVER_SOURCES
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp)
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/*.c
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/option/*.c 
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ILI9341.cpp)
     
     
 ######### You shouldn't have to edit anything below this line ##########
@@ -74,7 +78,7 @@ add_executable(${EXECUTABLE} ${GLOB_SOURCES} ${RECURSE_SOURCES} ${DRIVER_SOURCES
 # Define startup ASM file and linker script
 ########################################################################
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_L)
-set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld)
+set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/STM32F446RCTX_FLASH.ld)
 
 ########################################################################
 # Language settings

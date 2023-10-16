@@ -30,7 +30,7 @@ const osThreadAttr_t regular_task_attributes = {
 
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
-// Global variables
+/* CAN definitions */
 CANMessage msg1_static = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
 CANMessage msg2_static = CANMessage(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
 CANDevice can1 = CANDevice(&hcan1);

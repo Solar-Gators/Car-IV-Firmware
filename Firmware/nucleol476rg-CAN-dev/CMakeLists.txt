@@ -125,6 +125,7 @@ target_link_options(${EXECUTABLE} PRIVATE
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map,--cref
     --specs=nosys.specs
     -Wl,--undefined,_printf_float
+    -Wl,--no-warn-rwx-segment
     -Wl,--start-group
     -lc
     -lm

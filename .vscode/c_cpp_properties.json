@@ -23,7 +23,7 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
         "stm32f446rc_sources": [
-            "Resources/Drivers/STM32L4xx_HAL_Driver/Src",
+            "Resources/Drivers/STM32F4xx_HAL_Driver/Src",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
@@ -139,6 +139,37 @@
                 "${legacy_includes}",
                 "Firmware/steering-2023/Core/Inc",     // Project dependent
                 "Firmware/steering-2023/User/Inc",     // Project dependent
+                "${stm32f446rc_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32f446rc_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32F446xx",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "steering-dev",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "${legacy_includes}",
+                "Firmware/steering-dev/Core/Inc",     // Project dependent
+                "Firmware/steering-dev/User/Inc",     // Project dependent
                 "${stm32f446rc_includes}"               // Project dependent
             ],
             "browse": {

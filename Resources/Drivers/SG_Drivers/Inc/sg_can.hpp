@@ -30,6 +30,18 @@
 #define CAN_FILTER_ALL      0                   /* Accept all messages */
 #define CAN_FILTER_CUSTOM   2                   /* Accept messages in rx_messages_ */
 
+/**
+ * Class for storing information needed to transmit a single CAN message.
+ * 
+ * @param can_id        CAN ID, stores standard or extended ID types
+ * @param id_type       CAN ID type, can be CAN_ID_STD or CAN_ID_EXT
+ * @param rtr_mode      RTR mode, can be CAN_RTR_DATA or CAN_RTR_REMOTE
+ * @param len           Length of payload data
+ * @param data          Payload data array, maximum of 8 bytes
+ * @param rxCallback    Pointer to rx callback function
+ * @param mutex_id_     Mutex handle for object
+ * 
+*/
 class CANMessage {
 public:
     CANMessage(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t len):
@@ -61,7 +73,7 @@ public:
     void (*rxCallback)(uint8_t data[]);     /* pointer to rx callback function */
     osMutexId_t         mutex_id_;          /* mutex id for message */
 
-protected:
+private:
     StaticSemaphore_t   mutex_control_block_;
     const osMutexAttr_t mutex_attributes_ = {
         .name = "CANMessage Mutex",
@@ -71,6 +83,12 @@ protected:
     };
 };
 
+/**
+ * Class for controlling a single HAL CAN device.
+ * 
+ * Sends and receives CAN messages on a single CAN peripheral.
+ * Spawns two threads, one for handling Tx and one for handling Rx.
+*/
 class CANDevice {
     friend class CANController;
 public:
@@ -119,16 +137,19 @@ protected:
         .reserved = 0,
     };
 
-    /* Tx thread */
+    /* Tx thread function */
     void HandleTx(void* argument);
 
-    /* Rx thread */
+    /* Rx thread function */
     void HandleRx(void* argument);
 
     /* Tx timeout handler thread */
     void HandleTxTimeout();     // TODO: Test reset functionality
 };
 
+/**
+ * Class for controlling CAN devices and messages.
+*/
 class CANController {
 public:
     static HAL_StatusTypeDef AddDevice(CANDevice *device);
