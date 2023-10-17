@@ -10,7 +10,7 @@
 
 #include "main.h"
 #include "logger.hpp"
-#include "ILI9341.hpp"
+#include "UI.hpp"
 
 extern "C" void CPP_UserSetup(void);
 

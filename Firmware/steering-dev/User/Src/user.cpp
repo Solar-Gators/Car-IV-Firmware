@@ -12,21 +12,12 @@ void CPP_UserSetup() {
 
 
 	ILI9341 display(240, 320);
-	display.Init();
-	display.ClearScreen(0x0000);
-	display.SetRotation(1);
 
-	display.DrawRect(0, 0, 220, 60, RGB565_WHITE);
-	display.DrawRect(220, 0, 100, 60, RGB565_WHITE);
-	display.DrawRect(0, 60, 320, 30, RGB565_WHITE);
-	display.DrawRect(0, 90, 320, 150, RGB565_WHITE);
+	UI ui(&display);
 
-
-	display.SetTextSize(4);
-	display.DrawText(16, 15, "20.8 MPH", RGB565_YELLOW);
-
-	display.SetTextSize(3);
-	display.DrawText(242, 20, "ECO", RGB565_GREEN);
+	ui.Init();
+	ui.UpdateSpeed(35.23);
+	ui.UpdateMode(MODE_PWR);
 
 	display.SetTextSize(2);
 	display.DrawText(20, 67, "<    PV   BMS   MC    >", RGB565_GREEN);
@@ -57,9 +48,15 @@ void CPP_UserSetup() {
 	display.DrawText(232, 191, "W Solar", RGB565_PINK);
 	display.DrawText(232, 219, "W Motor", RGB565_DARK_GREEN);
 
-	
+	float speed = 1.5;
+
 	while (1) {
 		Logger::LogInfo("while\n");
+		ui.UpdateSpeed(speed++);
+		ui.IncrementTime();
+		ui.ToggleLeftTurn();
+		ui.ToggleRightTurn();
+		ui.UpdatePVStatus(false);
 		HAL_Delay(1000);
 	}
 }

@@ -61,7 +61,8 @@ file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/*.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/option/*.c 
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ILI9341.cpp)
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ILI9341.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/UI.cpp)
     
     
 ######### You shouldn't have to edit anything below this line ##########
