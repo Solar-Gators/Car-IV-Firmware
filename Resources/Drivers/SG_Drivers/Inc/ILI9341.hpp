@@ -25,7 +25,7 @@
 #define RGB565_DARK_GREEN   0x8F00
 #define RGB565_CYAN         0x7FFF
 #define RGB565_YELLOW       0xFFE0
-#define RGB565_GRAY         0x2104
+#define RGB565_GRAY         0x6A24
 #define RGB565_PURPLE       0xF11F
 #define RGB565_ORANGE       0xFD20
 #define RGB565_PINK         0xFDBA
