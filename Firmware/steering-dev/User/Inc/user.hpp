@@ -12,6 +12,4 @@
 #include "logger.hpp"
 #include "UI.hpp"
 
-extern "C" void CPP_UserSetup(void);
-
 #endif

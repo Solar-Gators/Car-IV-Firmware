@@ -41,6 +41,7 @@ public:
     HAL_StatusTypeDef UpdateNetPower(float value);
     HAL_StatusTypeDef UpdateSolarPower(float value);
     HAL_StatusTypeDef UpdateMotorPower(float value);
+    // TODO: Add soft reset for display
 protected:
     ILI9341* display_;
     bool left_turn_ = false;

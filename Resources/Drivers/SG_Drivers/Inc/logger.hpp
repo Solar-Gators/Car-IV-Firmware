@@ -1,3 +1,10 @@
+/*
+ * logger.hpp
+ *
+ *  Created on: July 1, 2023
+ *      Author: Matthew Shen
+ */
+
 #ifndef LOGGER_HPP_
 #define LOGGER_HPP_
 

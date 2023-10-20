@@ -7,6 +7,37 @@
 
 #include "user.hpp"
 
+extern "C" void CPP_UserSetup(void);
+
+/* Thread function prototypes */
+/**
+ * @brief Periodic task that runs at 1Hz
+ * Info and power data is updated on the display
+*/
+void PeriodicTask2(void *argument);
+/**
+ * @brief Periodic task that runs at 5Hz
+*/
+void PeriodicTask10(void *argument);
+
+/*  */
+
+/* Periodic timer definitions */
+osTimerAttr_t periodic2_timer_attr = {
+	.name = "Periodic Task 2",
+	.attr_bits = 0,
+	.cb_mem = NULL,
+	.cb_size = 0,
+};
+osTimerAttr_t periodic10_timer_attr = {
+	.name = "Periodic Task 10",
+	.attr_bits = 0,
+	.cb_mem = NULL,
+	.cb_size = 0,
+};
+
+
+
 void CPP_UserSetup() {
 	Logger::LogInfo("Entered user setup\n");
 

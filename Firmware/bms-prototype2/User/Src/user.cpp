@@ -29,17 +29,19 @@ void CPP_UserSetup(void) {
     // bal8to2.Start();
     // HAL_Delay(1);
     // bal8to2.Stop();
+
+    BQ76952 bms;
+    bms.Init(&hi2c1);
     
 
     while (1) {
-        // directCommand(0x14)
-        uint8_t cell1_data = 0x14;
-        HAL_I2C_Master_Transmit(&hi2c1, 0x10, &cell1_data, 1, HAL_MAX_DELAY);
-        
-        uint8_t data[2];
-        HAL_I2C_Master_Receive(&hi2c1, 0x11, data, 2, HAL_MAX_DELAY);
+        bms.ReadVoltages();
 
-        Logger::LogInfo("Cell 1: %d", data[0]);
-        Logger::LogInfo("Cell 1: %d", data[1]);
+        Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
+        Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
+        Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
+        Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
+
+        HAL_Delay(1000);
     }
 }

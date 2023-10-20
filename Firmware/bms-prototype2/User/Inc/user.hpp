@@ -5,6 +5,7 @@
 
 #include "logger.hpp"
 #include "balancer.hpp"
+#include "BQ76952.hpp"
 
 extern "C" I2C_HandleTypeDef hi2c1;
 extern "C" TIM_HandleTypeDef htim1;

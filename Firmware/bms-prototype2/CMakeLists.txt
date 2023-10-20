@@ -58,6 +58,7 @@ file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c)
 file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/balancer.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/BQ76952.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp)
     
     
