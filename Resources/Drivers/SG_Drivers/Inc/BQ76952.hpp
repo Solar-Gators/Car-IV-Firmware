@@ -12,6 +12,7 @@
 
 #include "main.h"
 #include "BQ769X2_Registers.h"
+#include <math.h>
 
 #define BQ_I2C_ADDR_WRITE 0x10
 #define BQ_I2C_ADDR_READ 0x11
@@ -22,6 +23,7 @@ public:
     HAL_StatusTypeDef ConfigUpdateMode(bool config_update); // TODO
     HAL_StatusTypeDef ReadVoltages();       // TODO: Add support for connected cells
     HAL_StatusTypeDef ReadSafetyFaults();
+    HAL_StatusTypeDef ReadCurrent();
 
     HAL_StatusTypeDef Shutdown();
 
@@ -34,6 +36,8 @@ public:
 private:
     HAL_StatusTypeDef WriteBytes(const uint8_t reg_addr, const uint8_t *data, const size_t num_bytes);
     HAL_StatusTypeDef ReadBytes(uint8_t reg_addr, uint8_t *data, const size_t num_bytes);
+    HAL_StatusTypeDef DirectReadU1(const uint8_t reg_addr, uint8_t *value);
+    HAL_StatusTypeDef DirectReadI1(const uint8_t reg_addr, int8_t *value);
     HAL_StatusTypeDef DirectReadU2(const uint8_t reg_addr, uint16_t *value); // TODO
     HAL_StatusTypeDef DirectReadI2(const uint8_t reg_addr, int16_t *value); // TODO
     HAL_StatusTypeDef SubcmdRead(const uint16_t subcmd, uint32_t *value, const size_t num_bytes);
@@ -45,6 +49,7 @@ private:
     HAL_StatusTypeDef SubcmdReadI4(const uint16_t subcmd, int32_t *value);     // TODO: Remove
     HAL_StatusTypeDef SubcmdWrite(const uint16_t subcmd, const uint32_t value, const size_t num_bytes);
     HAL_StatusTypeDef SubcmdCmdOnly(const uint16_t subcmd);
+    HAL_StatusTypeDef EnableThermistorPins(); // should get called by eventual init function
 
     I2C_HandleTypeDef *hi2c_;
 
@@ -52,6 +57,7 @@ private:
     int16_t avg_cell_voltage_;          // Average cell voltage in mV
     int16_t high_cell_voltage_;         // Highest cell voltage in mV
     int16_t low_cell_voltage_;          // Lowest cell voltage in mV
+    int16_t pack_current_;
 
     int16_t pack_voltage_;              // Pack voltage in 10 mV
     int16_t stack_voltage_;             // Stack voltage in 10 mV
