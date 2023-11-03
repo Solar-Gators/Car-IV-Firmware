@@ -7,6 +7,24 @@ HAL_StatusTypeDef BQ76952::Init(I2C_HandleTypeDef *hi2c){
     return HAL_I2C_IsDeviceReady(hi2c_, BQ_I2C_ADDR_WRITE, 10, 50);
 }
 
+HAL_StatusTypeDef BQ76952::ConfigUpdate(bool config_update){
+    HAL_StatusTypeDef status;
+
+    if (config_update) {
+        status = bq769x2_subcmd_cmd_only(BQ769X2_SUBCMD_SET_CFGUPDATE);
+    }
+    else {
+        status = bq769x2_subcmd_cmd_only(BQ769X2_SUBCMD_EXIT_CFGUPDATE);
+    }
+
+    if(status != HAL_OK)
+    	return status;
+
+    config_update_enabled_ = config_update;
+
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef BQ76952::ReadVoltages() {
     HAL_StatusTypeDef status = HAL_OK;
 
@@ -42,7 +60,7 @@ HAL_StatusTypeDef BQ76952::ReadCurrent(){
 	int16_t current = 0;
 	DirectReadI2(BQ769X2_CMD_CURRENT_CC2, &current);
 
-	pack_current_ = current * 1e-2F;
+	pack_current_ = current * 0.01;
 }
 
 HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
@@ -104,6 +122,10 @@ int16_t BQ76952::GetLowCellVoltage() {
     return low_cell_voltage_;
 }
 
+bool BQ76952::GetConfigUpdateStatus(){
+	return config_update_enabled;
+}
+
 HAL_StatusTypeDef BQ76952::WriteBytes(const uint8_t reg_addr, const uint8_t *data, const size_t num_bytes) {
     uint8_t buf[5];
 
@@ -121,31 +143,6 @@ HAL_StatusTypeDef BQ76952::ReadBytes(uint8_t reg_addr, uint8_t *data, const size
     HAL_I2C_Master_Transmit(hi2c_, BQ_I2C_ADDR_READ, &reg_addr, 1, 1000);
     
     return HAL_I2C_Master_Receive(hi2c_, BQ_I2C_ADDR_READ, data, num_bytes, 1000);
-}
-
-HAL_StatusTypeDef BQ76952::DirectReadU1(const uint8_t reg_addr, uint8_t *value){
-	uint8_t *buf;
-
-	HAL_StatusTypeDef status = ReadBytes(reg_addr, buf, 1);
-
-    if (status != HAL_OK)
-        return status;
-
-    *value = *buf;
-
-    return HAL_OK;
-}
-HAL_StatusTypeDef BQ76952::DirectReadI1(const uint8_t reg_addr, int8_t *value){
-    uint8_t *buf;
-
-    HAL_StatusTypeDef status = ReadBytes(reg_addr, buf, 1);
-
-    if (status != HAL_OK)
-        return status;
-
-    *value = (int8_t)(*buf);
-
-    return HAL_OK;
 }
 
 HAL_StatusTypeDef BQ76952::DirectReadU2(const uint8_t reg_addr, uint16_t *value) {
@@ -306,6 +303,17 @@ HAL_StatusTypeDef BQ76952::SubcmdReadI4(const uint16_t subcmd, int32_t *value) {
     return HAL_OK;
 }
 
+HAL_StatusTypeDef BQ76952::SubcmdReadF4(const uint16_t subcmd, float *value){
+	float f32;
+	HAL_StatusTypeDef status = SubcmdRead(subcmd, (uint32_t *)&f32, 4);
+
+    if (status != HAL_OK)
+        return status;
+
+    *value = f32;
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef BQ76952::SubcmdWrite(const uint16_t subcmd, const uint32_t value, const size_t num_bytes) {
     uint8_t buf_data[4];
     uint8_t buf_subcmd[2] = { subcmd & 0x00FF, subcmd >> 8 };
@@ -328,9 +336,130 @@ HAL_StatusTypeDef BQ76952::SubcmdWrite(const uint16_t subcmd, const uint32_t val
 }
 
 HAL_StatusTypeDef BQ76952::SubcmdCmdOnly(const uint16_t subcmd) {
-    return SubcmdWrite(BQ769X2_CMD_SUBCMD_LOWER, buf_subcmd, 2);
+    return SubcmdWrite(subcmd, 0, 0);
 }
 
-HAL_StatusTypeDef EnableThermistorPins(){
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteU1(const uint16_t subcmd, uint8_t value) {
+    return SubcmdWrite(subcmd, value, 1);
+}
 
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteU2(const uint16_t subcmd, uint16_t value) {
+    return SubcmdWrite(subcmd, value, 2);
+}
+
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteU4(const uint16_t subcmd, uint32_t value) {
+    return SubcmdWrite(subcmd, value, 4);
+}
+
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteI1(const uint16_t subcmd, int8_t value) {
+    return SubcmdWrite(subcmd, value, 1);
+}
+
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteI2(const uint16_t subcmd, int16_t value) {
+    return SubcmdWrite(subcmd, value, 2);
+}
+
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteI4(const uint16_t subcmd, int32_t value) {
+    return SubcmdWrite(subcmd, value, 4);
+}
+
+HAL_StatusTypeDef BQ76952::SubcmdCmdWriteF4(const uint16_t subcmd, float value) {
+    uint32_t *u32 = (uint32_t *)&value;
+    return SubcmdWrite(subcmd, *u32, 4);
+}
+
+HAL_StatusTypeDef BQ76952::DatamemReadU1(const uint16_t reg_addr, uint8_t *value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr)){
+		return HAL_ERROR;
+	}
+	uint32_t u32;
+	HAL_StatusTypeDef status = SubcmdRead(reg_addr, &u32, 1);
+	if(status == HAL_OK){
+		*value = (uint8_t)u32;
+	}
+	return status;
+}
+HAL_StatusTypeDef BQ76952::DatamemWriteU1(const uint16_t reg_addr, uint8_t value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+		return HAL_ERROR;
+	}
+	return SubcmdWrite(reg_addr, value, 1);
+}
+HAL_StatusTypeDef BQ76952::DatamemWriteU2(const uint16_t reg_addr, uint16_t value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+		return HAL_ERROR;
+	}
+	return SubcmdWrite(reg_addr, value, 2);
+}
+HAL_StatusTypeDef BQ76952::DatamemWriteI1(const uint16_t reg_addr, int8_t value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+		return HAL_ERROR;
+	}
+	return SubcmdWrite(reg_addr, value, 1);
+}
+HAL_StatusTypeDef BQ76952::DatamemWriteI2(const uint16_t reg_addr, int16_t value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+		return HAL_ERROR;
+	}
+	return SubcmdWrite(reg_addr, value, 2);
+}
+HAL_StatusTypeDef BQ76952::DatamemWriteF4(const uint16_t reg_addr, float value){
+	if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+		return HAL_ERROR;
+	}
+
+	uint32_t *u32 = (uint32_t *)&value;
+
+	return SubcmdWrite(reg_addr, *u32, 4);
+}
+
+HAL_StatusTypeDef BQ76952::EnableThermistorPins(){
+	HAL_StatusTypeDef status;
+
+	// need to talk to Matthew about what settins to configure thermistor to (18 or 180 kOhm, which temperature model to use)
+
+	//set ALERT for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_ALERT, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+	//set TS1 for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_TS1, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+	//set TS2 for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_TS2, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+	//set TS3 for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_TS3, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+	//set HDQ for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_HDQ, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+    //set CFETOFF for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_CFETOFF, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+    //set DFETOFF for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_DFETOFF, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+    //set DCHG for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_DCHG, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
+
+    //set DDSG for 18k, 18k curve, for use in measuring cell
+	status = DatamemWriteU1(BQ769X2_SET_CONF_DDSG, 0b00000111);
+    if(status != HAL_OK)
+    	return status;
 }
