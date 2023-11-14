@@ -83,6 +83,33 @@
             "cppStandard": "c++17"
         },
         {
+            "name": "matthew-junior-design",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/matthew-junior-design/Core/Inc",     // Project dependent
+                "Firmware/matthew-junior-design/User/Inc",     // Project dependent
+                "${stm32f072rb_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32f072rb_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32F072xB",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m0",
+                "-mthumb"],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
             "name": "nucleof072rb-base",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
@@ -102,11 +129,8 @@
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
-                "-mcpu=cortex-m4",
-                "-mthumb",
-                "-mfpu=fpv4-sp-d16",
-                "-mfloat-abi=hard"
-            ],
+                "-mcpu=cortex-m0",
+                "-mthumb"],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
