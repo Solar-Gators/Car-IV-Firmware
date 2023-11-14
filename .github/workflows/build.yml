@@ -45,9 +45,9 @@ jobs:
           cmake --build build
           cd ../..
 
-      - name: Build steering-2023
+      - name: Build steering-dev
         run: |
-          cd Firmware/steering-2023
+          cd Firmware/steering-dev
           cmake -S . -B build
           cmake --build build
           cd ../..
