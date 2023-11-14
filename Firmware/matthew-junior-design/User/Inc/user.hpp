@@ -7,5 +7,6 @@
 
 #include "cmsis_os.h"
 #include "logger.hpp"
+#include "LTC1661.hpp"
 
 #endif /* USER_HPP_ */

@@ -11,6 +11,8 @@
 
 extern "C" void CPP_UserSetup(void);
 
+extern "C" SPI_HandleTypeDef hspi1;
+
 /* Task function prototypes */
 void PeriodicTask1(void *argument);
 void RegularTask1(void *argument);
@@ -45,6 +47,17 @@ osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
 
 void CPP_UserSetup(void) {
+    // DAC Test
+    LTC1661 dac = LTC1661(&hspi1);
+    dac.Wake();
+    
+
+    while (1) {
+        dac.LoadA(1000);
+        HAL_Delay(1000);
+    }
+
+
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
     osTimerStart(periodic_timer_id, 1000);
 }

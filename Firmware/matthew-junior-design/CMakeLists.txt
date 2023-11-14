@@ -57,7 +57,8 @@ file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c)
 file(GLOB DRIVER_SOURCES
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp)
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/LTC1661.cpp)
     
 list(REMOVE_ITEM RECURSE_SOURCES
     ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Src/stm32f0xx_hal_timebase_rtc_alarm_template.c
