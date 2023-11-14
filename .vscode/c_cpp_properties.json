@@ -16,6 +16,17 @@
             "Resources/Drivers/Legacy_BSP/DataModules/inc",
             "Resources/Drivers/Legacy_BSP/Drivers/inc"
         ],
+        "stm32f072rb_includes": [
+            "Resources/Drivers/CMSIS/Device/ST/STM32F0xx/Include",
+            "Resources/Drivers/STM32F0xx_HAL_Driver/Inc",
+            "Resources/Drivers/STM32F0xx_HAL_Driver/Inc/Legacy",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0"
+        ],
+        "stm32f072rb_sources": [
+            "Resources/Drivers/STM32F0xx_HAL_Driver/Src",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
+            "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0"
+        ],
         "stm32f446rc_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
             "Resources/Drivers/STM32F4xx_HAL_Driver/Inc",
@@ -58,6 +69,36 @@
             },
             "defines": [
                 "STM32L476xx",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "nucleof072rb-base",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/nucleof072rb-base/Core/Inc",     // Project dependent
+                "Firmware/nucleof072rb-base/User/Inc",     // Project dependent
+                "${stm32f072rb_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32f072rb_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32F072xB",                          // Project dependent
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [

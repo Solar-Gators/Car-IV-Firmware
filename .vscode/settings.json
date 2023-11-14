@@ -18,7 +18,11 @@
         "stm32f4xx_hal_conf.h": "c",
         "stm32f4xx_hal_rcc.h": "c",
         "stm32f4xx_hal_def.h": "c",
-        "fatfs.h": "c"
+        "fatfs.h": "c",
+        "stm32f072xb.h": "c",
+        "semphr.h": "c",
+        "freertos_os2.h": "c",
+        "freertos.h": "c"
     },
     "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe"

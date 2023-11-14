@@ -23,6 +23,13 @@ jobs:
           cmake -S . -B build
           cmake --build build
           cd ../..
+          
+      - name: Build nucleof072rb-base
+        run: |
+          cd Firmware/nucleof072rb-base
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
 
       - name: Build nucleol476rg-base
         run: |

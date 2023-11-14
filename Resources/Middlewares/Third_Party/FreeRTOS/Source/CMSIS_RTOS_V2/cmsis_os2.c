@@ -144,6 +144,8 @@ static osKernelState_t KernelState = osKernelInactive;
 #endif /* configAPPLICATION_ALLOCATED_HEAP */
 #endif /* USE_FreeRTOS_HEAP_5 */
 
+#ifndef STM32F072xB   // TODO: Fix this
+
 #if defined(SysTick)
 #undef SysTick_Handler
 
@@ -167,6 +169,8 @@ void SysTick_Handler (void) {
 }
 #endif
 #endif /* SysTick */
+
+#endif /* STM32F072xB */
 
 /*
   Setup SVC to reset value.
