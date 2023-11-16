@@ -17,6 +17,8 @@
 #define BQ_I2C_ADDR_WRITE 0x10
 #define BQ_I2C_ADDR_READ 0x11
 
+static const uint8_t temp_registers[] = {BQ769X2_CMD_TEMP_TS1, BQ769X2_CMD_TEMP_TS2, BQ769X2_CMD_TEMP_TS3, BQ769X2_CMD_TEMP_ALERT, BQ769X2_CMD_TEMP_HDQ, BQ769X2_CMD_TEMP_CFETOFF, BQ769X2_CMD_TEMP_DFETOFF, BQ769X2_CMD_TEMP_DCHG, BQ769X2_CMD_TEMP_DDSG};
+
 class BQ76952 {
 public:
     HAL_StatusTypeDef Init(I2C_HandleTypeDef *hi2c);
@@ -24,6 +26,7 @@ public:
     HAL_StatusTypeDef ReadVoltages();       // TODO: Add support for connected cells
     HAL_StatusTypeDef ReadSafetyFaults();
     HAL_StatusTypeDef ReadCurrent();
+    HAL_StatusTypeDef ReadTemperatures();
 
     HAL_StatusTypeDef Shutdown();
 
@@ -62,7 +65,8 @@ private:
     HAL_StatusTypeDef DatamemWriteI1(const uint16_t reg_addr, int8_t value);
     HAL_StatusTypeDef DatamemWriteI2(const uint16_t reg_addr, int16_t value);
     HAL_StatusTypeDef DatamemWriteF4(const uint16_t reg_addr, float value);
-    HAL_StatusTypeDef EnableThermistorPins(); // should get called by eventual init function
+
+    HAL_StatusTypeDef EnableThermistorPins(); // these functions should only get called by eventual init function
 
     I2C_HandleTypeDef *hi2c_;
 
@@ -75,7 +79,13 @@ private:
     int16_t pack_voltage_;              // Pack voltage in 10 mV
     int16_t stack_voltage_;             // Stack voltage in 10 mV
 
-    bool config_update_enabled_;
+    float temperatures_[sizeof(temp_registers)/sizeof(temp_registers[0])]; // temperatures in C
+    float avg_temperature_; // avg temperature of temp_registers in  C
+    float high_temperature_; // high temperature of temp_registers in  C
+    float low_temperature_; // low temperature of temp_registers in  C
+    float chip_temperature_; // temperature of chip in C
+
+    bool config_update_enabled_; // whether config update mode is currently enabled
 };
 
 #endif  /* BQ76952_HPP_ */

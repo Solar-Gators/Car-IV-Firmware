@@ -11,10 +11,10 @@ HAL_StatusTypeDef BQ76952::ConfigUpdate(bool config_update){
     HAL_StatusTypeDef status;
 
     if (config_update) {
-        status = bq769x2_subcmd_cmd_only(BQ769X2_SUBCMD_SET_CFGUPDATE);
+        status = SubcmdCmdOnly(BQ769X2_SUBCMD_SET_CFGUPDATE);
     }
     else {
-        status = bq769x2_subcmd_cmd_only(BQ769X2_SUBCMD_EXIT_CFGUPDATE);
+        status = SubcmdCmdOnly(BQ769X2_SUBCMD_EXIT_CFGUPDATE);
     }
 
     if(status != HAL_OK)
@@ -57,10 +57,53 @@ HAL_StatusTypeDef BQ76952::ReadVoltages() {
 }
 
 HAL_StatusTypeDef BQ76952::ReadCurrent(){
-	int16_t current = 0;
-	DirectReadI2(BQ769X2_CMD_CURRENT_CC2, &current);
+    HAL_StatusTypeDef status;
 
-	pack_current_ = current * 0.01;
+	int16_t current = 0;
+	status = DirectReadI2(BQ769X2_CMD_CURRENT_CC2, &current);
+    if(status != HAL_OK)
+        return status;
+
+	pack_current_ = current * 0.01; // convert to mA
+
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::ReadTemperatures(){ 
+    HAL_StatusTypeDef status;
+    int num_temps = 0;
+    float sum_temps = 0;
+    int16_t temp = 0;
+
+    //read temperatures of thermistors
+    for (int i = 0; i < (sizeof(temp_registers)/sizeof(temp_registers[0])); i++){
+        status = DirectReadI2(temp_registers[i], &temp); // returns 0.1k
+        if (status != HAL_OK) { return status; }
+        
+        temperatures_[i] = (temp * 10.0) - 273.15; // convert to cesius
+
+        if(i == 0){
+            low_temperature_ = temperatures_[i];
+            high_temperature_ = temperatures_[i];
+        }else{
+            if(temperatures_[i] < low_temperature_){
+                low_temperature_ = temperatures_[i];
+            }
+            if(temperatures_[i] > high_temperature_){
+                high_temperature_ = temperatures_[i];
+            }
+        }
+
+        num_temps++;
+        sum_temps += temperatures_[i];
+    }
+
+    avg_temperature_ = sum_temps / num_temps;
+
+    // read chips internal temperature value
+    status = DirectReadI2(BQ769X2_CMD_TEMP_INT, &temp);
+    if (status != HAL_OK) { return status; }
+    chip_temperature_ = (temp * 10.0) - 273.15;
 }
 
 HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
@@ -68,7 +111,7 @@ HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
     uint8_t stat_b_byte;
     uint8_t stat_c_byte;
 
-    HAL_StatusTypeDef status = HAL_OK;
+    HAL_StatusTypeDef status;
 
     status = ReadBytes(BQ769X2_CMD_SAFETY_ALERT_A, &stat_a_byte, 1);
     if (status != HAL_OK) 
@@ -123,7 +166,7 @@ int16_t BQ76952::GetLowCellVoltage() {
 }
 
 bool BQ76952::GetConfigUpdateStatus(){
-	return config_update_enabled;
+	return config_update_enabled_;
 }
 
 HAL_StatusTypeDef BQ76952::WriteBytes(const uint8_t reg_addr, const uint8_t *data, const size_t num_bytes) {
@@ -417,6 +460,7 @@ HAL_StatusTypeDef BQ76952::EnableThermistorPins(){
 	HAL_StatusTypeDef status;
 
 	// need to talk to Matthew about what settins to configure thermistor to (18 or 180 kOhm, which temperature model to use)
+    // current value (0b00000111) sets for 18k, 18k curve
 
 	//set ALERT for 18k, 18k curve, for use in measuring cell
 	status = DatamemWriteU1(BQ769X2_SET_CONF_ALERT, 0b00000111);
@@ -462,4 +506,6 @@ HAL_StatusTypeDef BQ76952::EnableThermistorPins(){
 	status = DatamemWriteU1(BQ769X2_SET_CONF_DDSG, 0b00000111);
     if(status != HAL_OK)
     	return status;
+
+    return HAL_OK;
 }

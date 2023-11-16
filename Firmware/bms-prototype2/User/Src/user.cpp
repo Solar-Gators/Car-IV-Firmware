@@ -35,13 +35,19 @@ void CPP_UserSetup(void) {
     
 
     while (1) {
-        bms.ReadVoltages();
-
-        Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
-        Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
-        Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
-        Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
-
+        
+        // test reading current
+        bms.ReadCurrent();
         HAL_Delay(1000);
+
+        // test reading voltages
+        // bms.ReadVoltages();
+
+        // Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
+        // Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
+        // Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
+        // Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
+
+        //HAL_Delay(1000);
     }
 }
