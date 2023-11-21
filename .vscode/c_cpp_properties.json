@@ -38,13 +38,13 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
-        "stm32l476rg_includes": [
+        "stm32l4_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
             "Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
-            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Lefgacy",
+            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
-        "stm32l476rg_sources": [
+        "stm32l4_sources": [
             "Resources/Drivers/STM32L4xx_HAL_Driver/Src",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
@@ -59,11 +59,11 @@
                 "${common_includes}",
                 "Firmware/bms-prototype2/Core/Inc",     // Project dependent
                 "Firmware/bms-prototype2/User/Inc",     // Project dependent
-                "${stm32l476rg_includes}"               // Project dependent
+                "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {
                 "path": [
-                    "${stm32l476rg_sources}"            // Project dependent
+                    "${stm32l4_sources}"            // Project dependent
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
@@ -77,6 +77,33 @@
                 "-mfpu=fpv4-sp-d16",
                 "-mfloat-abi=hard"
             ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
+            "name": "matthew-junior-design",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/matthew-junior-design/Core/Inc",     // Project dependent
+                "Firmware/matthew-junior-design/User/Inc",     // Project dependent
+                "${stm32f072rb_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32f072rb_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32F072xB",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m0",
+                "-mthumb"],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
@@ -102,11 +129,8 @@
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
-                "-mcpu=cortex-m4",
-                "-mthumb",
-                "-mfpu=fpv4-sp-d16",
-                "-mfloat-abi=hard"
-            ],
+                "-mcpu=cortex-m0",
+                "-mthumb"],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
@@ -119,11 +143,11 @@
                 "${common_includes}",
                 "Firmware/nucleol476rg-base/Core/Inc",     // Project dependent
                 "Firmware/nucleol476rg-base/User/Inc",     // Project dependent
-                "${stm32l476rg_includes}"               // Project dependent
+                "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {
                 "path": [
-                    "${stm32l476rg_sources}"            // Project dependent
+                    "${stm32l4_sources}"            // Project dependent
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
@@ -149,11 +173,11 @@
                 "${common_includes}",
                 "Firmware/nucleol476rg-CAN-dev/Core/Inc",     // Project dependent
                 "Firmware/nucleol476rg-CAN-dev/User/Inc",     // Project dependent
-                "${stm32l476rg_includes}"               // Project dependent
+                "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {
                 "path": [
-                    "${stm32l476rg_sources}"            // Project dependent
+                    "${stm32l4_sources}"            // Project dependent
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
@@ -233,7 +257,37 @@
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
             "cppStandard": "c++17"
-        }
+        },
+        {
+            "name": "testboard-base",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/testboard-base/Core/Inc",     // Project dependent
+                "Firmware/testboard-base/User/Inc",     // Project dependent
+                "${stm32l4_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32l4_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32L496xx",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
     ],
     "version": 4
 }
