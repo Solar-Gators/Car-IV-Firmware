@@ -41,7 +41,7 @@
         "stm32l4_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
             "Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
-            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Lefgacy",
+            "Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
         "stm32l4_sources": [

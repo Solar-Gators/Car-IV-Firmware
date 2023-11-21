@@ -51,3 +51,10 @@ jobs:
           cmake -S . -B build
           cmake --build build
           cd ../..
+
+      - name: Build testboard-base
+        run: |
+          cd Firmware/testboard-base
+          cmake -S . -B build
+          cmake --build build
+          cd ../..

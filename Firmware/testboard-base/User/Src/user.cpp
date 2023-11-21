@@ -45,6 +45,9 @@ osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
 
 void CPP_UserSetup(void) {
+    // Make sure that timer priorities are configured correctly
+    HAL_Delay(10);
+
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
     osTimerStart(periodic_timer_id, 1000);
 }
