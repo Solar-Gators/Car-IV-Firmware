@@ -27,14 +27,14 @@ void OnProjectLoad (void) {
   Project.SetHostIF ("USB", "801042722");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
-  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/testboard-base", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/testboard-base", "$(ProjectDir)");
+  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/matthew-junior-design", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/matthew-junior-design", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
   //
   Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
-  File.Open ("$(ProjectDir)/build/testboard-base.elf");
+  File.Open ("$(ProjectDir)/build/matthew-junior-design.elf");
 }
 
 /*********************************************************************
