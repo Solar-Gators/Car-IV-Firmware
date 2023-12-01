@@ -45,36 +45,30 @@ const osThreadAttr_t regular_task_attributes = {
 /* Event flag to trigger regular task */
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
-uint8_t frame_buffer_[153600];
-
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
-    
-    for (uint32_t i = 0; i < 153600; i++)
-        frame_buffer_[i] = i % 256;
-
-    for (uint32_t i = 0; i < 153600; i++)
-        HAL_SPI_Transmit(&hspi1, &frame_buffer_[i], 1, HAL_MAX_DELAY);
-
-    // while (1) {
-    //     uint8_t data = 0x12;
-    //     HAL_GPIO_WritePin(TFTCS_GPIO_Port, TFTCS_Pin, GPIO_PIN_RESET);
-    //     HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);
-    //     HAL_GPIO_WritePin(TFTCS_GPIO_Port, TFTCS_Pin, GPIO_PIN_SET);
-    //     HAL_Delay(1);
-    // }
+    HAL_GPIO_WritePin(TFTBL_GPIO_Port, TFTBL_Pin, GPIO_PIN_SET);
 
     ST7789 display = ST7789(&hspi1, TFTCS_GPIO_Port, TFTCS_Pin, 
-                            TFTDC_GPIO_Port, TFTDC_Pin, 0, 0, 0, 0, frame_buffer_);
+                            TFTDC_GPIO_Port, TFTDC_Pin, 0, 0, 0, 0);
 
     display.Init();
-    
 
     while (1) {
-        display.Fill(RGB565_RED);
-        display.Fill(RGB565_BLACK);
+        display.Fill(ST7789_WHITE);
+        display.DrawText(&FontStyle_Emulogic, "How happy is the little stone", 30, 200, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "That rambles in the road alone,", 30, 180, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And doesn't care about careers,", 30, 160, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And exigencies never fears;", 30, 140, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Whose coat of elemental brown", 30, 120, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "A passing universe put on;", 30, 100, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And independent as the sun,", 30, 80, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Associates or grows alone,", 30, 60, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Fulfilling absolute decree", 30, 40, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "In casual simplicity", 30, 20, ST7789_BLACK);
+        HAL_Delay(500);
     }
 
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);

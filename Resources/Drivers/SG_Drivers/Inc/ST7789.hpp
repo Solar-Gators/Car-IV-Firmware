@@ -9,6 +9,7 @@
 #define ST7789_HPP_
 
 #include "main.h"
+#include "fontlibrary.h"
 #include "etl/string.h"
 
 // ST7789 Defines
@@ -67,24 +68,16 @@
 #define ST7789_RDID3_ADDR           0xDC
 
 // ST7789 Boundaries
-#define X_MAX                       240
-#define Y_MAX                       320
+#define X_MAX                       320
+#define Y_MAX                       240
 
 // ST7789 Colors
-#define RGB565_WHITE        0xFFFF
-#define RGB565_BLACK        0x0000
-#define RGB565_BLUE         0x0197
-#define RGB565_RED          0xF800
-#define RGB565_MAGENTA      0xF81F
-#define RGB565_GREEN        0x07E0
-#define RGB565_DARK_GREEN   0x8F00
-#define RGB565_CYAN         0x7FFF
-#define RGB565_YELLOW       0xFFE0
-#define RGB565_GRAY         0x6A24
-#define RGB565_PURPLE       0xF11F
-#define RGB565_ORANGE       0xFD20
-#define RGB565_PINK         0xFDBA
-#define RGB565_OLIVE        0xDFE4
+#define ST7789_BLACK                0x0000
+#define ST7789_WHITE                0xFFFF
+#define ST7789_RED                  0xF800
+#define ST7789_BLUE                 0x07E0
+#define ST7789_GREEN                0x001F
+#define ST7789_BEIGE                0xFF9C
 
 #ifndef _swap_int16_t
 #define _swap_int16_t(a, b) \
@@ -101,8 +94,7 @@ public:
            GPIO_TypeDef* CS_Port, uint16_t CS_Pin,
            GPIO_TypeDef* DC_Port, uint16_t DC_Pin,
            GPIO_TypeDef* RST_Port, uint16_t RST_Pin,
-           GPIO_TypeDef* BL_Port, uint16_t BL_Pin,
-           uint8_t* frame_buffer);
+           GPIO_TypeDef* BL_Port, uint16_t BL_Pin);
     virtual ~ST7789();
 
     void Init();
@@ -110,6 +102,7 @@ public:
     void DrawPixel(uint16_t x, uint16_t y, uint16_t color);
     void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
     void DrawRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+    void DrawText(const fontStyle_t *font, const char *text, uint16_t x, uint16_t y, uint16_t color);
 protected:
     inline void Select();
     inline void Deselect();
@@ -118,8 +111,11 @@ protected:
 
     void WriteCommand(uint8_t cmd);
     void WriteData(uint8_t data);
+    void WriteData16(uint16_t data);
+    void Flood(uint16_t color, uint32_t count);
     uint8_t ReadRegister(uint8_t addr);
     void SetWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    const uint8_t* GetCharGlyph(const fontStyle_t *font, char c);
 private:
     int16_t text_size_;
     // SPI interface
@@ -136,8 +132,6 @@ private:
     // Backlight
     GPIO_TypeDef* TFTBL_GPIO_Port_;
     uint16_t TFTBL_Pin_;
-
-    uint8_t* frame_buffer_;
 };
 
 #endif /* ST7789_HPP */

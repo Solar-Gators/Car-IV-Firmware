@@ -7,9 +7,8 @@
 HardwareTimer *PWM = new HardwareTimer(TIM1); // need to set it up here, before setup{}
 #endif
 
-extern "C" TIM_HandleTypeDef htim2;
 extern "C" TIM_HandleTypeDef htim3;
-extern "C" DAC_HandleTypeDef hdac1;
+extern "C" TIM_HandleTypeDef htim5;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4995,8 +4994,7 @@ inline void STM32SAM::SetAUDIO (unsigned char main_volume) {
 #endif
 
 #ifdef USE_HAL_DRIVER
-  //htim2.Instance->CCR4 = main_volume >> 1;
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, main_volume / 4);
+  htim5.Instance->CCR3 = main_volume >> 1;
 #endif
 
 }
