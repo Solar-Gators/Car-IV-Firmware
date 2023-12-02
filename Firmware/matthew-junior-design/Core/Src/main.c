@@ -26,6 +26,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -148,6 +149,7 @@ int main(void)
   MX_DAC1_Init();
   MX_TIM5_Init();
   MX_TIM4_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   CPP_UserSetup();
 

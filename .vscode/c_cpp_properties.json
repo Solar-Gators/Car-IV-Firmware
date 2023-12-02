@@ -90,9 +90,11 @@
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/matthew-junior-design/Core/Inc",     // Project dependent
-                "Firmware/matthew-junior-design/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/matthew-junior-design/Core/Inc",      // Project dependent
+                "Firmware/matthew-junior-design/User/Inc",      // Project dependent
+                "Firmware/matthew-junior-design/FATFS/App",     // Project dependent
+                "Firmware/matthew-junior-design/FATFS/Target",  // Project dependent
+                "${stm32l4_includes}"                           // Project dependent
             ],
             "browse": {
                 "path": [
