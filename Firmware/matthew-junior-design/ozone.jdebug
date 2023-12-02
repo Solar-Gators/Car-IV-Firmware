@@ -33,6 +33,7 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
+  Edit.SysVar (VAR_RTT_ENABLED, 1);
   Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
   File.Open ("$(ProjectDir)/build/matthew-junior-design.elf");
 }

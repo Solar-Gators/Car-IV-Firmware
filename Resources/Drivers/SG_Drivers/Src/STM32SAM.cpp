@@ -2546,6 +2546,10 @@ void STM32SAM::Init()
   }
   phonemeindex[255] = 255; //to prevent buffer overflow // ML : changed from 32 to 255 to stop freezing with long inputs
 
+  // Start timers
+  HAL_TIM_Base_Start(&htim3);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
+
 }
 
 
@@ -4712,7 +4716,7 @@ void STM32SAM::say(const char *argv ) {
 
   sam ( const_input,   phonetic ,  singmode ,  pitch , speed ,  mouth , throat  );
 
-
+  SetAUDIO(0);
 }
 
 void STM32SAM::say( char *argv ) {

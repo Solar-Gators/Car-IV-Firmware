@@ -73,8 +73,9 @@ void Error_Handler(void);
 #define SDCS_GPIO_Port GPIOB
 #define TFTCS_Pin GPIO_PIN_11
 #define TFTCS_GPIO_Port GPIOB
-#define JBTN_Pin GPIO_PIN_12
-#define JBTN_GPIO_Port GPIOB
+#define JOY_BTN_Pin GPIO_PIN_12
+#define JOY_BTN_GPIO_Port GPIOB
+#define JOY_BTN_EXTI_IRQn EXTI15_10_IRQn
 #define TFTDC_Pin GPIO_PIN_13
 #define TFTDC_GPIO_Port GPIOB
 #define BTN1_Pin GPIO_PIN_10
