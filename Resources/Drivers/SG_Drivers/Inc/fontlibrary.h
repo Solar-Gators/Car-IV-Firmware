@@ -1149,7 +1149,7 @@ static uint8_t const Emulogic_Bitmaps[940] =
     0x00,  // --------
 };
 
-static fontStyle_t FontStyle_Emulogic = 
+static fontStyle_t __attribute__ ((unused)) FontStyle_Emulogic = 
 {
     94, // Glyph count
     32, // First ascii code

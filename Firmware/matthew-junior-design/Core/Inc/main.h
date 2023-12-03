@@ -82,7 +82,9 @@ void Error_Handler(void);
 #define BTN1_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+#define SD_SPI_HANDLE   hspi1
+#define SD_CS_GPIO_Port SDCS_GPIO_Port
+#define SD_CS_Pin       SDCS_Pin
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

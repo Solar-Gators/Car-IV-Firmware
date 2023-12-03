@@ -36,9 +36,12 @@ set(THIRD_PARTY_INCLUDES
     ${RESOURCES_DIR}/Middlewares/Third_Party/etl/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src)
 set(USER_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/User/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/FATFS/App
+    ${CMAKE_CURRENT_SOURCE_DIR}/FATFS/Target
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc)
 
 ########################################################################
@@ -50,7 +53,8 @@ file(GLOB_RECURSE RECURSE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Src/*.c
-    ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT/*.c)
+    ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT/*.c
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/*.c)
 file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/*.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c

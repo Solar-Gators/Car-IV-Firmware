@@ -16,6 +16,7 @@
   * 
   * User Modifications:
   *   - CPP_UserSetup() is called from main()
+  *   - Defines for FATFS devices in main.h
   *   - Initialize ADC2 in MX_ADC1_Init()
   *   - Call debounce function from timer interrupt
   * 

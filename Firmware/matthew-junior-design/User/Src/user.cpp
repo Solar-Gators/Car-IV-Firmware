@@ -38,12 +38,12 @@ uint16_t GetJoyXY() {
     y_val = HAL_ADC_GetValue(&hadc1);
 
     // Read joystick x-axis, reconfigure GPIO
-    GPIO_InitTypeDef GPIO_InitStruct0 = {0};
+    GPIO_InitTypeDef GPIO_InitStruct0 = {};
     GPIO_InitStruct0.Pin = GPIO_PIN_2;
     GPIO_InitStruct0.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct0.Pull = GPIO_NOPULL;
 
-    GPIO_InitTypeDef GPIO_InitStruct1 = {0};
+    GPIO_InitTypeDef GPIO_InitStruct1 = {};
     GPIO_InitStruct1.Pin = GPIO_PIN_2;
     GPIO_InitStruct1.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct1.Pull = GPIO_NOPULL;
@@ -66,9 +66,21 @@ uint16_t GetJoyXY() {
 void SetBacklight(uint8_t brightness) {
     if (brightness > 50) {
         brightness = 50;
+    } else if (brightness < 0) {
+        brightness = 0;
     }
 
     HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, brightness+80);
+}
+
+void SetVolume(uint8_t volume) {
+    if (volume > 50) {
+        volume = 50;
+    } else if (volume < 0) {
+        volume = 0;
+    }
+
+    htim5.Instance->
 }
 
 void CPP_UserSetup(void) {
