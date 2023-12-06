@@ -20,7 +20,7 @@ STM32SAM voice = STM32SAM(5);
 
 /* Function definitions */
 void DisplayBanner(const char* text) {
-    display.DrawRectangle(0, 0, 320, 30, ST7789_BLACK);
+    display.DrawRectangle(0, 210, 320, 30, ST7789_BLACK);
     display.DrawText(&FontStyle_Emulogic, text, 50, 215, ST7789_WHITE);
 }
 
@@ -64,23 +64,22 @@ uint16_t GetJoyXY() {
 
 // Brightness input between 0 and 50
 void SetBacklight(uint8_t brightness) {
-    if (brightness > 50) {
+    if (brightness > 50)
         brightness = 50;
-    } else if (brightness < 0) {
-        brightness = 0;
-    }
 
     HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, brightness+80);
 }
 
 void SetVolume(uint8_t volume) {
-    if (volume > 50) {
+    if (volume > 50)
         volume = 50;
-    } else if (volume < 0) {
-        volume = 0;
-    }
 
-    htim5.Instance->
+    // Reload goes from 255 to 2048, higher volume means lower reload
+    uint32_t auto_reload = 14025 / (volume + 5);
+
+    // Count goes crazy for some reason
+    __HAL_TIM_SET_AUTORELOAD(&htim5, auto_reload);
+    __HAL_TIM_SET_COUNTER(&htim5, auto_reload);
 }
 
 void CPP_UserSetup(void) {
@@ -108,7 +107,6 @@ void CPP_UserSetup(void) {
     // }
 
 
-    
 
     //regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
     osTimerStart(periodic_timer_id, 200);

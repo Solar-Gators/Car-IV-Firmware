@@ -46,6 +46,16 @@ osTimerId_t periodic_timer_id = osTimerNew((osThreadFunc_t)PeriodicTask1,
 /* Event flag to trigger regular task */
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
+/* Mutexes */
+StaticSemaphore_t   spi_mutex_control_block;
+const osMutexAttr_t spi_mutex_attributes = {
+    .name = "SPI Mutex",
+    .attr_bits = osMutexRecursive,
+    .cb_mem = &spi_mutex_control_block,
+    .cb_size = sizeof(spi_mutex_control_block),
+};
+osMutexId_t spi_mutex_id = osMutexNew(&spi_mutex_attributes);
+
 
 /* Thread function definitions */
 void PeriodicTask1(void *argument) {
@@ -86,54 +96,70 @@ void PeriodicTask1(void *argument) {
 
 void VoiceTask(void *argument) {
     while (1) {
-        display.Fill(ST7789_WHITE);
-        display.DrawText(&FontStyle_Emulogic, "How happy is the little stone", 30, 200, ST7789_BLACK);
+        osMutexAcquire(spi_mutex_id, osWaitForever);
+
+        DisplayBanner("Read");
+        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
+
+        display.DrawText(&FontStyle_Emulogic, "How happy is the little stone", 30, 195, ST7789_BLACK);
         voice.say("How happy is the little stone,");
-        display.DrawText(&FontStyle_Emulogic, "That rambles in the road alone,", 30, 185, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "That rambles in the road alone,", 30, 180, ST7789_BLACK);
         voice.say("That rambles in the road alone,");
-        display.DrawText(&FontStyle_Emulogic, "And doesn't care about careers,", 30, 170, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And doesn't care about careers,", 30, 165, ST7789_BLACK);
         voice.say("And doesn't care about careers,");
-        display.DrawText(&FontStyle_Emulogic, "And exigencies never fears;", 30, 155, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And exigencies never fears;", 30, 150, ST7789_BLACK);
         voice.say("And exigencies never fears;");
-        display.DrawText(&FontStyle_Emulogic, "Whose coat of elemental brown", 30, 140, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Whose coat of elemental brown", 30, 135, ST7789_BLACK);
         voice.say("Whose coat of elemental brown,");
-        display.DrawText(&FontStyle_Emulogic, "A passing universe put on;", 30, 125, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "A passing universe put on;", 30, 120, ST7789_BLACK);
         voice.say("A passing universe put on;");
-        display.DrawText(&FontStyle_Emulogic, "And independent as the sun,", 30, 110, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "And independent as the sun,", 30, 105, ST7789_BLACK);
         voice.say("And independent as the sun,");
-        display.DrawText(&FontStyle_Emulogic, "Associates or grows alone,", 30, 95, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Associates or grows alone,", 30, 90, ST7789_BLACK);
         voice.say("Associates or grows alone,");
-        display.DrawText(&FontStyle_Emulogic, "Fulfilling absolute decree", 30, 80, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "Fulfilling absolute decree", 30, 75, ST7789_BLACK);
         voice.say("Fulfilling absolute decree,,");
-        display.DrawText(&FontStyle_Emulogic, "In casual simplicity", 30, 65, ST7789_BLACK);
+        display.DrawText(&FontStyle_Emulogic, "In casual simplicity", 30, 60, ST7789_BLACK);
         voice.say("In casual simplicity");
+
+        osMutexRelease(spi_mutex_id);
     }
 }
 
 void UITask(void *argument) {
     uint32_t backlight = 50;
+    uint32_t volume = 50;
     bool paused = false;
 
     while (1) {
         uint32_t input_flag = osEventFlagsWait(regular_event, 0x1F, osFlagsWaitAny, osWaitForever);
 
         switch (input_flag) {
-            case 0x1:
+            case 0x1:                       // Joystick Up
                 Logger::LogInfo("Up\n");
+                // Raise volume
+                if (volume < 50) {
+                    volume += 5;
+                    SetVolume(volume);
+                }
                 break;
-            case 0x2:
+            case 0x2:                       // Joystick Right
                 Logger::LogInfo("Right\n");
                 // Raise brightness
                 if (backlight < 50) {
                     backlight += 5;
                     SetBacklight(backlight);
                 }
-
                 break;
-            case 0x4:
+            case 0x4:                       // Joystick Down
                 Logger::LogInfo("Down\n");
+                // Lower volume
+                if (volume > 0) {
+                    volume -= 5;
+                    SetVolume(volume);
+                }
                 break;
-            case 0x8:
+            case 0x8:                       // Joystick Left
                 Logger::LogInfo("Left\n");
                 // Lower brightness
                 if (backlight > 0) {

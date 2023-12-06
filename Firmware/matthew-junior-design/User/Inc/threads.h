@@ -18,6 +18,9 @@ extern osThreadId_t ui_task_id;
 /* Event flags */
 extern osEventFlagsId_t regular_event;
 
+/* Mutexes */
+extern osMutexId_t spi_mutex_id;
+
 /* ISRs */
 //extern void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 

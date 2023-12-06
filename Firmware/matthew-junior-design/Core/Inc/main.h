@@ -85,6 +85,8 @@ void Error_Handler(void);
 #define SD_SPI_HANDLE   hspi1
 #define SD_CS_GPIO_Port SDCS_GPIO_Port
 #define SD_CS_Pin       SDCS_Pin
+
+#define AUDIO_TIM_HANDLE htim5
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

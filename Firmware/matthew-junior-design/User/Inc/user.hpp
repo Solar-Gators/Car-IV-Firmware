@@ -17,6 +17,7 @@ extern "C" ADC_HandleTypeDef hadc1;     // joystick y-axis
 extern "C" ADC_HandleTypeDef hadc2;     // joystick x-axis
 extern "C" DAC_HandleTypeDef hdac1;     // backlight
 
+void DisplayBanner(const char* text);
 uint16_t GetJoyXY();
 void SetBacklight(uint8_t brightness);  // 0-50
 void SetVolume(uint8_t volume);         // 0-50

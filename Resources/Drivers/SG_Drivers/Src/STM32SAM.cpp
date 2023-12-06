@@ -2549,7 +2549,6 @@ void STM32SAM::Init()
   // Start timers
   HAL_TIM_Base_Start(&htim3);
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
-
 }
 
 
