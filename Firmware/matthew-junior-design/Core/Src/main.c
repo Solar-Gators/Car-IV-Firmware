@@ -46,7 +46,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+extern uint16_t Timer1, Timer2;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -838,6 +838,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM17) {
+    if(Timer1 > 0)
+      Timer1--;
+    if(Timer2 > 0)
+      Timer2--;
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */

@@ -9,6 +9,7 @@
 #include "logger.hpp"
 #include "ST7789.hpp"
 #include "STM32SAM.h"
+#include "fatfs.h"
 
 extern "C" SPI_HandleTypeDef hspi1;     // display
 extern "C" TIM_HandleTypeDef htim4;     // debounce timer
@@ -21,6 +22,8 @@ void DisplayBanner(const char* text);
 uint16_t GetJoyXY();
 void SetBacklight(uint8_t brightness);  // 0-50
 void SetVolume(uint8_t volume);         // 0-50
+
+extern char text_buffer[20][100];               // Text buffer
 
 extern ST7789 display;
 

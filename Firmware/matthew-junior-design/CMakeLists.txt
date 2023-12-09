@@ -52,6 +52,9 @@ file(GLOB_RECURSE RECURSE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.s
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/FATFS/App/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/FATFS/Target/*.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Src/*.c
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT/*.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/*.c)

@@ -101,28 +101,16 @@ void VoiceTask(void *argument) {
         DisplayBanner("Read");
         display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
 
-        display.DrawText(&FontStyle_Emulogic, "How happy is the little stone", 30, 195, ST7789_BLACK);
-        voice.say("How happy is the little stone,");
-        display.DrawText(&FontStyle_Emulogic, "That rambles in the road alone,", 30, 180, ST7789_BLACK);
-        voice.say("That rambles in the road alone,");
-        display.DrawText(&FontStyle_Emulogic, "And doesn't care about careers,", 30, 165, ST7789_BLACK);
-        voice.say("And doesn't care about careers,");
-        display.DrawText(&FontStyle_Emulogic, "And exigencies never fears;", 30, 150, ST7789_BLACK);
-        voice.say("And exigencies never fears;");
-        display.DrawText(&FontStyle_Emulogic, "Whose coat of elemental brown", 30, 135, ST7789_BLACK);
-        voice.say("Whose coat of elemental brown,");
-        display.DrawText(&FontStyle_Emulogic, "A passing universe put on;", 30, 120, ST7789_BLACK);
-        voice.say("A passing universe put on;");
-        display.DrawText(&FontStyle_Emulogic, "And independent as the sun,", 30, 105, ST7789_BLACK);
-        voice.say("And independent as the sun,");
-        display.DrawText(&FontStyle_Emulogic, "Associates or grows alone,", 30, 90, ST7789_BLACK);
-        voice.say("Associates or grows alone,");
-        display.DrawText(&FontStyle_Emulogic, "Fulfilling absolute decree", 30, 75, ST7789_BLACK);
-        voice.say("Fulfilling absolute decree,,");
-        display.DrawText(&FontStyle_Emulogic, "In casual simplicity", 30, 60, ST7789_BLACK);
-        voice.say("In casual simplicity");
+        uint32_t buffer_idx = 0;
+        while (text_buffer[buffer_idx][0]) {
+            display.DrawText(&FontStyle_Emulogic, text_buffer[buffer_idx], 30, 195 - (15 * buffer_idx), ST7789_BLACK);
+            voice.say(text_buffer[buffer_idx]);
+            buffer_idx++;
+        }
 
         osMutexRelease(spi_mutex_id);
+
+        osDelay(500);
     }
 }
 
@@ -186,6 +174,19 @@ void UITask(void *argument) {
             default:
                 break;
         }
+    }
+}
+
+void MenuTask(void* argument) {
+    while (1) {
+        osMutexAcquire(spi_mutex_id, osWaitForever);
+
+        DisplayBanner("Main Menu");
+        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
+
+        display.DrawRectangle(10, 10, 300, 50, ST7789_BLACK);
+
+        osMutexRelease(spi_mutex_id);
     }
 }
 

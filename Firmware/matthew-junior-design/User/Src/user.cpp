@@ -18,6 +18,16 @@ ST7789 display = ST7789(&hspi1, TFTCS_GPIO_Port, TFTCS_Pin,
                         TFTDC_GPIO_Port, TFTDC_Pin, 0, 0, 0, 0);
 STM32SAM voice = STM32SAM(5);
 
+/* Global variables */
+FATFS fs;
+FATFS *pfs;
+FIL fil;
+FRESULT fres;
+DWORD fre_clust;
+uint32_t totalSpace, freeSpace;
+char text_buffer[20][100];               // Text buffer
+
+
 /* Function definitions */
 void DisplayBanner(const char* text) {
     display.DrawRectangle(0, 210, 320, 30, ST7789_BLACK);
@@ -85,6 +95,30 @@ void SetVolume(uint8_t volume) {
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
+
+
+    // Test SD card interface
+    if(f_mount(&fs, "", 1) != FR_OK)
+        Logger::LogError("SD card mount failed\n");
+    else
+        Logger::LogInfo("SD card mount successful\n");
+
+    f_getfree("", &fre_clust, &pfs);
+    totalSpace = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
+    freeSpace = (uint32_t)(fre_clust * pfs->csize * 0.5);
+    Logger::LogInfo("SD card total space: %lu\n", totalSpace);
+
+    fres = f_open(&fil, "poem1.txt", FA_READ);
+
+
+    // Read every line
+    uint32_t buf_index = 0;
+    while (f_gets(text_buffer[buf_index++], sizeof(text_buffer[0]), &fil))
+        Logger::LogInfo("%s\n", text_buffer[buf_index-1]);
+
+
+
+
 
     // Set backlight to max brightness
     HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
