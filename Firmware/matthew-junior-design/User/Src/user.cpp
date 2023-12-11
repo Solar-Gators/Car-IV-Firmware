@@ -92,33 +92,41 @@ void SetVolume(uint8_t volume) {
     __HAL_TIM_SET_COUNTER(&htim5, auto_reload);
 }
 
+FRESULT list_dir (const char *path)
+{
+    FRESULT res;
+    DIR dir;
+    FILINFO fno;
+    int nfile, ndir;
+
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    if (res == FR_OK) {
+        nfile = ndir = 0;
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Error or end of dir */
+            if (fno.fattrib & AM_DIR) {            /* Directory */
+                Logger::LogInfo("%s\n", fno.fname);
+                ndir++;
+            } else {                               /* File */
+                Logger::LogInfo("%s\n", fno.fname);
+                nfile++;
+            }
+        }
+        printf("%d dirs, %d files.\n", ndir, nfile);
+    } else {
+        printf("Failed to open \"%s\". (%u)\n", path, res);
+    }
+    return res;
+}
+
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
-
-    // Test SD card interface
-    if(f_mount(&fs, "", 1) != FR_OK)
-        Logger::LogError("SD card mount failed\n");
-    else
-        Logger::LogInfo("SD card mount successful\n");
-
-    f_getfree("", &fre_clust, &pfs);
-    totalSpace = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
-    freeSpace = (uint32_t)(fre_clust * pfs->csize * 0.5);
-    Logger::LogInfo("SD card total space: %lu\n", totalSpace);
-
-    fres = f_open(&fil, "poem1.txt", FA_READ);
-
-
-    // Read every line
-    uint32_t buf_index = 0;
-    while (f_gets(text_buffer[buf_index++], sizeof(text_buffer[0]), &fil))
-        Logger::LogInfo("%s\n", text_buffer[buf_index-1]);
-
-
-
-
+    // Initialize display
+    display.Init();
 
     // Set backlight to max brightness
     HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
@@ -129,20 +137,28 @@ void CPP_UserSetup(void) {
     voice.say("Power On,");
     voice.setPitch(64);
 
-    // Initialize display
-    display.Init();
-    DisplayMenu();
-
-    // // Backlight test
-    // for (int i = 80; i < 130; i += 5) {
-    //     HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, i);
-    //     Logger::LogInfo("Brightness: %d\n", i);              
-    //     HAL_Delay(1000);
-    // }
+    // Attempt to mount SD card
+    if(f_mount(&fs, "", 1) != FR_OK) {
+        Logger::LogError("SD card mount failed\n");
+        display.DrawText(&FontStyle_Emulogic, "SD card not detected!", 70, 115, ST7789_BLUE);
+        Error_Handler();
+    }
+    else
+        Logger::LogInfo("SD card mount successful\n");
 
 
 
-    //regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
+
+
+
+    fres = f_open(&fil, "poem1.txt", FA_READ);
+
+    // Read every line
+    uint32_t buf_index = 0;
+    while (f_gets(text_buffer[buf_index++], sizeof(text_buffer[0]), &fil))
+        Logger::LogInfo("%s\n", text_buffer[buf_index-1]);
+
+    // Start scheduler
     osTimerStart(periodic_timer_id, 200);
 }
 

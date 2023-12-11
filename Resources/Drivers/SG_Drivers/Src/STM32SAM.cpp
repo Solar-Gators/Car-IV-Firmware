@@ -10,21 +10,6 @@ HardwareTimer *PWM = new HardwareTimer(TIM1); // need to set it up here, before 
 extern "C" TIM_HandleTypeDef htim3;
 extern "C" TIM_HandleTypeDef htim5;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           All 
-//
-////////////////////////////////////////////////////////////////////////////////////////////
-
 
 char input[256]; //tab39445
 //standard sam sound
@@ -4537,46 +4522,6 @@ STM32SAM::STM32SAM () {
   oldtimetableindex = 0;
 
 }
-
-
-/*
-  STM32SAM::~STM32SAM() {
-  {
-  // TODO: end();
-  }
-*/
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           STM32SAM sam  (variable string,  phonetic, sing, pitch, speed, mouth, throat)
-//           STM32SAM say (sing off, phonetic off) (const string)
-//           STM32SAM say (sing off, phonetic off) (variable string)
-//           STM32SAM sing (sing on, phonetic off) (const string)
-//           STM32SAM sing (sing on, phonetic off) (variable string)
-//           STM32SAM sayPhonetic (sing off, phonetic on) (const string)
-//           STM32SAM sayPhonetic (sing off, phonetic on) (variable string)
-//           STM32SAM singPhonetic (sing on, phonetic on) (const string)
-//           STM32SAM singPhonetic (sing on, phonetic on) (variable string)
-//           STM32SAM voice (pitch, speed, mouth, throat)
-//           STM32SAM setPitch (pitch)
-//           STM32SAM setSpeed (speed)
-//           STM32SAM setMouth (mouth)
-//           STM32SAM setThroat (throat)
-//
-//
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           STM32SAM sam  (const string,  phonetic, sing, pitch, speed, mouth, throat)
-//
-////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void STM32SAM::sam ( const char *argv, unsigned char _phonetic , unsigned char _singmode , unsigned char _pitch , unsigned char _speed , unsigned char  _mouth , unsigned char _throat  ) {
 

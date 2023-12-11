@@ -10,11 +10,26 @@ const osThreadAttr_t voice_task_attributes = {
     .cb_size = sizeof(voice_task_control_block),
     .stack_mem = &voice_task_buffer[0],
     .stack_size = sizeof(voice_task_buffer),
-    .priority = (osPriority_t) osPriorityAboveNormal,
+    .priority = (osPriority_t) osPriorityNormal,
     .tz_module = 0,
     .reserved = 0,
 };
 osThreadId_t voice_task_id = osThreadNew((osThreadFunc_t)VoiceTask, NULL, &voice_task_attributes);
+
+uint32_t menu_task_buffer[256];
+StaticTask_t menu_task_control_block;
+const osThreadAttr_t menu_task_attributes = {
+    .name = "Menu Task",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &menu_task_control_block,
+    .cb_size = sizeof(menu_task_control_block),
+    .stack_mem = &menu_task_buffer[0],
+    .stack_size = sizeof(menu_task_buffer),
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
+osThreadId_t menu_task_id = osThreadNew((osThreadFunc_t)MenuTask, NULL, &menu_task_attributes);
 
 uint32_t ui_task_buffer[128];
 StaticTask_t ui_task_control_block;
@@ -114,6 +129,59 @@ void VoiceTask(void *argument) {
     }
 }
 
+void MenuTask(void *argument) {
+    FRESULT res;
+    DIR dir;
+    FILINFO fno;
+    int nfile, ndir;
+
+    while (1) {
+        osMutexAcquire(spi_mutex_id, osWaitForever);
+
+        // Suspend voice thread
+        // osThreadSuspend(voice_task_id);
+
+        // Display menu screen
+        DisplayBanner("Main Menu");
+        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
+
+        // Read directory items
+        while (1) {
+            // Print files
+            res = f_opendir(&dir, "data");
+            if (res == FR_OK) {
+                ndir = 0;
+                nfile = 0;
+                while (1) {
+                    res = f_readdir(&dir, &fno);
+
+                    // End of directory
+                    if (res != FR_OK || fno.fname[0] == 0) break;   
+
+                    // Directory, ignore
+                    if (fno.fattrib & AM_DIR) {
+                        Logger::LogInfo("Directory: %s\n", fno.fname);
+                        ndir++;
+                    }
+
+                    // File, display on LCD
+                    else {
+                        Logger::LogInfo("File: %s\n", fno.fname);
+                        // If first file, display select icon
+                        if (nfile == 0)
+                            display.DrawText(&FontStyle_Emulogic, ">", 30, 195, ST7789_BLUE);
+                        display.DrawText(&FontStyle_Emulogic, fno.fname, 50, 195 - (nfile*20), ST7789_BLACK);
+                        display.DrawRectangle(0, 195 - (nfile*20) - 5, 320, 1, ST7789_GRAY);
+                        nfile++;
+                    }
+                }
+            }
+        }
+
+        osMutexRelease(spi_mutex_id);
+    }
+}
+
 void UITask(void *argument) {
     uint32_t backlight = 50;
     uint32_t volume = 50;
@@ -174,19 +242,6 @@ void UITask(void *argument) {
             default:
                 break;
         }
-    }
-}
-
-void MenuTask(void* argument) {
-    while (1) {
-        osMutexAcquire(spi_mutex_id, osWaitForever);
-
-        DisplayBanner("Main Menu");
-        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
-
-        display.DrawRectangle(10, 10, 300, 50, ST7789_BLACK);
-
-        osMutexRelease(spi_mutex_id);
     }
 }
 

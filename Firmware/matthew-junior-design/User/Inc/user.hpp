@@ -22,6 +22,7 @@ void DisplayBanner(const char* text);
 uint16_t GetJoyXY();
 void SetBacklight(uint8_t brightness);  // 0-50
 void SetVolume(uint8_t volume);         // 0-50
+FRESULT list_dir (const char *path);
 
 extern char text_buffer[20][100];               // Text buffer
 

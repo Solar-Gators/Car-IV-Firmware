@@ -73,6 +73,7 @@
 
 // ST7789 Colors
 #define ST7789_BLACK                0x0000
+#define ST7789_GRAY                 0x1111
 #define ST7789_WHITE                0xFFFF
 #define ST7789_RED                  0xF800
 #define ST7789_BLUE                 0x07E0

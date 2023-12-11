@@ -6,6 +6,7 @@
 /* Task function prototypes */
 void PeriodicTask1(void *argument);
 void VoiceTask(void *argument);
+void MenuTask(void *argument);
 void UITask(void *argument);
 
 /* Periodic threads */
@@ -13,6 +14,7 @@ extern osTimerId_t periodic_timer_id;
 
 /* Regular task definitions */
 extern osThreadId_t voice_task_id;
+extern osThreadId_t menu_task_id;
 extern osThreadId_t ui_task_id;
 
 /* Event flags */
