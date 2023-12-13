@@ -13,9 +13,13 @@
 /* main.c functions */
 extern "C" void CPP_UserSetup(void);
 extern "C" void DebounceCallback(void);
+extern "C" void SinglePressCallback(void);
 
 ST7789 display = ST7789(&hspi1, TFTCS_GPIO_Port, TFTCS_Pin, 
                         TFTDC_GPIO_Port, TFTDC_Pin, 0, 0, 0, 0);
+
+ReaderUI ui = ReaderUI();
+
 STM32SAM voice = STM32SAM(5);
 
 /* Global variables */
@@ -25,20 +29,11 @@ FIL fil;
 FRESULT fres;
 DWORD fre_clust;
 uint32_t totalSpace, freeSpace;
-char text_buffer[20][100];               // Text buffer
+char text_buffer[20][100];              // Text buffer
+uint32_t pressed_time = 0;              // Time button was pressed
 
 
 /* Function definitions */
-void DisplayBanner(const char* text) {
-    display.DrawRectangle(0, 210, 320, 30, ST7789_BLACK);
-    display.DrawText(&FontStyle_Emulogic, text, 50, 215, ST7789_WHITE);
-}
-
-void DisplayMenu() {
-    DisplayBanner("Main Menu");
-    display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
-}
-
 uint16_t GetJoyXY() {
     // Read joystick y-axis, simple ADC read
     uint32_t y_val;
@@ -92,33 +87,18 @@ void SetVolume(uint8_t volume) {
     __HAL_TIM_SET_COUNTER(&htim5, auto_reload);
 }
 
-FRESULT list_dir (const char *path)
-{
-    FRESULT res;
-    DIR dir;
-    FILINFO fno;
-    int nfile, ndir;
+void MoveCursor(uint32_t source, uint32_t dest) {
+    // Check boundary conditions
+    if (source > 19)
+        source = 19;
+    if (dest > 19)
+        dest = 19;
 
+    // Blank out old cursor
+    ui.DrawText(&FontStyle_Emulogic, ">", 30, 195 - (20 * source), ST7789_WHITE);
 
-    res = f_opendir(&dir, path);                       /* Open the directory */
-    if (res == FR_OK) {
-        nfile = ndir = 0;
-        for (;;) {
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Error or end of dir */
-            if (fno.fattrib & AM_DIR) {            /* Directory */
-                Logger::LogInfo("%s\n", fno.fname);
-                ndir++;
-            } else {                               /* File */
-                Logger::LogInfo("%s\n", fno.fname);
-                nfile++;
-            }
-        }
-        printf("%d dirs, %d files.\n", ndir, nfile);
-    } else {
-        printf("Failed to open \"%s\". (%u)\n", path, res);
-    }
-    return res;
+    // Draw new cursor
+    ui.DrawText(&FontStyle_Emulogic, ">", 30, 195 - (20 * dest), ST7789_RED);
 }
 
 void CPP_UserSetup(void) {
@@ -126,7 +106,7 @@ void CPP_UserSetup(void) {
     HAL_Delay(10);
 
     // Initialize display
-    display.Init();
+    ui.Init();
 
     // Set backlight to max brightness
     HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
@@ -140,23 +120,20 @@ void CPP_UserSetup(void) {
     // Attempt to mount SD card
     if(f_mount(&fs, "", 1) != FR_OK) {
         Logger::LogError("SD card mount failed\n");
-        display.DrawText(&FontStyle_Emulogic, "SD card not detected!", 70, 115, ST7789_BLUE);
+        ui.DrawText(&FontStyle_Emulogic, "SD card not detected!", 70, 115, ST7789_BLUE);
         Error_Handler();
     }
     else
         Logger::LogInfo("SD card mount successful\n");
 
-
-
-
-
-
+    /* Remove eventually */
     fres = f_open(&fil, "poem1.txt", FA_READ);
 
     // Read every line
     uint32_t buf_index = 0;
     while (f_gets(text_buffer[buf_index++], sizeof(text_buffer[0]), &fil))
         Logger::LogInfo("%s\n", text_buffer[buf_index-1]);
+    /* End remove eventually */
 
     // Start scheduler
     osTimerStart(periodic_timer_id, 200);
@@ -165,6 +142,12 @@ void CPP_UserSetup(void) {
 void DebounceCallback(void) {
     // If button is still pressed
     if (HAL_GPIO_ReadPin(JOY_BTN_GPIO_Port, JOY_BTN_Pin) == GPIO_PIN_RESET) {
-        osEventFlagsSet(regular_event, 0x10);
+        // Start double press timer
+        HAL_TIM_Base_Start_IT(&htim6);
     }
+}
+
+void SinglePressCallback(void) {
+    // Double press timer has expired, button is single press
+    osEventFlagsSet(regular_event, 0x10);
 }

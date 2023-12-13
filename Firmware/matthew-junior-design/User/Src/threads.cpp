@@ -113,12 +113,12 @@ void VoiceTask(void *argument) {
     while (1) {
         osMutexAcquire(spi_mutex_id, osWaitForever);
 
-        DisplayBanner("Read");
-        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
+        ui.DisplayBanner("Reader");
+        ui.Clear();
 
         uint32_t buffer_idx = 0;
         while (text_buffer[buffer_idx][0]) {
-            display.DrawText(&FontStyle_Emulogic, text_buffer[buffer_idx], 30, 195 - (15 * buffer_idx), ST7789_BLACK);
+            ui.DrawText(&FontStyle_Emulogic, text_buffer[buffer_idx], 30, 195 - (15 * buffer_idx), ST7789_BLACK);
             voice.say(text_buffer[buffer_idx]);
             buffer_idx++;
         }
@@ -133,52 +133,89 @@ void MenuTask(void *argument) {
     FRESULT res;
     DIR dir;
     FILINFO fno;
-    int nfile, ndir;
+    int nfile = 0, ndir = 0;
+
+    uint32_t selected_file = 0;
 
     while (1) {
         osMutexAcquire(spi_mutex_id, osWaitForever);
 
-        // Suspend voice thread
-        // osThreadSuspend(voice_task_id);
+        // Suspend voice thread and UI thread
+        osThreadSuspend(voice_task_id);
+        osThreadSuspend(ui_task_id);
 
         // Display menu screen
-        DisplayBanner("Main Menu");
-        display.DrawRectangle(0, 0, 320, 210, ST7789_WHITE);
+        ui.DisplayBanner("Main Menu");
+        ui.Clear();
 
         // Read directory items
-        while (1) {
-            // Print files
-            res = f_opendir(&dir, "data");
-            if (res == FR_OK) {
-                ndir = 0;
-                nfile = 0;
-                while (1) {
-                    res = f_readdir(&dir, &fno);
+        res = f_opendir(&dir, "data");
+        if (res == FR_OK) {
+            ndir = 0;
+            nfile = 0;
+            while (1) {
+                res = f_readdir(&dir, &fno);
 
-                    // End of directory
-                    if (res != FR_OK || fno.fname[0] == 0) break;   
+                // End of directory
+                if (res != FR_OK || fno.fname[0] == 0) break;   
 
-                    // Directory, ignore
-                    if (fno.fattrib & AM_DIR) {
-                        Logger::LogInfo("Directory: %s\n", fno.fname);
-                        ndir++;
-                    }
+                // Directory, ignore
+                if (fno.fattrib & AM_DIR) {
+                    Logger::LogInfo("Directory: %s\n", fno.fname);
+                    ndir++;
+                }
 
-                    // File, display on LCD
-                    else {
-                        Logger::LogInfo("File: %s\n", fno.fname);
-                        // If first file, display select icon
-                        if (nfile == 0)
-                            display.DrawText(&FontStyle_Emulogic, ">", 30, 195, ST7789_BLUE);
-                        display.DrawText(&FontStyle_Emulogic, fno.fname, 50, 195 - (nfile*20), ST7789_BLACK);
-                        display.DrawRectangle(0, 195 - (nfile*20) - 5, 320, 1, ST7789_GRAY);
-                        nfile++;
-                    }
+                // File, display on LCD
+                else {
+                    Logger::LogInfo("File: %s\n", fno.fname);
+                    // If first file, display select icon
+                    if (nfile == 0)
+                        ui.DrawText(&FontStyle_Emulogic, ">", 30, 195, ST7789_RED);
+                    ui.DrawText(&FontStyle_Emulogic, fno.fname, 50, 195 - (nfile*20), ST7789_BLACK);
+                    ui.DrawRectangle(0, 195 - (nfile*20) - 5, 320, 1, ST7789_GRAY);
+                    nfile++;
                 }
             }
         }
 
         osMutexRelease(spi_mutex_id);
+
+        // Wait for user input
+        while (1) {
+            uint32_t input_flag = osEventFlagsWait(regular_event, 0x1F, osFlagsWaitAny, osWaitForever);
+
+            switch (input_flag) {
+                case 0x1:                       // Joystick Up
+                    // Move cursor up
+                    if (selected_file > 0) {
+                        osMutexAcquire(spi_mutex_id, osWaitForever);
+                        MoveCursor(selected_file, selected_file - 1); 
+                        selected_file--;
+                        osMutexRelease(spi_mutex_id);  
+                    }   
+                    break;
+                case 0x2:                       // Joystick Right
+                case 0x4:                       // Joystick Down
+                    // Move cursor down
+                    if ((int)selected_file < nfile-1 && selected_file < 20) {
+                        osMutexAcquire(spi_mutex_id, osWaitForever);
+                        MoveCursor(selected_file, selected_file + 1); 
+                        selected_file++;
+                        osMutexRelease(spi_mutex_id);                   
+                    }       
+                    break;
+                case 0x8:                       // Joystick Left
+                    break;
+                case 0x10:                      // Joystick Button Single Press
+                    // Play selected file
+                    osThreadResume(voice_task_id);
+                    osThreadResume(ui_task_id);
+                    osThreadExit();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
 
@@ -188,7 +225,7 @@ void UITask(void *argument) {
     bool paused = false;
 
     while (1) {
-        uint32_t input_flag = osEventFlagsWait(regular_event, 0x1F, osFlagsWaitAny, osWaitForever);
+        uint32_t input_flag = osEventFlagsWait(regular_event, 0x3F, osFlagsWaitAny, osWaitForever);
 
         switch (input_flag) {
             case 0x1:                       // Joystick Up
@@ -224,7 +261,7 @@ void UITask(void *argument) {
                 }
 
                 break;
-            case 0x10:
+            case 0x10:                      // Joystick Button Single Press
                 Logger::LogInfo("Button\n");
 
                 // Play/pause voice thread
@@ -237,7 +274,9 @@ void UITask(void *argument) {
                     osThreadResume(voice_task_id);
                 }
 
-
+                break;
+            case 0x20:                      // Joystick Button Double Press
+                Logger::LogInfo("Button Double\n");
                 break;
             default:
                 break;

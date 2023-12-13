@@ -63,8 +63,8 @@ void ST7789::Init() {
     HAL_Delay(60);
 
     WriteCommand(ST7789_DISPON_ADDR);
-    HAL_Delay(60);
-    Fill(0x0000);
+    //HAL_Delay(60);
+    //Fill(0x0000);
     
     Deselect();
 }
@@ -151,7 +151,8 @@ void ST7789::WriteData(uint8_t data) {
 }
 
 void ST7789::WriteData16(uint16_t data) {
-    HAL_SPI_Transmit(phspi_, (uint8_t*)&data, 2, HAL_MAX_DELAY);
+    HAL_SPI_Transmit(phspi_, ((uint8_t*)&data) + 1, 1, HAL_MAX_DELAY);
+    HAL_SPI_Transmit(phspi_, (uint8_t*)&data, 1, HAL_MAX_DELAY);
 }
 
 void ST7789::Flood(uint16_t color, uint32_t count) {

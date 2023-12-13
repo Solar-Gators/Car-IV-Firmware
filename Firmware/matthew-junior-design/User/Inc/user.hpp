@@ -7,26 +7,26 @@
 
 #include "cmsis_os.h"
 #include "logger.hpp"
-#include "ST7789.hpp"
+#include "ReaderUI.hpp"
 #include "STM32SAM.h"
 #include "fatfs.h"
 
 extern "C" SPI_HandleTypeDef hspi1;     // display
 extern "C" TIM_HandleTypeDef htim4;     // debounce timer
 extern "C" TIM_HandleTypeDef htim5;     // sound timer
+extern "C" TIM_HandleTypeDef htim6;     // double press timer
 extern "C" ADC_HandleTypeDef hadc1;     // joystick y-axis
 extern "C" ADC_HandleTypeDef hadc2;     // joystick x-axis
 extern "C" DAC_HandleTypeDef hdac1;     // backlight
 
-void DisplayBanner(const char* text);
 uint16_t GetJoyXY();
 void SetBacklight(uint8_t brightness);  // 0-50
 void SetVolume(uint8_t volume);         // 0-50
-FRESULT list_dir (const char *path);
+void MoveCursor(uint32_t source, uint32_t dest);
 
 extern char text_buffer[20][100];               // Text buffer
 
-extern ST7789 display;
+extern ReaderUI ui;
 
 extern STM32SAM voice;
 

@@ -73,7 +73,7 @@
 
 // ST7789 Colors
 #define ST7789_BLACK                0x0000
-#define ST7789_GRAY                 0x1111
+#define ST7789_GRAY                 0x8c71
 #define ST7789_WHITE                0xFFFF
 #define ST7789_RED                  0xF800
 #define ST7789_BLUE                 0x07E0
@@ -107,6 +107,7 @@ public:
 protected:
     inline void Select();
     inline void Deselect();
+    void SetWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     inline void SetData();
     inline void SetCommand();
 
@@ -115,7 +116,6 @@ protected:
     void WriteData16(uint16_t data);
     void Flood(uint16_t color, uint32_t count);
     uint8_t ReadRegister(uint8_t addr);
-    void SetWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     const uint8_t* GetCharGlyph(const fontStyle_t *font, char c);
 private:
     int16_t text_size_;
