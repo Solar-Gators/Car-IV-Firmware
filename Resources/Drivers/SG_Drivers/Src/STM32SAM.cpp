@@ -7,24 +7,8 @@
 HardwareTimer *PWM = new HardwareTimer(TIM1); // need to set it up here, before setup{}
 #endif
 
-extern "C" TIM_HandleTypeDef htim2;
 extern "C" TIM_HandleTypeDef htim3;
-extern "C" DAC_HandleTypeDef hdac1;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           All 
-//
-////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" TIM_HandleTypeDef htim5;
 
 
 char input[256]; //tab39445
@@ -2547,6 +2531,9 @@ void STM32SAM::Init()
   }
   phonemeindex[255] = 255; //to prevent buffer overflow // ML : changed from 32 to 255 to stop freezing with long inputs
 
+  // Start timers
+  HAL_TIM_Base_Start(&htim3);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
 }
 
 
@@ -4536,46 +4523,6 @@ STM32SAM::STM32SAM () {
 
 }
 
-
-/*
-  STM32SAM::~STM32SAM() {
-  {
-  // TODO: end();
-  }
-*/
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           STM32SAM sam  (variable string,  phonetic, sing, pitch, speed, mouth, throat)
-//           STM32SAM say (sing off, phonetic off) (const string)
-//           STM32SAM say (sing off, phonetic off) (variable string)
-//           STM32SAM sing (sing on, phonetic off) (const string)
-//           STM32SAM sing (sing on, phonetic off) (variable string)
-//           STM32SAM sayPhonetic (sing off, phonetic on) (const string)
-//           STM32SAM sayPhonetic (sing off, phonetic on) (variable string)
-//           STM32SAM singPhonetic (sing on, phonetic on) (const string)
-//           STM32SAM singPhonetic (sing on, phonetic on) (variable string)
-//           STM32SAM voice (pitch, speed, mouth, throat)
-//           STM32SAM setPitch (pitch)
-//           STM32SAM setSpeed (speed)
-//           STM32SAM setMouth (mouth)
-//           STM32SAM setThroat (throat)
-//
-//
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-//
-//           STM32SAM sam  (const string,  phonetic, sing, pitch, speed, mouth, throat)
-//
-////////////////////////////////////////////////////////////////////////////////////////////
-
-
 void STM32SAM::sam ( const char *argv, unsigned char _phonetic , unsigned char _singmode , unsigned char _pitch , unsigned char _speed , unsigned char  _mouth , unsigned char _throat  ) {
 
 
@@ -4713,7 +4660,7 @@ void STM32SAM::say(const char *argv ) {
 
   sam ( const_input,   phonetic ,  singmode ,  pitch , speed ,  mouth , throat  );
 
-
+  SetAUDIO(0);
 }
 
 void STM32SAM::say( char *argv ) {
@@ -4995,8 +4942,7 @@ inline void STM32SAM::SetAUDIO (unsigned char main_volume) {
 #endif
 
 #ifdef USE_HAL_DRIVER
-  //htim2.Instance->CCR4 = main_volume >> 1;
-  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, main_volume / 4);
+  htim5.Instance->CCR3 = main_volume >> 1;
 #endif
 
 }

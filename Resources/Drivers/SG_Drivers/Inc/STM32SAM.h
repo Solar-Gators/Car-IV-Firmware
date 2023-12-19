@@ -8,37 +8,6 @@
 //#include <Arduino.h>
 #include "main.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Core detector
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// #if defined(USE_HAL_DRIVER)
-// //#define USE_STM32duino_CORE
-// //                                        Official ST cores. Support for multiple line of MPU
-// //                                        link: https://github.com/stm32duino/Arduino_Core_STM32
-// //                                        Set in preferences: https://github.com/stm32duino/BoardManagerFiles/raw/master/STM32/package_stm_index.json and search stm32 in board manager.
-// //                                        Choose stm32 cores by ST Microelectronics. Select your CPU from tools menu
-
-
-// #elif defined(__STM32F1__)
-// #define USE_ROGER_CORE
-// //                                        Most of stuff for blue pill is made for this core
-// //                                        link: https://github.com/rogerclarkmelbourne/Arduino_STM32
-// //                                        Set in preferences: http://dan.drown.org/stm32duino/package_STM32duino_index.json and search stm32F1 in board manager.
-// //                                        Choose STM32F1xx core (NOTE: Only STM32F1 works)
-// #elif defined(AVR)
-// //                                        Must test this some day with Arduino UNO/NANO/MEGA
-// //
-// #error "Unsupported core - will try someday when i learn to setup interrupts and pwm on pins, without need to memorize TTROA, DDROB or DDWhateva"
-// #else
-// #error "Unknown or unsupported core. Maybe even both"
-// #endif
-
-
-
-
-
 class STM32SAM {
 
 
