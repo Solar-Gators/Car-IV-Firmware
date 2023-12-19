@@ -7,6 +7,5 @@
 
 #include "cmsis_os.h"
 #include "logger.hpp"
-#include "fatfs.h"
 
 #endif /* USER_HPP_ */
