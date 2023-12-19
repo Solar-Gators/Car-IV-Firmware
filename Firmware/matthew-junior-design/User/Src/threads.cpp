@@ -1,7 +1,22 @@
 #include "threads.h"
 
 /* Thread definitions */
-uint32_t voice_task_buffer[128];
+uint32_t sd_task_buffer[2048];
+StaticTask_t sd_task_control_block;
+const osThreadAttr_t sd_task_attributes = {
+    .name = "SD Task",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &sd_task_control_block,
+    .cb_size = sizeof(sd_task_control_block),
+    .stack_mem = &sd_task_buffer[0],
+    .stack_size = sizeof(sd_task_buffer),
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
+osThreadId_t sd_task_id = osThreadNew((osThreadFunc_t)SDTask, NULL, &sd_task_attributes);
+
+uint32_t voice_task_buffer[2048];
 StaticTask_t voice_task_control_block;
 const osThreadAttr_t voice_task_attributes = {
     .name = "Voice Task",
@@ -16,7 +31,7 @@ const osThreadAttr_t voice_task_attributes = {
 };
 osThreadId_t voice_task_id = osThreadNew((osThreadFunc_t)VoiceTask, NULL, &voice_task_attributes);
 
-uint32_t menu_task_buffer[256];
+uint32_t menu_task_buffer[2048];
 StaticTask_t menu_task_control_block;
 const osThreadAttr_t menu_task_attributes = {
     .name = "Menu Task",
@@ -31,35 +46,37 @@ const osThreadAttr_t menu_task_attributes = {
 };
 osThreadId_t menu_task_id = osThreadNew((osThreadFunc_t)MenuTask, NULL, &menu_task_attributes);
 
-uint32_t ui_task_buffer[128];
-StaticTask_t ui_task_control_block;
-const osThreadAttr_t ui_task_attributes = {
-    .name = "UI Task",
+uint32_t input_task_buffer[2048];
+StaticTask_t input_task_control_block;
+const osThreadAttr_t input_task_attributes = {
+    .name = "Input Handler Task",
     .attr_bits = osThreadDetached,
-    .cb_mem = &ui_task_control_block,
-    .cb_size = sizeof(ui_task_control_block),
-    .stack_mem = &ui_task_buffer[0],
-    .stack_size = sizeof(ui_task_buffer),
+    .cb_mem = &input_task_control_block,
+    .cb_size = sizeof(input_task_control_block),
+    .stack_mem = &input_task_buffer[0],
+    .stack_size = sizeof(input_task_buffer),
     .priority = (osPriority_t) osPriorityAboveNormal,
     .tz_module = 0,
     .reserved = 0,
 };
-osThreadId_t ui_task_id = osThreadNew((osThreadFunc_t)UITask, NULL, &ui_task_attributes);
+osThreadId_t input_task_id = osThreadNew((osThreadFunc_t)InputHandlerTask, NULL, &input_task_attributes);
 
 /* Periodic thread definitions */
-const osTimerAttr_t periodic_timer_attr = {
-    .name = "Periodic Task 1",
+const osTimerAttr_t joystick_timer_attr = {
+    .name = "Joystick Periodic Task",
     .attr_bits = 0,
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t periodic_timer_id = osTimerNew((osThreadFunc_t)PeriodicTask1, 
+osTimerId_t joystick_timer_id = osTimerNew((osThreadFunc_t)JoystickTask, 
                                             osTimerPeriodic, 
                                             NULL, 
-                                            &periodic_timer_attr);
+                                            &joystick_timer_attr);
 
 /* Event flag to trigger regular task */
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
+osEventFlagsId_t filename_event = osEventFlagsNew(NULL);
+osEventFlagsId_t lineread_event = osEventFlagsNew(NULL);
 
 /* Mutexes */
 StaticSemaphore_t   spi_mutex_control_block;
@@ -71,9 +88,21 @@ const osMutexAttr_t spi_mutex_attributes = {
 };
 osMutexId_t spi_mutex_id = osMutexNew(&spi_mutex_attributes);
 
+StaticSemaphore_t  text_mutex_control_block;
+const osMutexAttr_t text_mutex_attributes = {
+    .name = "Text Mutex",
+    .attr_bits = osMutexRecursive,
+    .cb_mem = &text_mutex_control_block,
+    .cb_size = sizeof(text_mutex_control_block),
+};
+osMutexId_t text_mutex_id = osMutexNew(&text_mutex_attributes);
+
+/* Buffers */
+char text_buffer[100];
+char filename_buffer[20][100];
 
 /* Thread function definitions */
-void PeriodicTask1(void *argument) {
+void JoystickTask(void *argument) {
     uint16_t joy_val = GetJoyXY();
 
     uint8_t joy_x = joy_val >> 8;
@@ -109,23 +138,79 @@ void PeriodicTask1(void *argument) {
     }
 }
 
+void SDTask(void *argument) {
+    FIL fil;
+    FRESULT fres;
+    uint32_t num_lines;
+
+    while (1) {
+        // Wait for file open request (account for 1 offset so 0 produces a flag)
+        uint32_t file_num = osEventFlagsWait(filename_event, 0xFFFF, osFlagsWaitAny, osWaitForever);
+        file_num--;
+
+        // Open file and read first line
+        TCHAR pathname[120] = "/data/";
+        strcat(pathname, filename_buffer[file_num]);
+        fres = f_open(&fil, pathname, FA_READ);
+        if (fres != FR_OK) {
+            Logger::LogError("Error opening file: %d\n", fres);
+            ui.DrawText(&FontStyle_Emulogic, "Error opening file", 30, 195, ST7789_RED);
+        }
+        num_lines = 0;
+
+        char* ret;
+        do {
+            // Read line from file
+            //osMutexAcquire(text_mutex_id, osWaitForever);
+            ret = f_gets(text_buffer, sizeof(text_buffer), &fil);
+            //osMutexRelease(text_mutex_id);
+
+            // If EOF, close file and break
+            if (!ret) {
+                f_close(&fil);
+                break;
+            }
+
+            // Signal line read
+            osEventFlagsSet(lineread_event, SD_LINE_RESPONSE);
+
+            if (num_lines == 9) {
+                ui.Clear();
+                num_lines = 0;
+            }
+
+            // Print line to display
+            osMutexAcquire(spi_mutex_id, osWaitForever);
+            ui.DrawText(&FontStyle_Emulogic, text_buffer, 30, 195-(num_lines*20), ST7789_BLACK);
+            osMutexRelease(spi_mutex_id);
+
+            // Increment num_lines
+            num_lines++;
+
+            // Wait for line read request
+            uint32_t request = osEventFlagsWait(lineread_event, SD_LINE_REQUEST | SD_CLOSE_REQUEST, osFlagsWaitAny, osWaitForever);
+            if (request == SD_CLOSE_REQUEST) {
+                f_close(&fil);
+                break;
+            }
+        } while (ret);
+
+    }
+}
+
 void VoiceTask(void *argument) {
     while (1) {
-        osMutexAcquire(spi_mutex_id, osWaitForever);
+        // Wait for line to appear in text buffer
+        osEventFlagsWait(lineread_event, SD_LINE_RESPONSE, osFlagsWaitAny, osWaitForever);
 
-        ui.DisplayBanner("Reader");
-        ui.Clear();
+        osMutexAcquire(text_mutex_id, osWaitForever);
+        // Don't read byte
+        if (text_buffer[0] != '#')
+            voice.say(text_buffer);
+        osMutexRelease(text_mutex_id);
 
-        uint32_t buffer_idx = 0;
-        while (text_buffer[buffer_idx][0]) {
-            ui.DrawText(&FontStyle_Emulogic, text_buffer[buffer_idx], 30, 195 - (15 * buffer_idx), ST7789_BLACK);
-            voice.say(text_buffer[buffer_idx]);
-            buffer_idx++;
-        }
-
-        osMutexRelease(spi_mutex_id);
-
-        osDelay(500);
+        // Request next line
+        osEventFlagsSet(lineread_event, SD_LINE_REQUEST);
     }
 }
 
@@ -138,11 +223,16 @@ void MenuTask(void *argument) {
     uint32_t selected_file = 0;
 
     while (1) {
+        // Reset counters
+        nfile = 0;
+        ndir = 0;
+        selected_file = 0;
+
         osMutexAcquire(spi_mutex_id, osWaitForever);
 
         // Suspend voice thread and UI thread
         osThreadSuspend(voice_task_id);
-        osThreadSuspend(ui_task_id);
+        osThreadSuspend(input_task_id);
 
         // Display menu screen
         ui.DisplayBanner("Main Menu");
@@ -150,6 +240,9 @@ void MenuTask(void *argument) {
 
         // Read directory items
         res = f_opendir(&dir, "data");
+        if (res != FR_OK)
+            Logger::LogError("Error changing directory: %d\n", res);
+        // res = f_chdir("data");
         if (res == FR_OK) {
             ndir = 0;
             nfile = 0;
@@ -173,6 +266,9 @@ void MenuTask(void *argument) {
                         ui.DrawText(&FontStyle_Emulogic, ">", 30, 195, ST7789_RED);
                     ui.DrawText(&FontStyle_Emulogic, fno.fname, 50, 195 - (nfile*20), ST7789_BLACK);
                     ui.DrawRectangle(0, 195 - (nfile*20) - 5, 320, 1, ST7789_GRAY);
+
+                    // Copy filename to buffer
+                    strcpy(filename_buffer[nfile], fno.fname);
                     nfile++;
                 }
             }
@@ -208,18 +304,25 @@ void MenuTask(void *argument) {
                     break;
                 case 0x10:                      // Joystick Button Single Press
                     // Play selected file
+                    ui.DisplayBanner(filename_buffer[selected_file]);
+                    ui.Clear();
+                    // Set event flag to open file, offset by 1 so 0 produces a flag
+                    osEventFlagsSet(filename_event, selected_file+1);
                     osThreadResume(voice_task_id);
-                    osThreadResume(ui_task_id);
-                    osThreadExit();
+                    osThreadResume(input_task_id);
+                    osThreadSuspend(menu_task_id);
                     break;
                 default:
                     break;
             }
+
+            if (input_flag == JOY_BTN)
+                break;
         }
     }
 }
 
-void UITask(void *argument) {
+void InputHandlerTask(void *argument) {
     uint32_t backlight = 50;
     uint32_t volume = 50;
     bool paused = false;
@@ -277,6 +380,16 @@ void UITask(void *argument) {
                 break;
             case 0x20:                      // Joystick Button Double Press
                 Logger::LogInfo("Button Double\n");
+
+                // Suspend voice and SD thread
+                osThreadSuspend(voice_task_id);
+                osEventFlagsSet(lineread_event, SD_CLOSE_REQUEST);
+
+                // On restart, clear response flag
+                osEventFlagsClear(lineread_event, SD_LINE_REQUEST | SD_LINE_RESPONSE | SD_CLOSE_REQUEST);
+
+                // Resume menu thread
+                osThreadResume(menu_task_id);
                 break;
             default:
                 break;

@@ -24,8 +24,6 @@ void SetBacklight(uint8_t brightness);  // 0-50
 void SetVolume(uint8_t volume);         // 0-50
 void MoveCursor(uint32_t source, uint32_t dest);
 
-extern char text_buffer[20][100];               // Text buffer
-
 extern ReaderUI ui;
 
 extern STM32SAM voice;

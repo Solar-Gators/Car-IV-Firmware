@@ -13,7 +13,6 @@
 /* main.c functions */
 extern "C" void CPP_UserSetup(void);
 extern "C" void DebounceCallback(void);
-extern "C" void SinglePressCallback(void);
 
 ST7789 display = ST7789(&hspi1, TFTCS_GPIO_Port, TFTCS_Pin, 
                         TFTDC_GPIO_Port, TFTDC_Pin, 0, 0, 0, 0);
@@ -29,7 +28,6 @@ FIL fil;
 FRESULT fres;
 DWORD fre_clust;
 uint32_t totalSpace, freeSpace;
-char text_buffer[20][100];              // Text buffer
 uint32_t pressed_time = 0;              // Time button was pressed
 
 
@@ -114,40 +112,39 @@ void CPP_UserSetup(void) {
 
     // Say "power on"
     voice.setVoice(72, 72, 128, 128);
-    voice.say("Power On,");
+    voice.say("Power On!");
     voice.setPitch(64);
 
     // Attempt to mount SD card
     if(f_mount(&fs, "", 1) != FR_OK) {
         Logger::LogError("SD card mount failed\n");
-        ui.DrawText(&FontStyle_Emulogic, "SD card not detected!", 70, 115, ST7789_BLUE);
+        ui.DrawFastRectangle(0, 0, 320, 240, true);
+        ui.DrawFastRectangle(50, 100, 220, 2, false);
+        ui.DrawFastRectangle(50, 140, 220, 2, false);
+        ui.DrawFastRectangle(50, 100, 2, 40, false);
+        ui.DrawFastRectangle(268, 100, 2, 40, false);
+        ui.DrawText(&FontStyle_Emulogic, "SD card not detected!", 75, 115, ST7789_RED);
         Error_Handler();
     }
     else
         Logger::LogInfo("SD card mount successful\n");
 
-    /* Remove eventually */
-    fres = f_open(&fil, "poem1.txt", FA_READ);
-
-    // Read every line
-    uint32_t buf_index = 0;
-    while (f_gets(text_buffer[buf_index++], sizeof(text_buffer[0]), &fil))
-        Logger::LogInfo("%s\n", text_buffer[buf_index-1]);
-    /* End remove eventually */
-
     // Start scheduler
-    osTimerStart(periodic_timer_id, 200);
+    osTimerStart(joystick_timer_id, 200);
 }
 
 void DebounceCallback(void) {
     // If button is still pressed
     if (HAL_GPIO_ReadPin(JOY_BTN_GPIO_Port, JOY_BTN_Pin) == GPIO_PIN_RESET) {
-        // Start double press timer
-        HAL_TIM_Base_Start_IT(&htim6);
+        // If double press timer is running, register double press and reset timer
+        if (pressed_time != 0 && HAL_GetTick() - pressed_time < 500) {
+            osEventFlagsSet(regular_event, JOY_BTN_DOUBLE);
+            pressed_time = 0;
+        }
+        // Register single press and start double press timer
+        else {
+            osEventFlagsSet(regular_event, JOY_BTN);
+            pressed_time = HAL_GetTick();
+        }
     }
-}
-
-void SinglePressCallback(void) {
-    // Double press timer has expired, button is single press
-    osEventFlagsSet(regular_event, 0x10);
 }

@@ -99,7 +99,6 @@ void StartDefaultTask(void *argument);
 /* USER CODE BEGIN PFP */
 void CPP_UserSetup(void);
 void DebounceCallback(void);
-void SinglePressCallback(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -877,10 +876,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   if (htim->Instance == TIM4) {   // Debounce timer
     HAL_TIM_Base_Stop_IT(&htim4);
     DebounceCallback();
-  }
-  else if (htim->Instance == TIM6) {  // Double press timer
-    HAL_TIM_Base_Stop_IT(&htim6);
-    SinglePressCallback();
   }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM17) {
