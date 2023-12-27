@@ -31,8 +31,8 @@ const osThreadAttr_t regular_task_attributes = {
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
 /* CAN definitions */
-CANMessage msg1_static = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
-CANMessage msg2_static = CANMessage(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
+CANFrame msg1_static = CANFrame(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
+CANFrame msg2_static = CANFrame(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
 CANDevice can1 = CANDevice(&hcan1);
 
 
@@ -59,11 +59,11 @@ void CPP_UserSetup(void) {
 void periodic_task1(void) {
     Logger::LogInfo("Sending CAN message\n");
 
-    CANMessage msg1 = CANMessage(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
+    CANFrame msg1 = CANFrame(0x37, CAN_ID_STD, CAN_RTR_DATA, 8);
     uint8_t msg1Data[8] = {1,2,3,4,5,6,7,8};
     msg1.LoadData(msg1Data, 8);
 
-    CANMessage msg2 = CANMessage(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
+    CANFrame msg2 = CANFrame(0x38, CAN_ID_EXT, CAN_RTR_DATA, 8);
     uint8_t msg2Data[8] = {9,10,11,12,13,14,15,16};
     msg2.LoadData(msg2Data, 8);
 
