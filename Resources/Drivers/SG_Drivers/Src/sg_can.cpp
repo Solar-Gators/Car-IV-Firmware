@@ -71,7 +71,7 @@ void CANDevice::HandleTx(void* argument) {
         osMessageQueueGet(tx_queue_, &tx_msg, NULL, osWaitForever);
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("Tx on device %x", hcan_->Instance);
+        Logger::LogDebug("Tx on device %x", hcan_->Instance);
         #endif
 
         // Get message header from CANFrame object
@@ -107,7 +107,7 @@ void CANDevice::HandleRx(void* argument) {
         osEventFlagsWait(rx_event_flag_, 0x1, osFlagsWaitAny, osWaitForever);      
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("Rx on device %x", hcan_->Instance);
+        Logger::LogDebug("Rx on device %x", hcan_->Instance);
         #endif
         
         CAN_RxHeaderTypeDef rxHeader;
@@ -126,11 +126,15 @@ void CANDevice::HandleRx(void* argument) {
                 for (uint32_t i = 0; i < rx_msg->len; i++)
                     rx_msg->data[i] = rxData[i];
                 osMutexRelease(rx_msg->mutex_id_);
+
+                // Call Rx callback
+                if (rx_msg->rxCallback)
+                rx_msg->rxCallback(rxData);
             }
         }
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("RX Data: %x %x %x %x %x %x %x %x", rxData[0], rxData[1], rxData[2], rxData[3], rxData[4], rxData[5], rxData[6], rxData[7]);
+        Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
         #endif
 
         // Re-enable Rx interrupt

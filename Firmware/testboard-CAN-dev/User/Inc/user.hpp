@@ -11,13 +11,4 @@
 #include "logger.hpp"
 #include "button.hpp"
 
-extern "C" CAN_HandleTypeDef hcan1;
-extern "C" CAN_HandleTypeDef hcan2;
-
-extern CANDevice can1;
-
-void ButtonCallback(void);
-void LongCallback(void);
-void DoubleCallback(void);
-
 #endif /* USER_HPP_ */

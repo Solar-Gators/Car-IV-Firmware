@@ -44,17 +44,11 @@
 */
 class CANFrame {
 public:
-    CANFrame(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t len):
-        can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len)
-    {
-        mutex_id_ = osMutexNew(&mutex_attributes_);
-    };
-
     CANFrame(uint32_t can_id, 
                 uint32_t id_type, 
                 uint32_t rtr_mode,
                 uint32_t len,
-                void (*rxCallback)(uint8_t data[])):
+                void (*rxCallback)(uint8_t data[]) = NULL):
         can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len), rxCallback(rxCallback)
     {
         mutex_id_ = osMutexNew(&mutex_attributes_);

@@ -24,24 +24,45 @@ Button::Button(GPIO_TypeDef *port, uint16_t pin,
     last_press_time_ = 0;
     long_press_time_ms_ = 0;        // Long press disabled
     double_press_time_ms_ = 0;      // Double press disabled
+
+    // Default toggle state
+    long_toggle_state_ = initial_toggle_state;
+    double_toggle_state_ = initial_toggle_state;
 };
 
 void Button::RegisterNormalPressCallback(void (*callback)(void)) {
     normal_callback_ = callback;
 }
 
-void Button::RegisterLongPressCallback(void (*callback)(void), uint32_t long_press_time_ms) {
+void Button::RegisterLongPressCallback(void (*callback)(void), 
+                                        uint32_t long_press_time_ms,
+                                        bool initial_toggle_state) {
     long_press_callback_ = callback;
     long_press_time_ms_ = long_press_time_ms;
+    long_toggle_state_ = initial_toggle_state;
 }
 
-void Button::RegisterDoublePressCallback(void (*callback)(void), uint32_t double_press_time_ms) {
+void Button::RegisterDoublePressCallback(void (*callback)(void),
+                                            uint32_t double_press_time_ms,
+                                            bool initial_toggle_state) {
     double_press_callback_ = callback;
     double_press_time_ms_ = double_press_time_ms;
 }
 
 uint32_t Button::GetPin() {
     return pin_;
+}
+
+bool Button::GetToggleState() {
+    return toggle_state_;
+}
+
+bool Button::GetLongToggleState() {
+    return long_toggle_state_;
+}
+
+bool Button::GetDoubleToggleState() {
+    return double_toggle_state_;
 }
 
 GPIO_PinState Button::ReadPin() {
@@ -93,6 +114,7 @@ void Button::PollForLongPress() {
 
     // If we get here, long press has occurred
     Logger::LogInfo("Long Press");
+    long_toggle_state_ = !long_toggle_state_;
     long_press_callback_();
 }
 
@@ -104,12 +126,14 @@ void Button::HandlePress() {
             Logger::LogInfo("Double Press");
             double_press_callback_();
             last_press_time_ = 0;
+            toggle_state_ = !toggle_state_;
             return;
         }
     }
     // If we get here double press has not occurred
     Logger::LogInfo("Normal Press");
     last_press_time_ = osKernelGetTickCount();
+    toggle_state_ = !toggle_state_;
     normal_callback_();
 }
 

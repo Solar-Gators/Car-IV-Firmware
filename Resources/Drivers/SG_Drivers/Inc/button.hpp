@@ -30,14 +30,20 @@
 class Button {
 public:
     Button(GPIO_TypeDef *port, uint16_t pin, uint32_t debounce_time_ms = 50,
-             GPIO_PinState default_state = GPIO_PIN_SET, 
-             bool initial_toggle_state = false);
+             GPIO_PinState default_state = GPIO_PIN_SET, bool initial_toggle_state = false);
     void RegisterNormalPressCallback(void (*callback)(void));
-    void RegisterLongPressCallback(void (*callback)(void), uint32_t long_press_time_ms = 500);
-    void RegisterDoublePressCallback(void (*callback)(void), uint32_t double_press_time_ms = 500);
+    void RegisterLongPressCallback(void (*callback)(void), 
+                                        uint32_t long_press_time_ms = 500, 
+                                        bool initial_toggle_state = false);
+    void RegisterDoublePressCallback(void (*callback)(void),
+                                        uint32_t double_press_time_ms = 500,
+                                        bool initial_toggle_state = false);
 
     uint32_t GetPin();
     GPIO_PinState ReadPin();
+    bool GetToggleState();
+    bool GetLongToggleState();
+    bool GetDoubleToggleState();
 
     // Current triggered button
     static inline Button *triggered_button_;
@@ -79,7 +85,9 @@ private:
     uint16_t pin_;                  // Pin number
     uint32_t debounce_time_ms_;     // Debounce time in ms
     GPIO_PinState default_state_;   // Default pin state
-    bool toggle_state_;             // Toggle state of button
+    bool toggle_state_;             // Toggle state of button, toggled on single and double press
+    bool long_toggle_state_;        // Toggle state of button, toggled on long press
+    bool double_toggle_state_;      // Toggle state of button, toggled on double press
 
     void (*normal_callback_)(void);        // User-provided callback function
     void (*long_press_callback_)(void);    // User-provided callback function for long press
@@ -88,7 +96,6 @@ private:
     uint32_t long_press_time_ms_;   // Time to count as a long press
     uint32_t double_press_time_ms_; // Time between presses to count as a double press
 
-
-    // Debouncing state information
+    // Double press state information
     uint32_t last_press_time_;     // Last time valid event was recorded on button
 };
