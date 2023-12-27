@@ -11,8 +11,8 @@ set(CMAKE_BUILD_TYPE Debug)
 # Edit this section based on the target platform
 ########################################################################
 set(MCU_FAMILY STM32L4xx)
-set(MCU_MODEL STM32L476xx)
-set(MCU_PART STM32L476RGTx)
+set(MCU_MODEL STM32L496xx)
+set(MCU_PART STM32L496RGTx)
 
 set(CPU_PARAMETERS
     -mcpu=cortex-m4
@@ -58,7 +58,7 @@ file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c)
 file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/console.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/button.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp)
     
     
@@ -76,7 +76,6 @@ add_executable(${EXECUTABLE} ${GLOB_SOURCES} ${RECURSE_SOURCES} ${DRIVER_SOURCES
 # Define startup ASM file and linker script
 ########################################################################
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_L)
-set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/startup_${MCU_MODEL_L}.s)
 set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld)
 
 ########################################################################

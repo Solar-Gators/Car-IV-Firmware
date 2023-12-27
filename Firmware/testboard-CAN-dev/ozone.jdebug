@@ -4,8 +4,8 @@
 *                         www.segger.com                             *
 **********************************************************************
 
-File          : C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-CAN-dev/ozone.jdebug
-Created       : 18 Jul 2023 00:01
+File          : C:/Dev/Car-IV-Firmware/Firmware/testboard-base/ozone.jdebug
+Created       : 21 Nov 2023 11:52
 Ozone Version : V3.30a
 */
 
@@ -22,18 +22,20 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
-  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-CAN-dev", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/nucleol476rg-can-dev", "$(ProjectDir)");
-  Project.SetDevice ("STM32L476RG");
-  Project.SetHostIF ("USB", "770506940");
-  Project.SetTargetIF ("JTAG");
+  Project.SetTraceSource ("SWO");
+  Project.SetDevice ("STM32L496RG");
+  Project.SetHostIF ("USB", "801042722");
+  Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
+  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/testboard-base", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/testboard-base", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
   //
-  File.Open ("$(ProjectDir)/build/nucleol476rg-CAN-dev.elf");
-  Project.SetOSPlugin ("C:\Program Files\SEGGER\Ozone\Plugins\OS\FreeRTOSPlugin_CM4.js");
+  Edit.SysVar (VAR_RTT_ENABLED, 1);
+  Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
+  File.Open ("$(ProjectDir)/build/testboard-base.elf");
 }
 
 /*********************************************************************

@@ -1,5 +1,6 @@
 #include "logger.hpp"
 
+#if (USE_LOGGING == 1)
 void Logger::LogInfo(const char * sFormat, ...) {
     PrintHeader("INFO");
     PrintThread();
@@ -39,6 +40,12 @@ void Logger::LogError(const char * sFormat, ...) {
     va_end(ParamList);
     SEGGER_RTT_printf(0, "\n");
 }
+#else
+void Logger::LogInfo(const char * sFormat, ...) {}
+void Logger::LogDebug(const char * sFormat, ...) {}
+void Logger::LogWarning(const char * sFormat, ...) {}
+void Logger::LogError(const char * sFormat, ...) {}
+#endif
 
 void Logger::PrintHeader(const char * sLevel) {
     uint32_t timestamp = HAL_GetTick();
@@ -46,7 +53,7 @@ void Logger::PrintHeader(const char * sLevel) {
 }
 
 void Logger::PrintThread() {
-#ifdef USE_FREERTOS
+#if (USE_FREERTOS == 1)
     SEGGER_RTT_printf(0, "[%s] ", osThreadGetName(osThreadGetId()));
 #endif
 }

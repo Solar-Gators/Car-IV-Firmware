@@ -1,5 +1,16 @@
 #include "sg_can.hpp"
 
+/* Only STM32L4 supported for now */
+#ifndef STM32L496xx
+#error This driver is only compatible with STM32L496xx devices
+#endif
+
+/* Must be running FreeRTOS */
+#if (USE_FREERTOS != 1)
+#error This driver requires FreeRTOS
+#endif
+
+
 /**
   * @brief  Starts threads, starts CAN modules, enables interrupts
   * @retval HAL status
@@ -23,8 +34,9 @@ HAL_StatusTypeDef CANDevice::Start() {
   * @brief  Sends CAN message
   * @retval HAL status
   */
-HAL_StatusTypeDef CANDevice::Send(CANMessage *msg) {
+HAL_StatusTypeDef CANDevice::Send(CANFrame *msg) {
     // Put message in queue, blocking if queue is full
+    // Aliasing is not an issue because data is copied to queue (how big is queue performance penalty?)
     if (osMessageQueuePut(tx_queue_, &msg, 0, TX_TIMEOUT) != osOK) {
         HandleTxTimeout();
         return HAL_ERROR;
@@ -53,21 +65,17 @@ void CANDevice::SetRxFlag() {
   * @param  manager Pointer to CANDeviceManager object
   */
 void CANDevice::HandleTx(void* argument) {
-    CANMessage* tx_msg;
+    CANFrame* tx_msg;
     while (1) {
         // Block thread execution until message appears in queue
         osMessageQueueGet(tx_queue_, &tx_msg, NULL, osWaitForever);
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("Tx thread sending...\n");
+        Logger::LogDebug("Tx on device %x", hcan_->Instance);
         #endif
 
-        // Spinlock until a tx mailbox is empty
-        while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan_));
-
-        // Get message header from CANMessage object
+        // Get message header from CANFrame object
         osMutexAcquire(tx_msg->mutex_id_, osWaitForever);
-        uint32_t txMailbox;
         CAN_TxHeaderTypeDef txHeader = {
             .StdId = tx_msg->can_id,
             .ExtId = tx_msg->can_id,
@@ -78,6 +86,11 @@ void CANDevice::HandleTx(void* argument) {
         };
         osMutexRelease(tx_msg->mutex_id_);
 
+        // Spinlock until a tx mailbox is empty
+        while (!HAL_CAN_GetTxMailboxesFreeLevel(hcan_));
+
+        // txMailbox stores the mailbox that the message was sent from
+        uint32_t txMailbox;
         // Request HAL message send
         HAL_CAN_AddTxMessage(hcan_, &txHeader, tx_msg->data, &txMailbox);
     }
@@ -88,13 +101,13 @@ void CANDevice::HandleTx(void* argument) {
   * @param  manager Pointer to CANDeviceManager object
   */
 void CANDevice::HandleRx(void* argument) {
-    CANMessage* rx_msg;
+    CANFrame* rx_msg;
     while (1) {
         // Block thread execution until Rx flag is set from ISR
         osEventFlagsWait(rx_event_flag_, 0x1, osFlagsWaitAny, osWaitForever);      
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("Rx thread receiving...\n");
+        Logger::LogDebug("Rx on device %x", hcan_->Instance);
         #endif
         
         CAN_RxHeaderTypeDef rxHeader;
@@ -113,11 +126,15 @@ void CANDevice::HandleRx(void* argument) {
                 for (uint32_t i = 0; i < rx_msg->len; i++)
                     rx_msg->data[i] = rxData[i];
                 osMutexRelease(rx_msg->mutex_id_);
+
+                // Call Rx callback
+                if (rx_msg->rxCallback)
+                rx_msg->rxCallback(rxData);
             }
         }
 
         #ifdef USE_LOGGING
-        Logger::LogInfo("RX Data: %x %x %x %x %x %x %x %x\n", rxData[0], rxData[1], rxData[2], rxData[3], rxData[4], rxData[5], rxData[6], rxData[7]);
+        Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
         #endif
 
         // Re-enable Rx interrupt
@@ -132,7 +149,7 @@ void CANDevice::HandleRx(void* argument) {
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
 void CANDevice::HandleTxTimeout() {
     #ifdef USE_LOGGING
-    Logger::LogError("Tx Timeout\n");
+    Logger::LogError("Tx Timeout on device %x", hcan_->Instance);
     #endif
 
     // Terminate thread
@@ -168,10 +185,10 @@ HAL_StatusTypeDef CANController::AddDevice(CANDevice *device) {
 
 /**
   * @brief  Add CAN message to CANController
-  * @param  msg Pointer to CANMessage object
+  * @param  msg Pointer to CANFrame object
   * @retval HAL status
   */
-HAL_StatusTypeDef CANController::AddRxMessage(CANMessage *msg) {
+HAL_StatusTypeDef CANController::AddRxMessage(CANFrame *msg) {
     if (num_msgs_ >= MAX_RX_MSGS)
         return HAL_ERROR;
 
@@ -184,11 +201,11 @@ HAL_StatusTypeDef CANController::AddRxMessage(CANMessage *msg) {
 
 /**
   * @brief  Add CAN messages to CANController
-  * @param  msg Array of pointers to CANMessage objects
-  * @param  num_msgs Number of CANMessage objects in array
+  * @param  msg Array of pointers to CANFrame objects
+  * @param  num_msgs Number of CANFrame objects in array
   * @retval HAL status
   */
-HAL_StatusTypeDef CANController::AddRxMessages(CANMessage *msg[], uint32_t num_msgs) {
+HAL_StatusTypeDef CANController::AddRxMessages(CANFrame *msg[], uint32_t num_msgs) {
     if (num_msgs_ + num_msgs >= MAX_RX_MSGS)
         return HAL_ERROR;
 
@@ -355,10 +372,10 @@ HAL_StatusTypeDef CANController::Start() {
 
 /**
   * @brief  Send CAN message on all CAN devices
-  * @param  msg Pointer to CANMessage object
+  * @param  msg Pointer to CANFrame object
   * @retval HAL status
   */
-HAL_StatusTypeDef CANController::Send(CANMessage *msg) {
+HAL_StatusTypeDef CANController::Send(CANFrame *msg) {
     for (auto device : devices_)
         if (device->Send(msg) != HAL_OK)
             return HAL_ERROR;
@@ -369,21 +386,21 @@ HAL_StatusTypeDef CANController::Send(CANMessage *msg) {
 /**
   * @brief  Send CAN message on CAN device
   * @param  device Pointer to CANDevice object
-  * @param  msg Pointer to CANMessage object
+  * @param  msg Pointer to CANFrame object
   * @retval HAL status
   */
-HAL_StatusTypeDef CANController::SendOnDevice(CANDevice *device, CANMessage *msg) {
+HAL_StatusTypeDef CANController::SendOnDevice(CANDevice *device, CANFrame *msg) {
     return device->Send(msg);
 }
 
 /**
   * @brief  Get CAN message from CANController
   * @param  can_id CAN ID of message to get
-  * @param  msg Pointer to CANMessage object
+  * @param  msg Pointer to CANFrame object
   * @retval HAL status
   */
 #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
-HAL_StatusTypeDef CANController::GetMessage(uint32_t can_id, CANMessage *msg) {
+HAL_StatusTypeDef CANController::GetMessage(uint32_t can_id, CANFrame *msg) {
     if (rx_messages_.find(can_id) == rx_messages_.end())
         return HAL_ERROR;
 
@@ -415,8 +432,11 @@ void CANController::RxCallback(CAN_HandleTypeDef *hcan) {
         }
 }
 
-
-/*
+/**
+ * @brief  CAN Rx interrupt callback. Calls CANDeviceManager SetRxFlag().
+ * @param  hcan Pointer to CAN_HandleTypeDef object
+*/
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    HAL_CAN_DeactivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
     CANController::RxCallback(hcan);
-}*/
+}

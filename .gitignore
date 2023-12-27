@@ -1,1 +1,5 @@
+# Ignore build directories
 **/build/
+
+# Ignore automatically generated makefiles
+Makefile
