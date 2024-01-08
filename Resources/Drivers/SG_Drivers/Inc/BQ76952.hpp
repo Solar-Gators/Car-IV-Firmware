@@ -65,8 +65,7 @@ private:
     HAL_StatusTypeDef DatamemWriteI1(const uint16_t reg_addr, int8_t value);
     HAL_StatusTypeDef DatamemWriteI2(const uint16_t reg_addr, int16_t value);
     HAL_StatusTypeDef DatamemWriteF4(const uint16_t reg_addr, float value);
-
-    HAL_StatusTypeDef EnableThermistorPins(); // these functions should only get called by eventual init function
+    HAL_StatusTypeDef EnableThermistorPins();
 
     I2C_HandleTypeDef *hi2c_;
 

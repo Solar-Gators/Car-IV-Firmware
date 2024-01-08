@@ -123,13 +123,6 @@ HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
     if (status != HAL_OK) 
         return status;
 
-    
-
-
-
-    if (status != HAL_OK) 
-        return status;
-
     return HAL_OK;
 }
 

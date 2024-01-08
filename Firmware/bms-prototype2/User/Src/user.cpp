@@ -32,10 +32,12 @@ void CPP_UserSetup(void) {
 
     BQ76952 bms;
     bms.Init(&hi2c1);
-    
 
     while (1) {
+        // test thermistors
         
+        
+
         // test reading current
         bms.ReadCurrent();
         HAL_Delay(1000);
