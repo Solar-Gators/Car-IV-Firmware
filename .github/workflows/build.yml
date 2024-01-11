@@ -23,6 +23,13 @@ jobs:
           cmake -S . -B build
           cmake --build build
           cd ../..
+          
+      - name: Build nucleof072rb-base
+        run: |
+          cd Firmware/nucleof072rb-base
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
 
       - name: Build nucleol476rg-base
         run: |
@@ -31,9 +38,21 @@ jobs:
           cmake --build build
           cd ../..
 
-      - name: Build nucleol476rg-CAN-dev
+      - name: Build steering-dev
         run: |
-          cd Firmware/nucleol476rg-CAN-dev
+          cd Firmware/steering-dev
           cmake -S . -B build
           cmake --build build
           cd ../..
+
+      - name: Build testboard-base
+        run: |
+          cd Firmware/testboard-base
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Build testboard-CAN-dev
+        run: |
+          cd Firmware/testboard-CAN-dev
+          cmake -S . -B build
+          cmake --build build

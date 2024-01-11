@@ -22,12 +22,12 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
-  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-CAN-dev", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/nucleol476rg-can-dev", "$(ProjectDir)");
   Project.SetDevice ("STM32L476RG");
   Project.SetHostIF ("USB", "770506940");
-  Project.SetTargetIF ("JTAG");
+  Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
+  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-CAN-dev", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/nucleol476rg-can-dev", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
