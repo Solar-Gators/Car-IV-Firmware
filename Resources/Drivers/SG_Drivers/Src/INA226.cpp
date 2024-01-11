@@ -3,7 +3,7 @@
 HAL_StatusTypeDef INA226::Init(I2C_HandleTypeDef *hi2c){
     hi2c_ = hi2c;
 
-    return HAL_I2C_IsDeviceReady(hi2c_, INA_I2C_ADDR, 10, 5);
+    return HAL_I2C_IsDeviceReady(hi2c_, INA_I2C_ADDR_WRITE, 10, 5);
 }
 
 HAL_StatusTypeDef INA226::GetShuntVoltage(){
@@ -51,7 +51,7 @@ HAL_StatusTypeDef INA226::Reset(){
     HAL_StatusTypeDef status;
     uint8_t reset_buff[3] = {INA_CONFIG, 0x80, 0x00}; // set first byte to be our register address, second two bytes is just top bit for reset
 
-    status = HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR, reset_buff, 3, 1000); // reset the device
+    status = HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR_WRITE, reset_buff, 3, 1000); // reset the device
     if(status != HAL_OK) return status;
 
     status = SetConfig();
@@ -73,11 +73,11 @@ HAL_StatusTypeDef INA226::SetConfig(){
 }
 
 HAL_StatusTypeDef INA226::ReadWordReg(uint8_t reg_addr, uint8_t *data){
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR, &reg_addr, 1, 1000);
+    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR_READ, &reg_addr, 1, 1000);
 
     if(status != HAL_OK) return status;
 
-    return HAL_I2C_Master_Receive(hi2c_, INA_I2C_ADDR, data, 2, 1000);
+    return HAL_I2C_Master_Receive(hi2c_, INA_I2C_ADDR_READ, data, 2, 1000);
 }
 
 HAL_StatusTypeDef INA226::WriteWordReg(uint8_t reg_addr, uint16_t data){
@@ -88,5 +88,21 @@ HAL_StatusTypeDef INA226::WriteWordReg(uint8_t reg_addr, uint16_t data){
     addressWordBuff[1] = uint8_t(data >> 8);
     addressWordBuff[2] = uint8_t(data);
 
-    return HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR, addressWordBuff, 3, 1000);
+    return HAL_I2C_Master_Transmit(hi2c_, INA_I2C_ADDR_WRITE, addressWordBuff, 3, 1000);
+}
+
+float INA226::Current(){
+    return current_;
+}
+
+float INA226::ShuntResistance(){
+    return shunt_resistance_;
+}
+
+float INA226::BusVoltage(){
+    return bus_voltage_;
+}
+
+float INA226::ShuntVoltage(){
+    return shunt_voltage_;
 }

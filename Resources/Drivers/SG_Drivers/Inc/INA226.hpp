@@ -13,7 +13,8 @@
 #include "main.h"
 #include <math.h>
 
-#define INA_I2C_ADDR 0x40
+#define INA_I2C_ADDR_WRITE 0x40
+#define INA_I2C_ADDR_READ 0x41
 
 #define INA_CONFIG 0x00
 #define INA_SHUNT_VOLTAGE 0x01
@@ -36,6 +37,10 @@ public:
     HAL_StatusTypeDef Reset();
     HAL_StatusTypeDef SetConfig();
 
+    float Current();
+    float ShuntResistance();
+    float BusVoltage();
+    float ShuntVoltage();
 private:
     HAL_StatusTypeDef ReadWordReg(uint8_t reg_addr, uint8_t *data);
     HAL_StatusTypeDef WriteWordReg(uint8_t reg_addr, uint16_t data);

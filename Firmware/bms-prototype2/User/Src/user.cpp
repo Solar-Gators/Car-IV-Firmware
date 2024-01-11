@@ -34,21 +34,18 @@ void CPP_UserSetup(void) {
     bms.Init(&hi2c1);
 
     while (1) {
-        // test thermistors
-        
-        
 
         // test reading current
-        bms.ReadCurrent();
-        HAL_Delay(1000);
+        // bms.ReadCurrent();
+        // HAL_Delay(1000);
 
         // test reading voltages
-        // bms.ReadVoltages();
+        bms.ReadVoltages();
 
-        // Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
-        // Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
-        // Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
-        // Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
+        Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
+        Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
+        Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
+        Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
 
         //HAL_Delay(1000);
     }
