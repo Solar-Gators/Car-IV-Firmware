@@ -42,5 +42,5 @@
         "ffconf.h": "c"
     },
     "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
-    "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe"
+    "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
 }

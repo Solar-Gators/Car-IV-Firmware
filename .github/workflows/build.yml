@@ -50,11 +50,9 @@ jobs:
           cd Firmware/testboard-base
           cmake -S . -B build
           cmake --build build
-          cd ../..
 
       - name: Build testboard-CAN-dev
         run: |
           cd Firmware/testboard-CAN-dev
           cmake -S . -B build
           cmake --build build
-          cd ../..
