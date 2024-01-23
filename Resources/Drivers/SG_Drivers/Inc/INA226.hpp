@@ -13,8 +13,8 @@
 #include "main.h"
 #include <math.h>
 
-#define INA_I2C_ADDR_WRITE 0x40
-#define INA_I2C_ADDR_READ 0x41
+#define INA_I2C_ADDR_WRITE 0b10001000
+#define INA_I2C_ADDR_READ 0b10001001
 
 #define INA_CONFIG 0x00
 #define INA_SHUNT_VOLTAGE 0x01
@@ -33,7 +33,7 @@ public:
     HAL_StatusTypeDef GetShuntVoltage();
     HAL_StatusTypeDef GetCurrent();
     HAL_StatusTypeDef GetBusVoltage();
-    HAL_StatusTypeDef SetShuntResistance(float ohms);
+    HAL_StatusTypeDef SetCalibrationReg(float ohms, uint8_t maxExpectedCurrent);
     HAL_StatusTypeDef Reset();
     HAL_StatusTypeDef SetConfig();
 
@@ -50,6 +50,8 @@ private:
     float current_; // amps
     float bus_voltage_; // volts
     float shunt_voltage_; // volts
+    float current_LSB_; // Multiply by current register to get current in A
+    float power_LSB_; // Multiply by power register to get power in W (always 25x current)
 };
 
 
