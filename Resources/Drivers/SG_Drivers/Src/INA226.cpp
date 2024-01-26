@@ -50,11 +50,11 @@ HAL_StatusTypeDef INA226::GetBusVoltage(){
     return HAL_OK;
 }
 
-HAL_StatusTypeDef INA226::SetCalibrationReg(float ohms, uint8_t maxExpectedCurrent){
+HAL_StatusTypeDef INA226::SetCalibrationReg(float ohms, float maxExpectedCurrent){
     HAL_StatusTypeDef status;
     shunt_resistance_ = ohms;
 
-    current_LSB_ = maxExpectedCurrent / 32768; // 2^15
+    current_LSB_ = maxExpectedCurrent / 32768.0F; // 2^15
 
     power_LSB_ = current_LSB_ * 25;
 

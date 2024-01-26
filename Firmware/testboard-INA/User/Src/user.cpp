@@ -11,7 +11,7 @@ void CPP_UserSetup(void) {
 
     INA.SetConfig();
 
-    INA.SetCalibrationReg(0.02, 5);
+    INA.SetCalibrationReg(0.02, 5.0);
 
     while(1){
         status = INA.GetShuntVoltage();

@@ -33,7 +33,7 @@ public:
     HAL_StatusTypeDef GetShuntVoltage();
     HAL_StatusTypeDef GetCurrent();
     HAL_StatusTypeDef GetBusVoltage();
-    HAL_StatusTypeDef SetCalibrationReg(float ohms, uint8_t maxExpectedCurrent);
+    HAL_StatusTypeDef SetCalibrationReg(float ohms, float maxExpectedCurrent);
     HAL_StatusTypeDef Reset();
     HAL_StatusTypeDef SetConfig();
 
