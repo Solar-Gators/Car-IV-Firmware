@@ -38,13 +38,6 @@ jobs:
           cmake --build build
           cd ../..
 
-      - name: Build nucleol476rg-CAN-dev
-        run: |
-          cd Firmware/nucleol476rg-CAN-dev
-          cmake -S . -B build
-          cmake --build build
-          cd ../..
-
       - name: Build steering-dev
         run: |
           cd Firmware/steering-dev
@@ -57,4 +50,9 @@ jobs:
           cd Firmware/testboard-base
           cmake -S . -B build
           cmake --build build
-          cd ../..
+
+      - name: Build testboard-CAN-dev
+        run: |
+          cd Firmware/testboard-CAN-dev
+          cmake -S . -B build
+          cmake --build build

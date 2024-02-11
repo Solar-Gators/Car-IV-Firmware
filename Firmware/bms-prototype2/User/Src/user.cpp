@@ -32,9 +32,14 @@ void CPP_UserSetup(void) {
 
     BQ76952 bms;
     bms.Init(&hi2c1);
-    
 
     while (1) {
+
+        // test reading current
+        // bms.ReadCurrent();
+        // HAL_Delay(1000);
+
+        // test reading voltages
         bms.ReadVoltages();
 
         Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
@@ -42,6 +47,6 @@ void CPP_UserSetup(void) {
         Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
         Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
 
-        HAL_Delay(1000);
+        //HAL_Delay(1000);
     }
 }

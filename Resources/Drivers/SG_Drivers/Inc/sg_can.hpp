@@ -31,7 +31,7 @@
 #define CAN_FILTER_CUSTOM   2                   /* Accept messages in rx_messages_ */
 
 /**
- * Class for storing information needed to transmit a single CAN message.
+ * Class for storing information needed to transmit a single CAN frame.
  * 
  * @param can_id        CAN ID, stores standard or extended ID types
  * @param id_type       CAN ID type, can be CAN_ID_STD or CAN_ID_EXT
@@ -42,19 +42,13 @@
  * @param mutex_id_     Mutex handle for object
  * 
 */
-class CANMessage {
+class CANFrame {
 public:
-    CANMessage(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t len):
-        can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len)
-    {
-        mutex_id_ = osMutexNew(&mutex_attributes_);
-    };
-
-    CANMessage(uint32_t can_id, 
+    CANFrame(uint32_t can_id, 
                 uint32_t id_type, 
                 uint32_t rtr_mode,
                 uint32_t len,
-                void (*rxCallback)(uint8_t data[])):
+                void (*rxCallback)(uint8_t data[]) = NULL):
         can_id(can_id), id_type(id_type), rtr_mode(rtr_mode), len(len), rxCallback(rxCallback)
     {
         mutex_id_ = osMutexNew(&mutex_attributes_);
@@ -76,7 +70,7 @@ public:
 private:
     StaticSemaphore_t   mutex_control_block_;
     const osMutexAttr_t mutex_attributes_ = {
-        .name = "CANMessage Mutex",
+        .name = "CANFrame Mutex",
         .attr_bits = osMutexRecursive,
         .cb_mem = &mutex_control_block_,
         .cb_size = sizeof(mutex_control_block_),
@@ -94,7 +88,7 @@ class CANDevice {
 public:
     CANDevice(CAN_HandleTypeDef *hcan) { hcan_ = hcan; }
     HAL_StatusTypeDef Start();
-    HAL_StatusTypeDef Send(CANMessage *msg);
+    HAL_StatusTypeDef Send(CANFrame *msg);
     uint32_t GetStatus();
     void SetRxFlag();
     osThreadId_t tx_task_id_;
@@ -102,8 +96,8 @@ public:
 
 protected:
     CAN_HandleTypeDef *hcan_;
-    etl::map<uint32_t, CANMessage*, MAX_RX_MSGS>* rx_messages_;
-    osMessageQueueId_t tx_queue_ = osMessageQueueNew(TX_QUEUE_SIZE, sizeof(CANMessage*), NULL);
+    etl::map<uint32_t, CANFrame*, MAX_RX_MSGS>* rx_messages_;
+    osMessageQueueId_t tx_queue_ = osMessageQueueNew(TX_QUEUE_SIZE, sizeof(CANFrame*), NULL);
     etl::atomic<uint32_t> status_;      // TODO: handle this
     osEventFlagsId_t rx_event_flag_ = osEventFlagsNew(NULL);
 
@@ -153,20 +147,20 @@ protected:
 class CANController {
 public:
     static HAL_StatusTypeDef AddDevice(CANDevice *device);
-    static HAL_StatusTypeDef AddRxMessage(CANMessage *msg);
-    static HAL_StatusTypeDef AddRxMessages(CANMessage *msg[], uint32_t num_msgs);
+    static HAL_StatusTypeDef AddRxMessage(CANFrame *msg);
+    static HAL_StatusTypeDef AddRxMessages(CANFrame *msg[], uint32_t num_msgs);
     static HAL_StatusTypeDef AddFilterAll();
-    static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority);      // TODO
+    static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority);      // TODO:
     static HAL_StatusTypeDef AddFilterIdRange(uint32_t can_id, uint32_t range, uint32_t id_type, uint32_t rtr_mode, uint32_t priority); // TODO
     static HAL_StatusTypeDef Start();
-    static HAL_StatusTypeDef Send(CANMessage *msg);
-    static HAL_StatusTypeDef SendOnDevice(CANDevice *device, CANMessage *msg);
-    static HAL_StatusTypeDef GetMessage(uint32_t can_id, CANMessage *msg);
+    static HAL_StatusTypeDef Send(CANFrame *msg);
+    static HAL_StatusTypeDef SendOnDevice(CANDevice *device, CANFrame *msg);
+    static HAL_StatusTypeDef GetMessage(uint32_t can_id, CANFrame *msg);
     static HAL_StatusTypeDef GetDeviceStatus(CANDevice *device);    // TODO
     static void RxCallback(CAN_HandleTypeDef *hcan);
 protected:
     static inline etl::vector<CANDevice*, 3> devices_;
-    static inline etl::map<uint32_t, CANMessage*, MAX_RX_MSGS> rx_messages_;
+    static inline etl::map<uint32_t, CANFrame*, MAX_RX_MSGS> rx_messages_;
     static inline uint32_t num_msgs_ = 0;
     static inline etl::deque<CAN_FilterTypeDef, NUM_FILTER_BANKS*2> filters_;
 };

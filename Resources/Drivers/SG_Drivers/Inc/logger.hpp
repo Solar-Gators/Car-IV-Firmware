@@ -12,7 +12,7 @@
 #include "user_config.h"
 #include "SEGGER_RTT.h"
 
-#ifdef USE_FREERTOS
+#if (USE_FREERTOS == 1)
 #include "cmsis_os.h"
 #endif
 
