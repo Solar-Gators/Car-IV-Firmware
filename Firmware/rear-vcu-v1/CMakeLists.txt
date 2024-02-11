@@ -29,6 +29,7 @@ include_directories(
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/Config
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc
+    ${RESOURCES_DIR}/Drivers/DataModules
     ${RESOURCES_DIR}/Middlewares/Third_Party/etl/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2

@@ -9,5 +9,6 @@
 #include "logger.hpp"
 #include "sg_can.hpp"
 #include "DACx311.hpp"
+#include "MitsubaFrame1.hpp"
 
 #endif /* USER_HPP_ */

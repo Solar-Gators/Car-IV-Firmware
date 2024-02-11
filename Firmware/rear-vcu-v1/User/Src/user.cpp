@@ -16,7 +16,6 @@ extern "C" CAN_HandleTypeDef hcan2;
 extern "C" SPI_HandleTypeDef hspi1;
 
 /* Initialize CAN frames and devices */
-CANFrame io_msg = CANFrame(0x37, CAN_ID_STD, CAN_RTR_DATA, 8, NULL);
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
 
@@ -32,7 +31,15 @@ void CPP_UserSetup(void) {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
-    CANController::AddRxMessage(&io_msg);
+    CANController::AddRxMessage(&mitsuba_frame_1);
+    CANController::AddFilterAll();
+    CANController::Start();
+
+    uint8_t dac_value = 50;
+    while (1) {
+        throttle_dac.SetValue(dac_value << 8);
+        dac_value += 50;
+    }
 
     throttle_dac.SetValue(0x0FFF);
 }

@@ -33,7 +33,7 @@ extern osEventFlagsId_t lineread_event; // SD line read request/response
 extern osMutexId_t spi_mutex_id;
 extern osMutexId_t text_mutex_id;
 
-/* ISRs */
+/* Callbacks */
 //extern void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 

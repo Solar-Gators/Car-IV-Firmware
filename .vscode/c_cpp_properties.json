@@ -7,6 +7,7 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
             "Resources/Middlewares/Third_Party/etl/include",
             "Resources/Drivers/SG_Drivers/Inc",
+            "Resources/Drivers/DataModules",
             "Resources/Drivers/segger-rtt-master/RTT",
             "Resources/Drivers/segger-rtt-master/Config",
             "C:/msys64/mingw64/arm-none-eabi/include"
