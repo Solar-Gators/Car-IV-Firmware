@@ -49,6 +49,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -57,18 +59,32 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define MC_FR_CTRL_Pin GPIO_PIN_0
+#define MC_FR_CTRL_GPIO_Port GPIOC
+#define MC_PE_CTRL_Pin GPIO_PIN_1
+#define MC_PE_CTRL_GPIO_Port GPIOC
+#define MC_MAIN_CTRL_Pin GPIO_PIN_2
+#define MC_MAIN_CTRL_GPIO_Port GPIOC
 #define ERROR_LED_Pin GPIO_PIN_0
 #define ERROR_LED_GPIO_Port GPIOA
 #define OK_LED_Pin GPIO_PIN_1
 #define OK_LED_GPIO_Port GPIOA
-#define PM_ALERT_Pin GPIO_PIN_2
-#define PM_ALERT_GPIO_Port GPIOB
-#define GP2_Pin GPIO_PIN_12
-#define GP2_GPIO_Port GPIOB
-#define GP1_Pin GPIO_PIN_13
-#define GP1_GPIO_Port GPIOB
-#define BTN1_Pin GPIO_PIN_10
-#define BTN1_GPIO_Port GPIOA
+#define REGEN_CS_Pin GPIO_PIN_3
+#define REGEN_CS_GPIO_Port GPIOA
+#define THROTTLE_CS_Pin GPIO_PIN_4
+#define THROTTLE_CS_GPIO_Port GPIOA
+#define MPPT_CONTACTOR_EN_Pin GPIO_PIN_4
+#define MPPT_CONTACTOR_EN_GPIO_Port GPIOC
+#define MPPT_PRE_CONTACTOR_EN_Pin GPIO_PIN_5
+#define MPPT_PRE_CONTACTOR_EN_GPIO_Port GPIOC
+#define RL_LIGHT_EN_Pin GPIO_PIN_6
+#define RL_LIGHT_EN_GPIO_Port GPIOC
+#define RR_LIGHT_EN_Pin GPIO_PIN_7
+#define RR_LIGHT_EN_GPIO_Port GPIOC
+#define RC_LIGHT_EN_Pin GPIO_PIN_8
+#define RC_LIGHT_EN_GPIO_Port GPIOC
+#define STRB_LIGHT_EN_Pin GPIO_PIN_9
+#define STRB_LIGHT_EN_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
 
