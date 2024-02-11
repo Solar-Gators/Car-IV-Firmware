@@ -11,57 +11,28 @@
 
 extern "C" void CPP_UserSetup(void);
 
-/* Task function prototypes */
-void PeriodicTask1(void *argument);
-void RegularTask1(void *argument);
+extern "C" CAN_HandleTypeDef hcan1;
+extern "C" CAN_HandleTypeDef hcan2;
+extern "C" SPI_HandleTypeDef hspi1;
 
-/* Periodic timer definitions */
-osTimerAttr_t periodic_timer_attr = {
-    .name = "Periodic Task 1",
-    .attr_bits = 0,
-    .cb_mem = NULL,
-    .cb_size = 0,
-};
-osTimerId_t periodic_timer_id = osTimerNew((osThreadFunc_t)PeriodicTask1, osTimerPeriodic, NULL, &periodic_timer_attr);
+/* Initialize CAN frames and devices */
+CANFrame io_msg = CANFrame(0x37, CAN_ID_STD, CAN_RTR_DATA, 8, NULL);
+CANDevice candev1 = CANDevice(&hcan1);
+CANDevice candev2 = CANDevice(&hcan2);
 
-/* Regular task definitions */
-osThreadId_t regular_task_id;
-uint32_t regular_task_buffer[128];
-StaticTask_t regular_task_control_block;
-const osThreadAttr_t regular_task_attributes = {
-    .name = "Regular Task 1",
-    .attr_bits = osThreadDetached,
-    .cb_mem = &regular_task_control_block,
-    .cb_size = sizeof(regular_task_control_block),
-    .stack_mem = &regular_task_buffer[0],
-    .stack_size = sizeof(regular_task_buffer),
-    .priority = (osPriority_t) osPriorityAboveNormal,
-    .tz_module = 0,
-    .reserved = 0,
-};
-
-/* Event flag to trigger regular task */
-osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
+/* Initialize DACs */
+DACx311 throttle_dac = DACx311(&hspi1, THROTTLE_CS_GPIO_Port, THROTTLE_CS_Pin);
+DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 
 
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
-    regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
-    osTimerStart(periodic_timer_id, 1000);
-}
+    // Add CAN devices and CAN frames
+    CANController::AddDevice(&candev1);
+    CANController::AddDevice(&candev2);
+    CANController::AddRxMessage(&io_msg);
 
-void PeriodicTask1(void *argument) {
-    Logger::LogInfo("Periodic timer fired\n");
-    osEventFlagsSet(regular_event, 0x1);
-}
-
-void RegularTask1(void *argument) {
-    while (1) {
-        osEventFlagsWait(regular_event, 0x1, osFlagsWaitAny, osWaitForever);
-
-        Logger::LogInfo("Hello World!\n");
-        HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
-    }
+    throttle_dac.SetValue(0x0FFF);
 }
