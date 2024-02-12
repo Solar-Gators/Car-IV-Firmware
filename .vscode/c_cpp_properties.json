@@ -18,7 +18,6 @@
             "Resources/Drivers/Legacy_BSP/Drivers/inc"
         ],
         "gccExePath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
-        // STM32F0
         "stm32f0_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32F0xx/Include",
             "Resources/Drivers/STM32F0xx_HAL_Driver/Inc",
@@ -30,7 +29,6 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0"
         ],
-        // STM32F4
         "stm32f4_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
             "Resources/Drivers/STM32F4xx_HAL_Driver/Inc",
@@ -42,7 +40,6 @@
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang",
             "Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
         ],
-        // STM32L4
         "stm32l4_includes": [
             "Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
             "Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
@@ -57,22 +54,22 @@
     },
     "configurations": [
         {
-            "name": "bms-prototype2",                   // Project dependent
+            "name": "bms-prototype2",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/bms-prototype2/Core/Inc",     // Project dependent
-                "Firmware/bms-prototype2/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/bms-prototype2/Core/Inc",
+                "Firmware/bms-prototype2/User/Inc",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L476xx",                          // Project dependent
+                "STM32L476xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -87,78 +84,80 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "matthew-junior-design",                   // Project dependent
+            "name": "matthew-junior-design",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/matthew-junior-design/Core/Inc",      // Project dependent
-                "Firmware/matthew-junior-design/User/Inc",      // Project dependent
-                "Firmware/matthew-junior-design/FATFS/App",     // Project dependent
-                "Firmware/matthew-junior-design/FATFS/Target",  // Project dependent
-                "${stm32l4_includes}"                           // Project dependent
+                "Firmware/matthew-junior-design/Core/Inc",
+                "Firmware/matthew-junior-design/User/Inc",
+                "Firmware/matthew-junior-design/FATFS/App",
+                "Firmware/matthew-junior-design/FATFS/Target",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L496xx",                          // Project dependent
+                "STM32L496xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
                 "-mcpu=cortex-m4",
-                "-mthumb"],
+                "-mthumb"
+            ],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
             "cppStandard": "c++17"
         },
         {
-            "name": "nucleof072rb-base",                   // Project dependent
+            "name": "nucleof072rb-base",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/nucleof072rb-base/Core/Inc",     // Project dependent
-                "Firmware/nucleof072rb-base/User/Inc",     // Project dependent
-                "${stm32f0_includes}"               // Project dependent
+                "Firmware/nucleof072rb-base/Core/Inc",
+                "Firmware/nucleof072rb-base/User/Inc",
+                "${stm32f0_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32f0_sources}"            // Project dependent
+                    "${stm32f0_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32F072xB",                          // Project dependent
+                "STM32F072xB",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
                 "-mcpu=cortex-m0",
-                "-mthumb"],
+                "-mthumb"
+            ],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
             "cppStandard": "c++17"
         },
         {
-            "name": "nucleol476rg-base",                   // Project dependent
+            "name": "nucleol476rg-base",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/nucleol476rg-base/Core/Inc",     // Project dependent
-                "Firmware/nucleol476rg-base/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/nucleol476rg-base/Core/Inc",
+                "Firmware/nucleol476rg-base/User/Inc",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L476xx",                          // Project dependent
+                "STM32L476xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -173,22 +172,22 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "nucleol476rg-CAN-dev",                   // Project dependent
+            "name": "nucleol476rg-CAN-dev",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/nucleol476rg-CAN-dev/Core/Inc",     // Project dependent
-                "Firmware/nucleol476rg-CAN-dev/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/nucleol476rg-CAN-dev/Core/Inc",
+                "Firmware/nucleol476rg-CAN-dev/User/Inc",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L476xx",                          // Project dependent
+                "STM32L476xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -203,6 +202,7 @@
             "cppStandard": "c++17"
         },
         {
+<<<<<<< Updated upstream
             "name": "rear-vcu-v1",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
@@ -234,22 +234,25 @@
         },
         {
             "name": "steering-2023",                   // Project dependent
+=======
+            "name": "steering-2023",
+>>>>>>> Stashed changes
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
                 "${legacy_includes}",
-                "Firmware/steering-2023/Core/Inc",     // Project dependent
-                "Firmware/steering-2023/User/Inc",     // Project dependent
-                "${stm32f4_includes}"               // Project dependent
+                "Firmware/steering-2023/Core/Inc",
+                "Firmware/steering-2023/User/Inc",
+                "${stm32f4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32f4_sources}"            // Project dependent
+                    "${stm32f4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32F446xx",                          // Project dependent
+                "STM32F446xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -264,23 +267,23 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "steering-dev",                   // Project dependent
+            "name": "steering-dev",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
                 "${legacy_includes}",
-                "Firmware/steering-dev/Core/Inc",     // Project dependent
-                "Firmware/steering-dev/User/Inc",     // Project dependent
-                "${stm32f4_includes}"               // Project dependent
+                "Firmware/steering-dev/Core/Inc",
+                "Firmware/steering-dev/User/Inc",
+                "${stm32f4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32f4_sources}"            // Project dependent
+                    "${stm32f4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32F446xx",                          // Project dependent
+                "STM32F446xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -295,22 +298,22 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "testboard-base",                   // Project dependent
+            "name": "testboard-base",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/testboard-base/Core/Inc",     // Project dependent
-                "Firmware/testboard-base/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/testboard-base/Core/Inc",
+                "Firmware/testboard-base/User/Inc",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L496xx",                          // Project dependent
+                "STM32L496xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -325,22 +328,22 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "testboard-CAN-dev",                   // Project dependent
+            "name": "testboard-CAN-dev",
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/testboard-CAN-dev/Core/Inc",     // Project dependent
-                "Firmware/testboard-CAN-dev/User/Inc",     // Project dependent
-                "${stm32l4_includes}"               // Project dependent
+                "Firmware/testboard-CAN-dev/Core/Inc",
+                "Firmware/testboard-CAN-dev/User/Inc",
+                "${stm32l4_includes}"
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"            // Project dependent
+                    "${stm32l4_sources}"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L496xx",                          // Project dependent
+                "STM32L496xx",
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -355,6 +358,7 @@
             "cppStandard": "c++17"
         },
         {
+<<<<<<< Updated upstream
             "name": "testboard-INA",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
@@ -373,17 +377,59 @@
                 "STM32L496xx",                          // Project dependent
                 "USE_HAL_DRIVER"
             ],
+=======
+            "name": "Front-VCU",
+            "includePath": [
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/CMSIS/Include",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FatFs/src",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/etl/include",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/SG_Drivers/Inc",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/segger-rtt-master/RTT",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/segger-rtt-master/Config",
+                "C:/msys64/mingw64/arm-none-eabi/include",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Firmware/testboard-base/Core/Inc",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Firmware/testboard-base/User/Inc",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy",
+                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+            ],
+            "defines": [
+                "STM32L496xx",
+                "USE_HAL_DRIVER"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "windows-gcc-arm",
+            "mergeConfigurations": false,
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
+            "browse": {
+                "path": [
+                    "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/**",
+                    "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "compilerPathInCppPropertiesJson": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
+>>>>>>> Stashed changes
             "compilerArgs": [
                 "-mcpu=cortex-m4",
                 "-mthumb",
                 "-mfpu=fpv4-sp-d16",
                 "-mfloat-abi=hard"
+<<<<<<< Updated upstream
             ],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
             "cppStandard": "c++17"
         },
+=======
+            ]
+        }
+>>>>>>> Stashed changes
     ],
     "version": 4
 }
