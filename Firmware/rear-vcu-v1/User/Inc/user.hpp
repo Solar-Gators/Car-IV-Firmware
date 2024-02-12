@@ -9,10 +9,13 @@
 #include "logger.hpp"
 #include "sg_can.hpp"
 #include "DACx311.hpp"
-#include "MitsubaFrame1.hpp"
+#include "MotorControlFrame.hpp"
 #include "IoTestFrame.hpp"
 
 #endif /* USER_HPP_ */
 
-
-void IoMsgCallback(uint8_t *data);
+void SetMotorState(bool state);
+void SetMotorMode(bool mode);
+void SetMotorDirection(bool direction);
+void SetThrottle(uint16_t val);
+void SetRegen(uint16_t val);

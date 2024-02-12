@@ -1,13 +1,7 @@
 #include "user.hpp"
 
-/* In this program, two tasks are generated. One is triggered by a periodic timer, which
- * expires every 500ms. The other is a regular thread, which is triggered by and event flag.
- * The periodic timer task sets the event flag, which causes the regular thread to exit
- * its wait state and execute. The regular thread then toggles the LED and prints a message.
- * 
- * CPP_UserSetup is called from main.cpp, and is where the user should put their setup code.
- * It is run before the RTOS scheduler is started.
-*/
+#include "threads.h"
+
 
 extern "C" void CPP_UserSetup(void);
 
@@ -33,13 +27,37 @@ void CPP_UserSetup(void) {
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&io_test_frame, IoMsgCallback);
-    CANController::AddRxMessage(&mitsuba_frame_1);
+    CANController::AddRxMessage(&motor_control_frame, MotorUpdateCallback);
     CANController::AddFilterAll();
     CANController::Start();
+
+    // Test DAC
+    while (1) {
+        throttle_dac.SetValue(0x0FFF);
+        regen_dac.SetValue(0x0FFF);
+        HAL_Delay(1000);
+        throttle_dac.SetValue(0x0000);
+        regen_dac.SetValue(0x0000);
+        HAL_Delay(1000);
+    }
 }
 
-void IoMsgCallback(uint8_t *data) {
-    // Set LEDs based on info in message
-    HAL_GPIO_WritePin(OK_LED_GPIO_Port, OK_LED_Pin, io_test_frame.GetOkLed());
-    HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, io_test_frame.GetErrorLed());
+void SetMotorState(bool state) {
+    HAL_GPIO_WritePin(MC_MAIN_CTRL_GPIO_Port, MC_MAIN_CTRL_Pin, (GPIO_PinState)state);
+}
+
+void SetMotorMode(bool mode) {
+    HAL_GPIO_WritePin(MC_PE_CTRL_GPIO_Port, MC_PE_CTRL_Pin, (GPIO_PinState)mode);
+}
+
+void SetMotorDirection(bool direction) {
+    HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, (GPIO_PinState)direction);
+}
+
+void SetThrottle(uint16_t value) {
+    throttle_dac.SetValue(value);
+}
+
+void SetRegen(uint16_t value) {
+    regen_dac.SetValue(value);
 }

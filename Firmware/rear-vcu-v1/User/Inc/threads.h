@@ -13,7 +13,8 @@ void VoiceTask(void *argument);
 void MenuTask(void *argument);
 void InputHandlerTask(void *argument);
 
-void MotorUpdateTask(void *argument);
+void IoMsgCallback(uint8_t *data);
+void MotorUpdateCallback(uint8_t *data);
 
 /* Periodic threads */
 extern osTimerId_t joystick_timer_id;

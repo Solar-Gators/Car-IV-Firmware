@@ -1,5 +1,5 @@
 /*
- * MotorControl.hpp
+ * MotorControlFrame.hpp
  *
  *  Created on: February 12, 2024
  *      Author: Matthew Shen
@@ -15,9 +15,9 @@
 #define MOTOR_REVERSE_FLAG (0x01 << 2)
 #define BRAKE_EN_FLAG (0x01 << 3)
 
-class MotorControl : public CANFrame {
+class MotorControlFrame : public CANFrame {
 public:
-    MotorControl() : CANFrame(0x234, CAN_ID_STD, CAN_RTR_DATA, 8) {}
+    MotorControlFrame() : CANFrame(0x234, CAN_ID_STD, CAN_RTR_DATA, 8) {}
 
     inline uint16_t GetThrottleVal() {
         return static_cast<uint16_t>((this->data[1] << 8) | this->data[0]);
@@ -45,3 +45,5 @@ public:
         this->data[4] = flags;
     }
 };
+
+inline MotorControlFrame motor_control_frame = MotorControlFrame();
