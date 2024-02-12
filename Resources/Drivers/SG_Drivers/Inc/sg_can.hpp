@@ -148,6 +148,7 @@ class CANController {
 public:
     static HAL_StatusTypeDef AddDevice(CANDevice *device);
     static HAL_StatusTypeDef AddRxMessage(CANFrame *msg);
+    static HAL_StatusTypeDef AddRxMessage(CANFrame *msg, void (*rxCallback)(uint8_t*));
     static HAL_StatusTypeDef AddRxMessages(CANFrame *msg[], uint32_t num_msgs);
     static HAL_StatusTypeDef AddFilterAll();
     static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority);      // TODO:

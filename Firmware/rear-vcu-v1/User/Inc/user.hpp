@@ -10,5 +10,9 @@
 #include "sg_can.hpp"
 #include "DACx311.hpp"
 #include "MitsubaFrame1.hpp"
+#include "IoTestFrame.hpp"
 
 #endif /* USER_HPP_ */
+
+
+void IoMsgCallback(uint8_t *data);

@@ -199,6 +199,19 @@ HAL_StatusTypeDef CANController::AddRxMessage(CANFrame *msg) {
     return HAL_OK;
 }
 
+HAL_StatusTypeDef CANController::AddRxMessage(CANFrame *msg, void (*rxCallback)(uint8_t*)) {
+    if (num_msgs_ >= MAX_RX_MSGS)
+        return HAL_ERROR;
+
+    msg->rxCallback = rxCallback;
+
+    // Add message to map
+    rx_messages_.insert(etl::make_pair(msg->can_id, msg));
+    num_msgs_++;
+
+    return HAL_OK;
+}
+
 /**
   * @brief  Add CAN messages to CANController
   * @param  msg Array of pointers to CANFrame objects
