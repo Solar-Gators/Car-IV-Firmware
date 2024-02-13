@@ -2,6 +2,8 @@
 #include "IMU.h"
 #include "usbd_cdc_if.h"
 #include <string>
+#include "IoTestFrame.hpp"
+#include "MotorControlFrame.hpp"
 
 using namespace std;
 
@@ -13,6 +15,15 @@ using namespace std;
  * CPP_UserSetup is called from main.cpp, and is where the user should put their setup code.
  * It is run before the RTOS scheduler is started.
 */
+extern "C" CAN_HandleTypeDef hcan1;
+extern "C" CAN_HandleTypeDef hcan2;
+
+
+/* Initialize CAN frames and devices */
+
+CANDevice candev1 = CANDevice(&hcan1);
+CANDevice candev2 = CANDevice(&hcan2);
+
 
 extern "C" void CPP_UserSetup(void);
 
@@ -66,7 +77,13 @@ void CPP_UserSetup(void) {
     HAL_Delay(10);
 
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
-    osTimerStart(periodic_timer_id, 100);
+    osTimerStart(periodic_timer_id, 1000);
+
+    CANController::AddDevice(&candev1);
+    CANController::AddDevice(&candev2);
+    //CANController::AddRxMessage(&io_test_frame, IoMsgCallback);
+    CANController::AddFilterAll();
+    CANController::Start();
 }
 
 void PeriodicTask1(void *argument) {
@@ -74,7 +91,7 @@ void PeriodicTask1(void *argument) {
     //Logger::LogInfo("Periodic timer fired\n");
     HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
 
-    IMU_ReadAccel(&imu);
+    //IMU_ReadAccel(&imu);
     volatile HAL_StatusTypeDef status = HAL_OK;
     status = HAL_ADC_Start(&hadc2);
 	status = HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
@@ -85,13 +102,12 @@ void PeriodicTask1(void *argument) {
     txBuffer[0] = high;
     txBuffer[1] = low; 
     txBuffer[2] = '\n'; 
-		Logger::LogInfo("raw value: %x\n", raw);
-    if(CDC_Transmit_FS(txBuffer,3) != 0){
-        HAL_GPIO_WritePin(OK_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
-    }else{
-        HAL_GPIO_WritePin(OK_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-    }    
-    
+	Logger::LogInfo("raw value: %x\n", raw);
+
+    motor_control_frame.SetThrottleVal(raw<<4);
+    motor_control_frame.data[2] = 123;
+    CANController::Send(&motor_control_frame);
+
     osEventFlagsSet(regular_event, 0x1);
 
 

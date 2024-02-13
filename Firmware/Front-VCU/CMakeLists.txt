@@ -43,7 +43,8 @@ set(THIRD_PARTY_INCLUDES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
 set(USER_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/User/Inc
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc)
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc
+    ${RESOURCES_DIR}/Drivers/DataModules)
 
 ########################################################################
 # Sources
@@ -64,6 +65,7 @@ file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c)
 file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/IMU.c)
     
     
