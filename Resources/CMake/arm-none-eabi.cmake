@@ -8,7 +8,8 @@ set(FLAGS
     --specs=nano.specs -Wl,--gc-sections")
 set(CPP_FLAGS
     "-fno-rtti -fno-exceptions \
-    -fno-threadsafe-statics")
+    -fno-threadsafe-statics\
+    -std=gnu++17")
 
 set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc ${FLAGS})
 set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
