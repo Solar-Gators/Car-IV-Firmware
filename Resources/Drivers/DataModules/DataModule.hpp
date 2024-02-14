@@ -9,6 +9,8 @@
 
 #include "sg_can.hpp"
 
+// This macro acts as a singleton wrapper for CANFrames to prevent errors from multiple CANFrame instances
+// Refer to other files in this directory for usage examples
 
 #define DATAMODULE(CLASS_NAME, CAN_ID, CAN_ID_TYPE, CAN_RTR_MODE, CAN_DATA_BYTES, FUNCTIONS) \
 class CLASS_NAME : public CANFrame { \
@@ -28,5 +30,5 @@ class CLASS_NAME : public CANFrame { \
     FUNCTIONS \
 };
 
-    // Prevent the compiler from complaining about backslash-newline at end of file
-    inline int stuff;
+// Prevent the compiler from complaining about backslash-newline at end of file
+inline int stuff;

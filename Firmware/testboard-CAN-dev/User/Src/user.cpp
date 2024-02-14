@@ -25,7 +25,7 @@ void CPP_UserSetup(void) {
     // Test that timer priorities are configured correctly
     HAL_Delay(1);
 
-    // Setup button
+    // Setup button callbacks
     user_button.RegisterNormalPressCallback(ButtonSingleCallback);
     user_button.RegisterLongPressCallback(ButtonLongCallback);
     //user_button.RegisterDoublePressCallback(DoubleCallback);
