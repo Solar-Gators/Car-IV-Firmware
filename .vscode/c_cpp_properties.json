@@ -202,7 +202,6 @@
             "cppStandard": "c++17"
         },
         {
-<<<<<<< Updated upstream
             "name": "rear-vcu-v1",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
@@ -234,9 +233,6 @@
         },
         {
             "name": "steering-2023",                   // Project dependent
-=======
-            "name": "steering-2023",
->>>>>>> Stashed changes
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
@@ -358,7 +354,6 @@
             "cppStandard": "c++17"
         },
         {
-<<<<<<< Updated upstream
             "name": "testboard-INA",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
@@ -377,59 +372,17 @@
                 "STM32L496xx",                          // Project dependent
                 "USE_HAL_DRIVER"
             ],
-=======
-            "name": "Front-VCU",
-            "includePath": [
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/CMSIS/Include",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FatFs/src",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/include",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/etl/include",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/SG_Drivers/Inc",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/segger-rtt-master/RTT",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/segger-rtt-master/Config",
-                "C:/msys64/mingw64/arm-none-eabi/include",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Firmware/testboard-base/Core/Inc",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Firmware/testboard-base/User/Inc",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/CMSIS/Device/ST/STM32L4xx/Include",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Inc",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Inc/Legacy",
-                "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
-            ],
-            "defines": [
-                "STM32L496xx",
-                "USE_HAL_DRIVER"
-            ],
-            "cStandard": "c11",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "windows-gcc-arm",
-            "mergeConfigurations": false,
-            "compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
-            "browse": {
-                "path": [
-                    "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware/**",
-                    "c:/Users/samrb/Desktop/SG_TestProject/Car-IV-Firmware"
-                ],
-                "limitSymbolsToIncludedHeaders": true
-            },
-            "compilerPathInCppPropertiesJson": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
->>>>>>> Stashed changes
             "compilerArgs": [
                 "-mcpu=cortex-m4",
                 "-mthumb",
                 "-mfpu=fpv4-sp-d16",
                 "-mfloat-abi=hard"
-<<<<<<< Updated upstream
             ],
             "forcedInclude": [],
             "compilerPath": "${gccExePath}",
             "cStandard": "c11",
             "cppStandard": "c++17"
         },
-=======
-            ]
-        }
->>>>>>> Stashed changes
     ],
     "version": 4
 }
