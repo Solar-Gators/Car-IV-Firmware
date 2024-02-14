@@ -11,4 +11,7 @@
 #include "logger.hpp"
 #include "button.hpp"
 
+// Datamodules
+#include "IoTestFrame.hpp"
+
 #endif /* USER_HPP_ */
