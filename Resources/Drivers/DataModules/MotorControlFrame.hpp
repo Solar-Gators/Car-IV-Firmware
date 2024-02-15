@@ -12,7 +12,15 @@
 #include "DataModule.hpp"
 
 
-DATAMODULE(MotorControlFrame, 0x234, CAN_ID_STD, CAN_RTR_DATA, 8, 
+DATAMODULE(
+
+    /* CAN definitions */
+    MotorControlFrame,
+    0x234,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    8,
+
     inline static uint16_t GetThrottleVal() {
         return static_cast<uint16_t>((Data()[1] << 8) | Data()[0]);
     }

@@ -7,10 +7,16 @@
 
 #pragma once
 
-#include <stdint.h>
 #include "DataModule.hpp"
 
-DATAMODULE(IoTestFrame, 0x37, CAN_ID_STD, CAN_RTR_DATA, 8,
+DATAMODULE(
+    
+    IoTestFrame,
+    0x37,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    8,
+
     inline static GPIO_PinState GetOkLed() {
         return (GPIO_PinState)Data()[0];
     }

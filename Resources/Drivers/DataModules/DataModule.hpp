@@ -22,13 +22,13 @@ class CLASS_NAME : public CANFrame { \
             static CLASS_NAME instance; \
             return instance; \
         } \
-        CLASS_NAME(const CLASS_NAME&) = delete; \
-        CLASS_NAME& operator=(const CLASS_NAME&) = delete; \
         static uint8_t* Data() { \
             return Instance().data; \
         } \
+        CLASS_NAME(const CLASS_NAME&) = delete; \
+        CLASS_NAME& operator=(const CLASS_NAME&) = delete; \
     FUNCTIONS \
 };
 
 // Prevent the compiler from complaining about backslash-newline at end of file
-inline int stuff;
+inline int useless_variable;
