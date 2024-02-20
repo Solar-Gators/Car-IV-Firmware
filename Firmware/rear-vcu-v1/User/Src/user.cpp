@@ -19,10 +19,17 @@ extern "C" SPI_HandleTypeDef hspi1;
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
 
-/* Initialize DACs */
+/* Initialize Other Hardware */
 DACx311 throttle_dac = DACx311(&hspi1, THROTTLE_CS_GPIO_Port, THROTTLE_CS_Pin);
 DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
-
+Mitsuba mitsuba = Mitsuba(&throttle_dac, 
+                        &regen_dac, 
+                        MC_MAIN_CTRL_GPIO_Port, 
+                        MC_MAIN_CTRL_Pin,
+                        MC_PE_CTRL_GPIO_Port,
+                        MC_PE_CTRL_Pin,
+                        MC_FR_CTRL_GPIO_Port,
+                        MC_FR_CTRL_Pin);
 
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
@@ -35,11 +42,13 @@ void CPP_UserSetup(void) {
     CANController::AddFilterAll();
     CANController::Start();
 
-    uint8_t dac_value = 50;
-    while (1) {
-        throttle_dac.SetValue(dac_value << 8);
-        dac_value += 50;
-    }
+    mitsuba.SetThrottle(0);
+    mitsuba.Enable();
 
-    throttle_dac.SetValue(0x0FFF);
+    uint8_t throttle = 0;
+    while (1) {
+        mitsuba.SetThrottle(throttle << 8);
+        throttle += 3;
+        HAL_Delay(250);
+    }
 }
