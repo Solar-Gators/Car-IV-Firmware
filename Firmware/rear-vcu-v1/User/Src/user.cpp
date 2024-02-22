@@ -17,7 +17,7 @@ CANDevice candev2 = CANDevice(&hcan2);
 DACx311 throttle_dac = DACx311(&hspi1, THROTTLE_CS_GPIO_Port, THROTTLE_CS_Pin);
 DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 
-
+/* Setup function, called from main before kernel initialization */
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
@@ -27,7 +27,7 @@ void CPP_UserSetup(void) {
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
-    CANController::AddRxMessage(&MotorControlFrame::Instance(), MotorUpdateCallback);
+    CANController::AddRxMessage(&DriverControlsFrame0::Instance(), MotorUpdateCallback);
     CANController::AddFilterAll();
     CANController::Start();
 
@@ -39,6 +39,7 @@ void CPP_UserSetup(void) {
     SetMotorDirection(false);
 }
 
+/* Helper Functions */
 void SetMotorState(bool state) {
     HAL_GPIO_WritePin(MC_MAIN_CTRL_GPIO_Port, MC_MAIN_CTRL_Pin, (GPIO_PinState)state);
 }

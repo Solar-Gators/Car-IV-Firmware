@@ -7,17 +7,7 @@
 
 #include "cmsis_os.h"
 #include "logger.hpp"
-#include "usbd_cdc_if.h"
-#include "DriverControls.hpp"
-
 #include "sg_can.hpp"
-#include "IMU.h"
-
-extern "C" I2C_HandleTypeDef hi2c2;
-extern "C" ADC_HandleTypeDef hadc2;
-
-
-
-
+#include "DACx311.hpp"
 
 #endif /* USER_HPP_ */

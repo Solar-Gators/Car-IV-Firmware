@@ -7,6 +7,9 @@ void IoMsgCallback(uint8_t *data) {
 }
 
 void MotorUpdateCallback(uint8_t *data) {
-    SetThrottle(MotorControlFrame::GetThrottleVal());
-    SetRegen(MotorControlFrame::GetRegenVal());    
+    SetMotorState(DriverControlsFrame0::GetMotorEnable());
+    SetMotorMode(DriverControlsFrame0::GetDriveMode());
+    SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
+    SetThrottle(DriverControlsFrame0::GetThrottleVal());
+    SetRegen(DriverControlsFrame0::GetRegenVal());    
 }

@@ -104,9 +104,8 @@ void PeriodicTask1(void *argument) {
     txBuffer[2] = '\n'; 
 	Logger::LogInfo("raw value: %x\n", raw);
 
-    motor_control_frame.SetThrottleVal(raw<<4);
-    motor_control_frame.data[2] = 123;
-    CANController::Send(&motor_control_frame);
+    DriverControlsFrame0::SetThrottleVal(raw);
+    CANController::Send(&DriverControlsFrame0::Instance());
 
     osEventFlagsSet(regular_event, 0x1);
 

@@ -9,7 +9,7 @@
 #include "logger.hpp"
 #include "sg_can.hpp"
 #include "DACx311.hpp"
-#include "MotorControlFrame.hpp"
+#include "DriverControls.hpp"
 #include "IoTestFrame.hpp"
 
 #endif /* USER_HPP_ */
