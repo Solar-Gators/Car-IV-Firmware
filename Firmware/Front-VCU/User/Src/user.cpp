@@ -104,7 +104,7 @@ void PeriodicTask1(void *argument) {
     txBuffer[2] = '\n'; 
 	Logger::LogInfo("raw value: %x\n", raw);
 
-    DriverControlsFrame0::SetThrottleVal(raw);
+    DriverControlsFrame0::SetThrottleVal(raw << 4);
     CANController::Send(&DriverControlsFrame0::Instance());
 
     osEventFlagsSet(regular_event, 0x1);

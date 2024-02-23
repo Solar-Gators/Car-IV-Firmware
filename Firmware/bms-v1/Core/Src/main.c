@@ -71,8 +71,8 @@ static void MX_CAN2_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_I2C3_Init(void);
-static void MX_I2C4_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_I2C4_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -122,8 +122,8 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM3_Init();
   MX_I2C3_Init();
-  MX_I2C4_Init();
   MX_TIM1_Init();
+  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
   CPP_UserSetup();
 
@@ -500,7 +500,7 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 30000;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)

@@ -23,6 +23,7 @@ class BQ76952 {
 public:
     HAL_StatusTypeDef Init(I2C_HandleTypeDef *hi2c);
     HAL_StatusTypeDef ConfigUpdate(bool config_update); // TODO
+    HAL_StatusTypeDef ConfigureVoltageRegs(); // TODO
     HAL_StatusTypeDef ReadVoltages();       // TODO: Add support for connected cells
     HAL_StatusTypeDef ReadSafetyFaults();
     HAL_StatusTypeDef ReadCurrent();

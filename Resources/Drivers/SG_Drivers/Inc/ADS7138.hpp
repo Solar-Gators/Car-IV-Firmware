@@ -11,6 +11,7 @@
 #pragma once
 
 #include "main.h"
+#include "logger.hpp"
 
 /* ADS7138 opcodes */
 #define ADS7138_OPCODE_READ		0x10
@@ -23,8 +24,16 @@
 #define ADS7138_REG_OSR_CFG			0x3
 #define ADS7138_REG_OPMODE_CFG		0x4
 #define ADS7138_REG_PIN_CFG			0x5
-#define ADS7138_REG_SEQUENCE_CFG	0x10
-#define ADS7138_REG_CHANNEL_SEL		0x11
+#define ADS7138_REG_GPIO_CFG        0x7
+#define ADS7138_REG_GPIO_DRIVE_CFG  0x9
+#define ADS7138_REG_GPIO_VALUE      0xB
+#define ADS7138_REG_GPI_VALUE       0xD
+#define ADS7138_REG_SEQUENCE_CFG    0x10
+#define ADS7138_REG_CHANNEL_SEL     0x11
+#define ADS7138_AUTO_SEQ_CH_SEL     0x12
+
+#define ADS7138_REG_RECENT_CH0_LSB  0xA0
+#define ADS7138_REG_RECENT_CH0_MSB  0xA1
 
 /* GENERAL_CFG Register Fields */
 #define ADS7138_GENERAL_CFG_RST		0x1
@@ -45,6 +54,8 @@
 class ADS7138 {
 public:
     ADS7138(I2C_HandleTypeDef *phi2c, uint8_t address);
+    HAL_StatusTypeDef Init();
+    HAL_StatusTypeDef TestI2C();
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;
