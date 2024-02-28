@@ -77,7 +77,7 @@ void CPP_UserSetup(void) {
     HAL_Delay(10);
 
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
-    osTimerStart(periodic_timer_id, 1000);
+    osTimerStart(periodic_timer_id, 20);
 
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
@@ -104,7 +104,7 @@ void PeriodicTask1(void *argument) {
     txBuffer[2] = '\n'; 
 	Logger::LogInfo("raw value: %x\n", raw);
 
-    DriverControlsFrame0::SetThrottleVal(raw << 4);
+    DriverControlsFrame0::SetThrottleVal((uint16_t)(raw) << 4);
     CANController::Send(&DriverControlsFrame0::Instance());
 
     osEventFlagsSet(regular_event, 0x1);
