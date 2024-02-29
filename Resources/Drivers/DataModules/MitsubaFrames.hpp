@@ -18,6 +18,10 @@ DATAMODULE(
     CAN_RTR_DATA,
     8,
 
+    inline static void SetRequestAll() {
+        Data()[0] |= 0x3;
+    }
+
     inline static void SetRequest0() {
         Data()[0] |= (0x1 << 0);
     }

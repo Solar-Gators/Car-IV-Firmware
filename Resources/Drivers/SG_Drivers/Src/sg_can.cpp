@@ -119,6 +119,11 @@ void CANDevice::HandleRx(void* argument) {
                 Error_Handler();
             }
 
+            #ifdef USE_LOGGING
+            Logger::LogDebug("Rx ID: %x", rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
+            Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
+            #endif
+
             // Find message in map and populate data
             rx_msg = (*rx_messages_)[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
             if (rx_msg != nullptr) {
@@ -132,10 +137,6 @@ void CANDevice::HandleRx(void* argument) {
                 rx_msg->rxCallback(rxData);
             }
         }
-
-        #ifdef USE_LOGGING
-        Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
-        #endif
 
         // Re-enable Rx interrupt
         HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);

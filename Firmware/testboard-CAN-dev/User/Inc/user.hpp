@@ -13,5 +13,6 @@
 
 // Datamodules
 #include "IoTestFrame.hpp"
+#include "MitsubaFrames.hpp"
 
 #endif /* USER_HPP_ */

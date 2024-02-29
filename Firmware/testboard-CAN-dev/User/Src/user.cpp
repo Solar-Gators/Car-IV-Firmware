@@ -37,6 +37,7 @@ void CPP_UserSetup(void) {
     // Add message to rx map, otherwise CANController will ignore it
     // Simultaneously register callback with rx message
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
+    CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaMsgCallback);
 
     // Set filter to accept all messages
     CANController::AddFilterAll();
