@@ -50,6 +50,20 @@ HAL_StatusTypeDef INA226::GetBusVoltage(){
     return HAL_OK;
 }
 
+HAL_StatusTypeDef INA226::GetPower(){
+    uint8_t buff[2];
+    uint16_t val;
+    HAL_StatusTypeDef status;
+
+    status = ReadWordReg(INA_POWER, buff);
+    if(status != HAL_OK) return status;
+
+    val = uint16_t(buff[0] << 8) | buff[1];
+
+    power_ = val * power_LSB_;
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef INA226::SetCalibrationReg(float ohms, float maxExpectedCurrent){
     HAL_StatusTypeDef status;
     shunt_resistance_ = ohms;
