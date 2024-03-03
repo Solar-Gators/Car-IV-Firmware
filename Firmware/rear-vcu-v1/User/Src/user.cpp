@@ -29,11 +29,14 @@ void CPP_UserSetup(void) {
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
     CANController::AddRxMessage(&DriverControlsFrame0::Instance(), MotorUpdateCallback);
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
+    CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
+    CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
     CANController::AddFilterAll();
     CANController::Start();
 
     // Permanently request all Mitsuba frames
-    MitsubaRequestFrame::Instance().SetRequestAll();
+    MitsubaRequestFrame::Instance().Data()[0] |= 0x7;
+    //MitsubaRequestFrame::Instance().SetRequestAll();
 
     // Enable the motor
     SetMotorState(true);
