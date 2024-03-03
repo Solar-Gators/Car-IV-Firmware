@@ -4,6 +4,7 @@
 #include <string>
 #include "IoTestFrame.hpp"
 #include "MotorControlFrame.hpp"
+#include "M24C02.hpp"
 
 using namespace std;
 
