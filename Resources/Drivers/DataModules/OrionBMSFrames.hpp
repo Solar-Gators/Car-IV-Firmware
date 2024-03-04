@@ -190,19 +190,19 @@ DATAMODULE(
     }
 
     inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[7] = (val >> 8) & 0xFF;
-        Data()[6] = val & 0xFF;
+        Data()[6] = (val >> 8) & 0xFF;
+        Data()[7] = val & 0xFF;
     }
     inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[5] = (val >> 8) & 0xFF;
-        Data()[4] = val & 0xFF;
+        Data()[4] = (val >> 8) & 0xFF;
+        Data()[5] = val & 0xFF;
     }
     inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[3] = (val >> 8) & 0xFF;
-        Data()[2] = val & 0xFF;
+        Data()[2] = (val >> 8) & 0xFF;
+        Data()[3] = val & 0xFF;
     }
         inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[1] = (val >> 8) & 0xFF;
-        Data()[0] = val & 0xFF;
+        Data()[0] = (val >> 8) & 0xFF;
+        Data()[1] = val & 0xFF;
     }
 )
