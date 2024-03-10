@@ -4,7 +4,7 @@
 #define M24C02_HPP_
 
 #include "stm32l4xx_hal.h"
-#include "string.h"
+#include <cstring>
 #include <cstdint>
 #include <vector>
 
@@ -12,7 +12,7 @@ using namespace std;
 
 #define M2402_I2C_ADDR (1010000 << 1)
 
-class memory{ //Memory class containing ID, address, size (in hex), and a name.
+class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a name.
 
     public:
 
@@ -33,24 +33,55 @@ class memory{ //Memory class containing ID, address, size (in hex), and a name.
             return name;
         }
 
+        char getType(){
+            return type;
+        }
+
         //Defines constructor
-        memory(int ID, uint8_t Addr, uint8_t size, char name[]){
+        //Supported data types: int (i), float (f), char (c)
+        memory(int ID, uint8_t Addr, char type, char name[]){
             ID = ID;
             Addr = Addr;
-            size = size;
+            type = type;
             name = name;
+            switch (type){
+
+                case 'i':
+                case 'f':
+                size = 4;
+                break;
+
+                case 'c':
+                case 'b':
+                size = 1;
+                break;
+
+                default:
+                size = 1;
+                break;
+            }
+
+
         }
 
     private:
         int ID;
         uint8_t Addr;
         uint8_t size;
-        char name[];
+        char* name;
+        char type;
 };
 
-/*Define a list of all of the names in order of assignment.
-The order does not matter as assignment and calling is dynamic.*/
-char* name[] = {"Potential", "Integral", "Derivative", "Odometer", "Regen", "Speed"};
+//Include all memory objects below in the array.
+memory potential(1,0x00, 'f', "Potential");
+memory storage[] = {
+    memory potential(1, 0x00, "f", "Potential"),
+    memory integral(2, 0x03, 'f', "Integral"),
+    memory derivative(3, 0x08, 'f', "Derivative")
+
+};
+
+
 
 typedef struct {
     I2C_HandleTypeDef *i2cHandle;
