@@ -10,10 +10,11 @@
 
 using namespace std;
 
-#define M2402_I2C_ADDR (1010000 << 1)
+#define M24C02_I2C_ADDR (1010000 << 1)
 
 class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a name.
 
+    
     public:
 
         //Defines getter functions
@@ -63,6 +64,15 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 
 
         }
+        
+        memory(){
+            ID = -1;
+            Addr = 0x00;
+            type = 'n';
+            name = "null";
+            size = 0;
+
+        }
 
     private:
         int ID;
@@ -73,13 +83,21 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 };
 
 //Include all memory objects below in the array.
-memory potential(1,0x00, 'f', "Potential");
-memory storage[] = {
-    memory potential(1, 0x00, "f", "Potential"),
-    memory integral(2, 0x03, 'f', "Integral"),
-    memory derivative(3, 0x08, 'f', "Derivative")
 
+int test[] = {
+    1,2,3,4
 };
+
+memory storage[] = { //Defines an array to store all of the memory objects in.
+    memory(0,0x00, 'f', "Potential"),
+    memory(1, 0x03, 'f', "Integral"),
+    memory(2, 0x08, 'f', "Derivative"),
+    memory(3, 0x0C, 'f', "Odometer"),
+    memory(4, 0x10, 'f', "Regen"),
+    memory(5, 0x14, 'f', "Speed")
+};
+//All address values are in hex.
+//Floats and Ints are 4 bytes, Chars and Bools are 1 byte.
 
 
 
@@ -95,7 +113,7 @@ HAL_StatusTypeDef M24C02_TickOdometer(M24C02 *dev);
 
 //Low level functions
 //Utilize overloading so only one function is needed
-HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data);
+HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t data);
 HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, uint8_t length);
 
 HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data);
