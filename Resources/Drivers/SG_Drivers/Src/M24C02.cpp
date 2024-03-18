@@ -2,7 +2,18 @@
 
 #include "M24C02.hpp"
 
+void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
 
+	union U //Creates a shared memory space of the largest item (4 bytes).
+	{
+		float tempFloat; //Both items are saved in the same memory space concurrently.
+		uint8_t bytesArray[4];
+	};
+
+	U u = val;
+
+	memcpy(bytes, u.tempFloat, 4); //Copies the data from the float value to the bytes
+}
 
 
 
