@@ -10,7 +10,9 @@
 
 using namespace std;
 
-#define M24C02_I2C_ADDR (1010000 << 1)
+
+
+#define M24C02_I2C_ADDR (0b10100000)
 
 class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a name.
 
@@ -77,7 +79,7 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
     private:
         int ID;
         uint8_t Addr;
-        uint8_t size;
+        int size;
         const char* name;
         char type;
 };
