@@ -30,7 +30,7 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
             return size;
         }
 
-        char* getName(){
+        const char* getName(){
             return name;
         }
 
@@ -40,7 +40,7 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 
         //Defines constructor
         //Supported data types: int (i), float (f), char (c)
-        memory(int ID, uint8_t Addr, char type, char name[]){
+        memory(int ID, uint8_t Addr, char type, const char* name){
             ID = ID;
             Addr = Addr;
             type = type;
@@ -78,7 +78,7 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
         int ID;
         uint8_t Addr;
         uint8_t size;
-        char* name;
+        const char* name;
         char type;
 };
 
