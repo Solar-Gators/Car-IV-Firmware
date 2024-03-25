@@ -9,6 +9,14 @@ extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
 extern "C" SPI_HandleTypeDef hspi1;
 
+/* FATFS globals */
+FATFS fs;
+FATFS *pfs;
+FIL fil;
+FRESULT fres;
+DWORD fre_clust;
+uint32_t totalSpace, freeSpace;
+
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
@@ -44,6 +52,13 @@ void CPP_UserSetup(void) {
     // Setup kill switch callbacks
     // TODO: Check that kill switch is not pressed on startup
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);
+
+    // Attempt to mount SD card
+    if (f_mount(&fs, "", 1) != FR_OK) {
+        Logger::LogError("SD card mount failed\n");
+    } else {
+        Logger::LogInfo("SD card mount successful\n");
+    }
 
     // TODO: Eventually get rid of this, get state from driver controls
     // Enable the motor

@@ -6,6 +6,7 @@
 #include "main.h"
 
 #include "cmsis_os.h"
+#include "fatfs.h"
 #include "logger.hpp"
 #include "sg_can.hpp"
 #include "button.hpp"
