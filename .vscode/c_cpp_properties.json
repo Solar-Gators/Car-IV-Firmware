@@ -443,6 +443,36 @@
             "cStandard": "c11",
             "cppStandard": "c++17"
         },
+        {
+            "name": "vcu",                   // Project dependent
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/vcu/Core/Inc",     // Project dependent
+                "Firmware/vcu/User/Inc",     // Project dependent
+                "${stm32l4_includes}"               // Project dependent
+            ],
+            "browse": {
+                "path": [
+                    "${stm32l4_sources}"            // Project dependent
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32L496xx",                          // Project dependent
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
     ],
     "version": 4
 }

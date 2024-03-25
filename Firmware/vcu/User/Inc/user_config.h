@@ -3,5 +3,6 @@
 
 #define USE_FREERTOS 1
 #define USE_LOGGING 1
+#define LOG_LEVEL LOG_LEVEL_DEBUG
 
 #endif  /* USER_CONFIG_H_ */

@@ -29,6 +29,7 @@ include_directories(
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/Config
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc
+    ${RESOURCES_DIR}/Drivers/DataModules
     ${RESOURCES_DIR}/Middlewares/Third_Party/etl/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
@@ -55,6 +56,7 @@ file(GLOB SG_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/DACx311.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/button.cpp
 )
 list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_msp_template.c)
 list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_timebase_tim_template.c)
@@ -89,8 +91,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 # Linker options
 ########################################################################
 set(CMAKE_EXE_LINKER_FLAGS
-    "${CMAKE_EXE_LINKER_FLAGS} \
-    -specs=nosys.specs \
+    "-specs=nosys.specs \
     -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld \
     -Wl,--gc-sections \
     -Wl,-Map=${PROJECT_NAME}.map,--cref \

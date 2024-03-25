@@ -19,7 +19,7 @@ DATAMODULE(
     8,
 
     inline static void SetRequestAll() {
-        Data()[0] |= 0x3;
+        Data()[0] |= 0x7;
     }
 
     inline static void SetRequest0() {

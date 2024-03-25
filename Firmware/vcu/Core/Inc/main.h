@@ -49,8 +49,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -59,32 +57,53 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define HORN_EN_Pin GPIO_PIN_13
+#define HORN_EN_GPIO_Port GPIOC
+#define FAN_EN_Pin GPIO_PIN_0
+#define FAN_EN_GPIO_Port GPIOC
+#define HEADLIGHT_EN_Pin GPIO_PIN_1
+#define HEADLIGHT_EN_GPIO_Port GPIOC
+#define FR_LIGHT_EN_Pin GPIO_PIN_2
+#define FR_LIGHT_EN_GPIO_Port GPIOC
+#define FL_LIGHT_EN_Pin GPIO_PIN_3
+#define FL_LIGHT_EN_GPIO_Port GPIOC
 #define MC_FR_CTRL_Pin GPIO_PIN_0
-#define MC_FR_CTRL_GPIO_Port GPIOC
+#define MC_FR_CTRL_GPIO_Port GPIOA
 #define MC_PE_CTRL_Pin GPIO_PIN_1
-#define MC_PE_CTRL_GPIO_Port GPIOC
+#define MC_PE_CTRL_GPIO_Port GPIOA
 #define MC_MAIN_CTRL_Pin GPIO_PIN_2
-#define MC_MAIN_CTRL_GPIO_Port GPIOC
-#define ERROR_LED_Pin GPIO_PIN_0
-#define ERROR_LED_GPIO_Port GPIOA
-#define OK_LED_Pin GPIO_PIN_1
-#define OK_LED_GPIO_Port GPIOA
+#define MC_MAIN_CTRL_GPIO_Port GPIOA
 #define REGEN_CS_Pin GPIO_PIN_3
 #define REGEN_CS_GPIO_Port GPIOA
 #define THROTTLE_CS_Pin GPIO_PIN_4
 #define THROTTLE_CS_GPIO_Port GPIOA
-#define MPPT_CONTACTOR_EN_Pin GPIO_PIN_4
-#define MPPT_CONTACTOR_EN_GPIO_Port GPIOC
-#define MPPT_PRE_CONTACTOR_EN_Pin GPIO_PIN_5
-#define MPPT_PRE_CONTACTOR_EN_GPIO_Port GPIOC
-#define RL_LIGHT_EN_Pin GPIO_PIN_6
-#define RL_LIGHT_EN_GPIO_Port GPIOC
-#define RR_LIGHT_EN_Pin GPIO_PIN_7
-#define RR_LIGHT_EN_GPIO_Port GPIOC
-#define RC_LIGHT_EN_Pin GPIO_PIN_8
+#define ERROR_LED_Pin GPIO_PIN_4
+#define ERROR_LED_GPIO_Port GPIOC
+#define OK_LED_Pin GPIO_PIN_5
+#define OK_LED_GPIO_Port GPIOC
+#define NWC_Pin GPIO_PIN_0
+#define NWC_GPIO_Port GPIOB
+#define IMU_INT_Pin GPIO_PIN_1
+#define IMU_INT_GPIO_Port GPIOB
+#define RL_LIGHT_EN_Pin GPIO_PIN_14
+#define RL_LIGHT_EN_GPIO_Port GPIOB
+#define RR_LIGHT_EN_Pin GPIO_PIN_15
+#define RR_LIGHT_EN_GPIO_Port GPIOB
+#define RC_LIGHT_EN_Pin GPIO_PIN_6
 #define RC_LIGHT_EN_GPIO_Port GPIOC
-#define STRB_LIGHT_EN_Pin GPIO_PIN_9
+#define STRB_LIGHT_EN_Pin GPIO_PIN_7
 #define STRB_LIGHT_EN_GPIO_Port GPIOC
+#define KILL_SW_Pin GPIO_PIN_8
+#define KILL_SW_GPIO_Port GPIOC
+#define KILL_SW_EXTI_IRQn EXTI9_5_IRQn
+#define MPPT_PRECHARGE_EN_Pin GPIO_PIN_9
+#define MPPT_PRECHARGE_EN_GPIO_Port GPIOC
+#define MPPT_CONTACTOR_EN_Pin GPIO_PIN_8
+#define MPPT_CONTACTOR_EN_GPIO_Port GPIOA
+#define SD_CS_Pin GPIO_PIN_15
+#define SD_CS_GPIO_Port GPIOA
+#define PTT_Pin GPIO_PIN_7
+#define PTT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
