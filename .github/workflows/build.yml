@@ -56,3 +56,9 @@ jobs:
           cd Firmware/testboard-CAN-dev
           cmake -S . -B build
           cmake --build build
+
+      - name: Build vcu
+        run: |
+          cd Firmware/vcu
+          cmake -S . -B build
+          cmake --build build
