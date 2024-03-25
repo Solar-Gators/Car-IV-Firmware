@@ -76,6 +76,10 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 
         }
 
+        ~memory(){
+            delete name;
+        }
+
     private:
         int ID;
         uint8_t Addr;
@@ -86,7 +90,7 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 
 //Include all memory objects below in the array.
 memory storage[] = { //Defines an array to store all of the memory objects in.
-    memory(0,0x00, 'f', "Potential"),
+    memory(0, 0x00, 'f', "Potential"),
     memory(1, 0x03, 'f', "Integral"),
     memory(2, 0x08, 'f', "Derivative"),
     memory(3, 0x0C, 'f', "Odometer"),
