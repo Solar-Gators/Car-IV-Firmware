@@ -10,9 +10,9 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 		uint8_t bytesArray[4];
 	};
 
-	U u = val;
+	//U u = val;
 
-	memcpy(bytes, u.tempFloat, 4); //Copies the data from the float value to the bytes
+	//memcpy(bytes, u.tempFloat, 4); //Copies the data from the float value to the bytes
 }
 
 

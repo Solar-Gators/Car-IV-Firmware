@@ -85,11 +85,6 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 };
 
 //Include all memory objects below in the array.
-
-int test[] = {
-    1,2,3,4
-};
-
 memory storage[] = { //Defines an array to store all of the memory objects in.
     memory(0,0x00, 'f', "Potential"),
     memory(1, 0x03, 'f', "Integral"),
