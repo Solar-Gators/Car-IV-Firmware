@@ -1,0 +1,3 @@
+Features to implement:
+-SD card logging (BMS, MPPT, MC, throttle, brake)
+-Kill switch persistent state

@@ -10,6 +10,7 @@
 
 /* Periodic threads */
 void SendMitsubaRequest(void);
+void ToggleLights(void);
 
 
 /* Regular task definitions */
@@ -22,7 +23,8 @@ void ThreadsStart();
 
 /* Callbacks */
 void IoMsgCallback(uint8_t *data);
-void MotorUpdateCallback(uint8_t *data);
+void DriverControls0Callback(uint8_t *data);
+void DriverControls1Callback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
 
 void KillSwitchCallback(void);

@@ -39,7 +39,8 @@ void CPP_UserSetup(void) {
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
-    CANController::AddRxMessage(&DriverControlsFrame0::Instance(), MotorUpdateCallback);
+    CANController::AddRxMessage(&DriverControlsFrame0::Instance(), DriverControls0Callback);
+    CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
     CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
     CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
@@ -61,6 +62,8 @@ void CPP_UserSetup(void) {
     }
 
     // TODO: Eventually get rid of this, get state from driver controls
+    SetThrottle(0);
+    SetRegen(0);
     // Enable the motor
     SetMotorState(true);
     // Set the motor mode to eco
@@ -74,17 +77,15 @@ void CPP_UserSetup(void) {
 
 /* Helper Functions */
 void SetMotorState(bool state) {
-    HAL_GPIO_WritePin(MC_MAIN_CTRL_GPIO_Port, MC_MAIN_CTRL_Pin, (GPIO_PinState)state);
+    HAL_GPIO_WritePin(MC_MAIN_CTRL_GPIO_Port, MC_MAIN_CTRL_Pin, static_cast<GPIO_PinState>(state));
 }
 
 void SetMotorMode(bool mode) {
-    HAL_GPIO_WritePin(MC_PE_CTRL_GPIO_Port, MC_PE_CTRL_Pin, (GPIO_PinState)mode);
+    HAL_GPIO_WritePin(MC_PE_CTRL_GPIO_Port, MC_PE_CTRL_Pin, static_cast<GPIO_PinState>(mode));
 }
 
 void SetMotorDirection(bool direction) {
-    volatile GPIO_PinState state = (GPIO_PinState)direction;
-
-    HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, state);
+    HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, static_cast<GPIO_PinState>(direction));
 }
 
 void SetThrottle(uint16_t value) {
