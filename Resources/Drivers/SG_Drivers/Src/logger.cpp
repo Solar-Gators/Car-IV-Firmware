@@ -1,9 +1,10 @@
 #include "logger.hpp"
 
 #if (USE_LOGGING == 1)
-void Logger::LogInfo(const char * sFormat, ...) {
-    #if (LOG_LEVEL <= LOG_LEVEL_INFO)
-    PrintHeader("INFO");
+
+void Logger::LogDebug(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_DEBUG)
+    PrintHeader("DEBUG");
     PrintThread();
     va_list ParamList;
     va_start(ParamList, sFormat);
@@ -13,9 +14,9 @@ void Logger::LogInfo(const char * sFormat, ...) {
     #endif
 }
 
-void Logger::LogDebug(const char * sFormat, ...) {
-    #if (LOG_LEVEL <= LOG_LEVEL_DEBUG)
-    PrintHeader("DEBUG");
+void Logger::LogInfo(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_INFO)
+    PrintHeader("INFO");
     PrintThread();
     va_list ParamList;
     va_start(ParamList, sFormat);
