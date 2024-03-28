@@ -21,7 +21,7 @@ bool intToBytes(int val, uint8_t &bytes){
 
 }
 
-bool cstringToBytes(const char *name, int &length){
+bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
 
 
 }
@@ -33,7 +33,7 @@ bool getData(memory obj, uint8_t *data){
 
 
 
-bool fetchMem(uint8_t *info){
+bool fetchInfo(uint8_t *info){
 	try{
 		int numStored = sizeof(storage);
 
@@ -44,45 +44,47 @@ bool fetchMem(uint8_t *info){
 		
 		
 	
+		//Structure for data packets. byte 0, length of string in int, btyes n-m characters for the c-string, byte m+1 ID of object. Pattern repeats for all objects in storage.
 		for(int i = 0 ; i < numStored ; i++){
 
 			const char *tempName = storage[i].getName();
-			bool pass = cstringToBytes(tempName, strSize);
+			uint8_t *nameData;
+			bool pass = cstringToBytes(tempName, strSize, nameData);
+			if (pass == false){
+				throw;
+			}
 
-			uint8_t tempInt;
-			intToBytes(strSize, tempInt);
 
-			tempInfo[currentSize] = tempInt;
+			tempInfo[currentSize] = strSize;
 			currentSize++;
 
-			for(int j ; j < strSize ; j++){
-				tempInfo[currentSize + j] = tempName[j];
+			for(int j = 0 ; j < strSize ; j++){
+
+				tempInfo[currentSize + j] = nameData[j];
 
 			}
 			currentSize += strSize;
 
-			if (pass == false){
-				throw 1;
-			}
+			delete nameData;
 
-			//getData
+			tempInfo[currentSize] = storage[i].getID();
+			currentSize++;
 
-
+			delete tempName;
 
 		}
 
-	
+		reqSize = currentSize;
+		info = tempInfo;
+		
 		delete tempInfo;
-		//delete tempName;
 
 	}
 
 	catch(...){
+		//strcpy((char*)buf, "Error: Conversion Error")
 	
 	}
-
-
-
 }
 
 
