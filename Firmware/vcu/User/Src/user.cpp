@@ -12,7 +12,6 @@ extern "C" SPI_HandleTypeDef hspi1;
 /* FATFS globals */
 FATFS fs;
 FATFS *pfs;
-FIL fil;
 FRESULT fres;
 DWORD fre_clust;
 uint32_t totalSpace, freeSpace;
@@ -60,6 +59,9 @@ void CPP_UserSetup(void) {
     } else {
         Logger::LogInfo("SD card mount successful\n");
     }
+
+    // Turn on headlights
+    HAL_GPIO_WritePin(HEADLIGHT_EN_GPIO_Port, HEADLIGHT_EN_Pin, GPIO_PIN_SET);
 
     // TODO: Eventually get rid of this, get state from driver controls
     SetThrottle(0);

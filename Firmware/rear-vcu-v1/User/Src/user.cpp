@@ -29,8 +29,8 @@ void CPP_UserSetup(void) {
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
     CANController::AddRxMessage(&DriverControlsFrame0::Instance(), MotorUpdateCallback);
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
-    CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
-    CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
+    //CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
+    //CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
     CANController::AddFilterAll();
     CANController::Start();
 

@@ -108,9 +108,6 @@ void PeriodicTask1(void *argument) {
     CANController::Send(&DriverControlsFrame0::Instance());
 
     osEventFlagsSet(regular_event, 0x1);
-
-
-
 }
 
 void RegularTask1(void *argument) {

@@ -31,7 +31,9 @@ void MotorUpdateCallback(uint8_t *data) {
     SetMotorMode(DriverControlsFrame0::GetDriveMode());
     SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
     SetThrottle(DriverControlsFrame0::GetThrottleVal());
-    SetRegen(DriverControlsFrame0::GetRegenVal());    
+    SetRegen(DriverControlsFrame0::GetRegenVal());   
+
+    Logger::LogInfo("Motor current: %d", MitsubaFrame0::Instance().GetMotorCurrent()); 
 }
 
 void MitsubaCallback(uint8_t *data) {

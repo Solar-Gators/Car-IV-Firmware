@@ -36,7 +36,7 @@ HAL_StatusTypeDef BQ76952::ReadVoltages() {
     low_cell_voltage_ = 0;
     high_cell_voltage_ = 10;
     for (int i = 0; i < 16; i++) {
-        status = DirectReadI2(BQ769X2_CMD_VOLTAGE_CELL_1 + i*2, &cell_voltages_[i]);
+        status = DirectReadI2(CELL_NO_TO_ADDR(i+1), &cell_voltages_[i]);
         if (status != HAL_OK) { return status; }
 
         if (cell_voltages_[i] > high_cell_voltage_) {

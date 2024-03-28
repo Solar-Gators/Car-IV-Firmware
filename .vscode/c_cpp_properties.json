@@ -414,6 +414,36 @@
             "cppStandard": "c++17"
         },
         {
+            "name": "testboard-commander",
+            "intelliSenseMode": "gcc-arm",
+            "includePath": [
+                "${common_includes}",
+                "Firmware/testboard-commander/Core/Inc",
+                "Firmware/testboard-commander/User/Inc",
+                "${stm32l4_includes}"
+            ],
+            "browse": {
+                "path": [
+                    "${stm32l4_sources}"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "STM32L496xx",
+                "USE_HAL_DRIVER"
+            ],
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        },
+        {
             "name": "testboard-INA",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [

@@ -44,37 +44,41 @@ void SendMitsubaRequest() {
 
 /* Periodic thread function to handle hazards and turn signal logic */
 void ToggleLights() {
-    // Hazards toggle the RC light no matter what
-    if (DriverControlsFrame1::GetHazards()) {
-        HAL_GPIO_TogglePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin);
-        // If brake is not enabled, hazards also toggle all side lights
-        if (!DriverControlsFrame0::GetBrakeEnable()) {
-            HAL_GPIO_TogglePin(FL_LIGHT_EN_GPIO_Port, FL_LIGHT_EN_Pin);
-            HAL_GPIO_TogglePin(FR_LIGHT_EN_GPIO_Port, FR_LIGHT_EN_Pin);
-            HAL_GPIO_TogglePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin);
-            HAL_GPIO_TogglePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin);
-        }
-    }
-
-    // Turn signals toggle side lights no matter what
-    // This implies that hazards will override turn signals
-    else if (DriverControlsFrame1::GetLeftTurn()) {
+    // If hazards or left turn on, toggle left lights
+    if (DriverControlsFrame1::GetHazards() || DriverControlsFrame1::GetLeftTurn()) {
         HAL_GPIO_TogglePin(FL_LIGHT_EN_GPIO_Port, FL_LIGHT_EN_Pin);
         HAL_GPIO_TogglePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin);
     }
-    else if (DriverControlsFrame1::GetRightTurn()) {
+    // If neither hazards nor left turn on, left lights depend on brake lights
+    else {
+        HAL_GPIO_WritePin(FL_LIGHT_EN_GPIO_Port, FL_LIGHT_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, 
+                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrakeEnable()));
+    }
+    // If hazards or right turn on, toggle right lights
+    if (DriverControlsFrame1::GetHazards() || DriverControlsFrame1::GetRightTurn()) {
         HAL_GPIO_TogglePin(FR_LIGHT_EN_GPIO_Port, FR_LIGHT_EN_Pin);
         HAL_GPIO_TogglePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin);
     }
-
-    // If no turn signals, hazards, or brake, turn off all lights
-    else if (!DriverControlsFrame0::GetBrakeEnable()) {
-        HAL_GPIO_WritePin(FL_LIGHT_EN_GPIO_Port, FL_LIGHT_EN_Pin, GPIO_PIN_RESET);
+    // If neither hazards nor right turn on, right lights depend on brake lights
+    else {
         HAL_GPIO_WritePin(FR_LIGHT_EN_GPIO_Port, FR_LIGHT_EN_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, 
+                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrakeEnable()));
+    }
+
+    // If brake lights are not on, center light turns off
+    if (!DriverControlsFrame0::GetBrakeEnable()) {
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_RESET);
     }
+}
+
+/* Periodic thread function to write log data to SD card */
+void LogData() {
+    FIL fil;
+
+    // Open the log file
+    f_open(&fil, "log.txt", FA_OPEN_ALWAYS | FA_WRITE);
 }
 
 /* Callback executed when IoTestFrame received
@@ -118,11 +122,8 @@ void DriverControls0Callback(uint8_t *data) {
     headlights, push to talk, horn */
 void DriverControls1Callback(uint8_t *data) {
     // Headlights
-    HAL_GPIO_WritePin(FL_LIGHT_EN_GPIO_Port, 
-                        FL_LIGHT_EN_Pin, 
-                        static_cast<GPIO_PinState>(DriverControlsFrame1::GetHeadlight()));
-    HAL_GPIO_WritePin(FR_LIGHT_EN_GPIO_Port, 
-                        FR_LIGHT_EN_Pin, 
+    HAL_GPIO_WritePin(HEADLIGHT_EN_GPIO_Port, 
+                        HEADLIGHT_EN_Pin, 
                         static_cast<GPIO_PinState>(DriverControlsFrame1::GetHeadlight()));
 
     // Push to talk

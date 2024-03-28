@@ -134,7 +134,7 @@ void CANDevice::HandleRx(void* argument) {
 
                 // Call Rx callback
                 if (rx_msg->rxCallback)
-                rx_msg->rxCallback(rxData);
+                    rx_msg->rxCallback(rxData);
             }
         }
 

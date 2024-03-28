@@ -11,13 +11,12 @@
 /* Periodic threads */
 void SendMitsubaRequest(void);
 void ToggleLights(void);
-
+void LogData(void);
 
 /* Regular task definitions */
 void ThreadsStart();
 
 /* Event flags */
-
 
 /* Mutexes */
 
@@ -26,7 +25,6 @@ void IoMsgCallback(uint8_t *data);
 void DriverControls0Callback(uint8_t *data);
 void DriverControls1Callback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
-
 void KillSwitchCallback(void);
 
 
