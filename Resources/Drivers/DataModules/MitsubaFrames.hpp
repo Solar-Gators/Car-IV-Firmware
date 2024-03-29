@@ -69,22 +69,22 @@ DATAMODULE(
         return (Data()[3] >> 6) & 0x1;
     }
 
-    // Motor Current
+    // Motor Current (A)
     inline static uint16_t GetMotorCurrent() {
         return ((Data()[3] & 0x3F) << 4) | (Data()[4] >> 4);
     }
 
-    // FET Temperature
+    // FET Temperature (increments of 5C)
     inline static uint8_t GetFETTemp() {
         return (Data()[4] & 0xF) << 1 | (Data()[5] >> 7);
     }
 
-    // Motor RPM
+    // Motor RPM (1RPM)
     inline static uint16_t GetMotorRPM() {
         return ((Data()[5] & 0x7F) << 5) | (Data()[6] >> 3);
     }
 
-    // PWM Duty Cycle
+    // PWM Duty Cycle (0.5%)
     inline static uint16_t GetPWMDutyCycle() {
         return ((Data()[6] & 0x7) << 7) | (Data()[7] >> 1);
     }

@@ -15,6 +15,7 @@
 #include "VCUFrame.hpp"
 #include "DriverControls.hpp"
 #include "IoTestFrame.hpp"
+#include "OrionBMSFrames.hpp"
 #include "MitsubaFrames.hpp"
 
 #endif /* USER_HPP_ */

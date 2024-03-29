@@ -122,6 +122,20 @@ void LogData() {
         // Wait for signal from periodic thread
         osEventFlagsWait(log_event, 0x1, osFlagsWaitAny, osWaitForever);
 
+        int time = osKernelGetTickCount();
+        
+        float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0;
+        float battery_current = BMSFrame2::Instance().GetPackCurrent() / 10.0;
+        int battery_avg_temp = BMSFrame1::Instance().GetAverageTemp();
+        int battery_high_temp = BMSFrame1::Instance().GetHighTemp();
+
+        int motor_rpm = MitsubaFrame0::Instance().GetMotorRPM();
+        int motor_temp = MitsubaFrame0::Instance().GetFETTemp() * 5;
+
+        int throttle = DriverControlsFrame0::Instance().GetThrottleVal() / 655;
+        int regen = DriverControlsFrame0::Instance().GetRegenVal() / 655;
+        int brake = DriverControlsFrame0::Instance().GetBrakeEnable();
+
         Logger::LogInfo("Logging Data");
     }
 }
