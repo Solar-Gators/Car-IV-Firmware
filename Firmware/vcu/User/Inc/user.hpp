@@ -17,6 +17,7 @@
 #include "IoTestFrame.hpp"
 #include "OrionBMSFrames.hpp"
 #include "MitsubaFrames.hpp"
+#include "MPPTFrames.hpp"
 
 #endif /* USER_HPP_ */
 

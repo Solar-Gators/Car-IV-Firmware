@@ -122,8 +122,10 @@ void LogData() {
         // Wait for signal from periodic thread
         osEventFlagsWait(log_event, 0x1, osFlagsWaitAny, osWaitForever);
 
+        // Get data from CAN frames
         int time = osKernelGetTickCount();
         
+        int battery_soc = BMSFrame4::Instance().GetPackSOC();
         float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0;
         float battery_current = BMSFrame2::Instance().GetPackCurrent() / 10.0;
         int battery_avg_temp = BMSFrame1::Instance().GetAverageTemp();
@@ -132,11 +134,56 @@ void LogData() {
         int motor_rpm = MitsubaFrame0::Instance().GetMotorRPM();
         int motor_temp = MitsubaFrame0::Instance().GetFETTemp() * 5;
 
+        float mppt1_input_voltage = MPPTInputMeasurementsFrame1::Instance().GetInputVoltage();
+        float mppt1_input_current = MPPTInputMeasurementsFrame1::Instance().GetInputCurrent();
+        float mppt2_input_voltage = MPPTInputMeasurementsFrame2::Instance().GetInputVoltage();
+        float mppt2_input_current = MPPTInputMeasurementsFrame2::Instance().GetInputCurrent();
+        float mppt3_input_voltage = MPPTInputMeasurementsFrame3::Instance().GetInputVoltage();
+        float mppt3_input_current = MPPTInputMeasurementsFrame3::Instance().GetInputCurrent();
+
         int throttle = DriverControlsFrame0::Instance().GetThrottleVal() / 655;
         int regen = DriverControlsFrame0::Instance().GetRegenVal() / 655;
         int brake = DriverControlsFrame0::Instance().GetBrakeEnable();
 
-        Logger::LogInfo("Logging Data");
+        uint32_t bms_faults = BMSFrame4::Instance().GetFaultFlags0() |
+                                (BMSFrame4::Instance().GetFaultFlags1() << 8) |
+                                (BMSFrame4::Instance().GetFaultFlags2() << 16);
+        uint32_t mitsuba_faults = MitsubaFrame2::Instance().GetAllFlags();
+
+
+        // Generate log line with sprintf since f_printf does not support floats
+        char log_buffer[256];
+        sprintf(log_buffer, 
+                "%d,%d,%.2f,%.2f,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%lu,%lu\n",
+                time, 
+                battery_soc,
+                battery_voltage, 
+                battery_current, 
+                battery_avg_temp, 
+                battery_high_temp, 
+                motor_rpm, 
+                motor_temp, 
+                mppt1_input_voltage, 
+                mppt1_input_current, 
+                mppt2_input_voltage, 
+                mppt2_input_current, 
+                mppt3_input_voltage, 
+                mppt3_input_current, 
+                throttle, 
+                regen, 
+                brake, 
+                bms_faults, 
+                mitsuba_faults);
+        
+        // Write log line to SD card
+        if (f_write(&fil, log_buffer, strlen(log_buffer), NULL) != FR_OK)
+            Logger::LogError("Error writing to SD card\n");
+
+        // Sync the SD card
+        // TODO: This is slow, can optimize to sync less often
+        // TODO: When sync fails, check if card is still inserted
+        if (f_sync(&fil) != FR_OK)
+            Logger::LogError("Error syncing SD card\n");
     }
 }
 

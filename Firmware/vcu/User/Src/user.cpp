@@ -99,25 +99,25 @@ bool SD_Init() {
 
     // Write the csv header
     UINT bw;
-    const char* csv_header = "time (ms),\
-                                SoC,\
-                                Battery Voltage,\
-                                Battery Current,\
-                                Battery Avg Temp,\
-                                Battery High T,\
-                                Motor RPM,\
-                                Motor Temp,\
-                                MPPT1 Voltage,\
-                                MPPT1 Current,\
-                                MPPT2 Voltage,\
-                                MPPT2 Current,\
-                                MPPT3 Voltage,\
-                                MPPT3 Current,\
-                                Throttle,\
-                                Regen,\
-                                Brake,\
-                                BMS Faults,\
-                                MC Faults\n";
+    const char* csv_header = "time (ms),"\
+                                "SoC,"\
+                                "Battery Voltage,"\
+                                "Battery Current,"\
+                                "Battery Avg Temp,"\
+                                "Battery High T,"\
+                                "Motor RPM,"\
+                                "Motor Temp,"\
+                                "MPPT1 Voltage,"\
+                                "MPPT1 Current,"\
+                                "MPPT2 Voltage,"\
+                                "MPPT2 Current,"\
+                                "MPPT3 Voltage,"\
+                                "MPPT3 Current,"\
+                                "Throttle,"\
+                                "Regen,"\
+                                "Brake,"\
+                                "BMS Faults,"\
+                                "MC Faults\n";
     f_write(&fil, csv_header, strlen(csv_header), &bw);
     if (fres != FR_OK || bw < strlen(csv_header)) {
         Logger::LogError("Failed to write new log file");

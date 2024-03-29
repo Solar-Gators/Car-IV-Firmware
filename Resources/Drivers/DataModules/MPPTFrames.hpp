@@ -9,9 +9,9 @@
 
 #include "DataModule.hpp"
 
-static constexpr uint16_t MPPT1_BASE_ADDRESS = 0x600;
-static constexpr uint16_t MPPT1_BASE_ADDRESS = 0x610;
-static constexpr uint16_t MPPT1_BASE_ADDRESS = 0x620;
+#define MPPT1_BASE_ADDRESS 0x600
+#define MPPT2_BASE_ADDRESS 0x610
+#define MPPT3_BASE_ADDRESS 0x620
 
 
 /* MPPT 1 */
@@ -28,7 +28,7 @@ DATAMODULE(
     inline static float GetInputVoltage() {
         float input_voltage;
         memcpy(&input_voltage, &Data()[0], 4);
-        return input_voltage
+        return input_voltage;
     }
 
     // Input current (A)
@@ -51,14 +51,14 @@ DATAMODULE(
     // Output volage (V)
     inline static float GetOutputVoltage() {
         float output_voltage;
-        memcpy(output_voltage, &Data()[0], 4);
-        return output_voltage
+        memcpy(&output_voltage, &Data()[0], 4);
+        return output_voltage;
     }
 
     // Output current (A)
     inline static float GetOutputCurrent() {
         float output_current;
-        memcpy(output_current, &Data()[4], 4);
+        memcpy(&output_current, &Data()[4], 4);
         return output_current;
     }
 )
@@ -76,7 +76,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float fet_temp;
         memcpy(&fet_temp, &Data()[0], 4);
-        return fet_temp
+        return fet_temp;
     }
 
     // Controller temperature (C)
@@ -100,7 +100,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float supply_12V;
         memcpy(&supply_12V, &Data()[0], 4);
-        return supply_12V
+        return supply_12V;
     }
 
     // 3V supply (V)
@@ -124,7 +124,7 @@ DATAMODULE(
     inline static float GetMaxOutputVoltage() {
         float voltage;
         memcpy(&voltage, &Data()[0], 4);
-        return voltage
+        return voltage;
     }
 
     // Max Input Current (A)
@@ -150,7 +150,7 @@ DATAMODULE(
     inline static float GetInputVoltage() {
         float input_voltage;
         memcpy(&input_voltage, &Data()[0], 4);
-        return input_voltage
+        return input_voltage;
     }
 
     // Input current (A)
@@ -173,14 +173,14 @@ DATAMODULE(
     // Output volage (V)
     inline static float GetOutputVoltage() {
         float output_voltage;
-        memcpy(output_voltage, &Data()[0], 4);
-        return output_voltage
+        memcpy(&output_voltage, &Data()[0], 4);
+        return output_voltage;
     }
 
     // Output current (A)
     inline static float GetOutputCurrent() {
         float output_current;
-        memcpy(output_current, &Data()[4], 4);
+        memcpy(&output_current, &Data()[4], 4);
         return output_current;
     }
 )
@@ -198,7 +198,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float fet_temp;
         memcpy(&fet_temp, &Data()[0], 4);
-        return fet_temp
+        return fet_temp;
     }
 
     // Controller temperature (C)
@@ -222,7 +222,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float supply_12V;
         memcpy(&supply_12V, &Data()[0], 4);
-        return supply_12V
+        return supply_12V;
     }
 
     // 3V supply (V)
@@ -246,7 +246,7 @@ DATAMODULE(
     inline static float GetMaxOutputVoltage() {
         float voltage;
         memcpy(&voltage, &Data()[0], 4);
-        return voltage
+        return voltage;
     }
 
     // Max Input Current (A)
@@ -272,7 +272,7 @@ DATAMODULE(
     inline static float GetInputVoltage() {
         float input_voltage;
         memcpy(&input_voltage, &Data()[0], 4);
-        return input_voltage
+        return input_voltage;
     }
 
     // Input current (A)
@@ -295,14 +295,14 @@ DATAMODULE(
     // Output volage (V)
     inline static float GetOutputVoltage() {
         float output_voltage;
-        memcpy(output_voltage, &Data()[0], 4);
-        return output_voltage
+        memcpy(&output_voltage, &Data()[0], 4);
+        return output_voltage;
     }
 
     // Output current (A)
     inline static float GetOutputCurrent() {
         float output_current;
-        memcpy(output_current, &Data()[4], 4);
+        memcpy(&output_current, &Data()[4], 4);
         return output_current;
     }
 )
@@ -320,7 +320,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float fet_temp;
         memcpy(&fet_temp, &Data()[0], 4);
-        return fet_temp
+        return fet_temp;
     }
 
     // Controller temperature (C)
@@ -344,7 +344,7 @@ DATAMODULE(
     inline static float GetFETTemp() {
         float supply_12V;
         memcpy(&supply_12V, &Data()[0], 4);
-        return supply_12V
+        return supply_12V;
     }
 
     // 3V supply (V)
@@ -368,7 +368,7 @@ DATAMODULE(
     inline static float GetMaxOutputVoltage() {
         float voltage;
         memcpy(&voltage, &Data()[0], 4);
-        return voltage
+        return voltage;
     }
 
     // Max Input Current (A)

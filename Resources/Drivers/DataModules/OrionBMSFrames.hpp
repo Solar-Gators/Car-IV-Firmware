@@ -121,7 +121,7 @@ DATAMODULE(
     CAN_RTR_DATA,
     8,
 
-    inline static uint8_t GetFaultsFrame0() {
+    inline static uint8_t GetFaultFlags0() {
         return Data()[0];
     }
     /*
@@ -134,7 +134,7 @@ DATAMODULE(
     cell_voltage_over_5v_fault_         = Data()[0] & (1 << 6);
     cell_bank_fault_                    = Data()[0] & (1 << 7);*/
 
-    inline static uint8_t GetFaultsFrame1() {
+    inline static uint8_t GetFaultFlags1() {
         return Data()[1];
     }
     /*
@@ -147,7 +147,7 @@ DATAMODULE(
     invalid_input_supply_voltage_fault_ = Data()[1] & (1 << 6);
     chargeenable_relay_fault_           = Data()[1] & (1 << 7);*/
 
-    inline static uint8_t GetFaultsFrame2(){
+    inline static uint8_t GetFaultFlags2(){
         return Data()[2];
     }
     /*
@@ -187,22 +187,5 @@ DATAMODULE(
 
     inline static uint16_t GetMaxPackDCL() { 
         return ((Data()[0] << 8) | Data()[1]);
-    }
-
-    inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[6] = (val >> 8) & 0xFF;
-        Data()[7] = val & 0xFF;
-    }
-    inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[4] = (val >> 8) & 0xFF;
-        Data()[5] = val & 0xFF;
-    }
-    inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[2] = (val >> 8) & 0xFF;
-        Data()[3] = val & 0xFF;
-    }
-        inline static void SetMaxPackVoltage(uint16_t val) {
-        Data()[0] = (val >> 8) & 0xFF;
-        Data()[1] = val & 0xFF;
     }
 )
