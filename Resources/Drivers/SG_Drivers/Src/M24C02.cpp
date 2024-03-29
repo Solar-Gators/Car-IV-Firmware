@@ -12,9 +12,11 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 		uint8_t bytesArray[4];
 	};
 
-	//U u = val;
+	U temp;
 
-	//memcpy(bytes, u.tempFloat, 4); //Copies the data from the float value to the bytes
+	for(int i = 0 ; i < 4; i++){
+		bytes[i] = temp.bytesArray[i];
+	}
 }
 
 bool intToBytes(int val, uint8_t &bytes){
@@ -22,7 +24,15 @@ bool intToBytes(int val, uint8_t &bytes){
 }
 
 bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
+	
+	int strLen = sizeof(name);
+	length = strLen;
+		
+	for(int i = 0 ; i < strLen ; i++){
 
+		nameData[i] = name[i];
+
+	}
 
 }
 
