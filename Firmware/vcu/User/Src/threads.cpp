@@ -1,5 +1,8 @@
 #include "threads.h"
 
+/* Setup data structures */
+osEventFlagsId_t log_event = osEventFlagsNew(NULL);
+
 /* Setup periodic threads */
 osTimerAttr_t mitsuba_req_periodic_timer_attr = {
     .name = "Send Mitsuba Request Thread",
@@ -23,6 +26,33 @@ osTimerId_t toggle_lights_periodic_timer_id = osTimerNew((osThreadFunc_t)ToggleL
                                                             NULL, 
                                                             &toggle_lights_periodic_timer_attr);
 
+osTimerAttr_t logger_periodic_timer_attr = {
+    .name = "Toggle Lights Thread",
+    .attr_bits = 0,
+    .cb_mem = NULL,
+    .cb_size = 0,
+};
+osTimerId_t logger_periodic_timer_id = osTimerNew((osThreadFunc_t)LogDataPeriodic, 
+                                                            osTimerPeriodic, 
+                                                            NULL, 
+                                                            &logger_periodic_timer_attr);
+
+/* Setup regular threads */
+uint32_t logger_thread_buffer[1024];
+StaticTask_t logger_thread_control_block;
+const osThreadAttr_t logger_thread_attributes = {
+    .name = "Logging Thread",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &logger_thread_control_block,
+    .cb_size = sizeof(logger_thread_control_block),
+    .stack_mem = &logger_thread_buffer[0],
+    .stack_size = sizeof(logger_thread_buffer),
+    .priority = (osPriority_t) osPriorityBelowNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
+osThreadId_t logger_thread_id = osThreadNew((osThreadFunc_t)LogData, NULL, &logger_thread_attributes);
+
 /* Start periodic threads */
 void ThreadsStart() {
     // Request to receive Mitsuba frames every 500ms
@@ -30,6 +60,9 @@ void ThreadsStart() {
 
     // Toggle lights (hazards & turn signals) every 500ms
     osTimerStart(toggle_lights_periodic_timer_id, 500);
+
+    // Toggle logger thread every 100ms
+    osTimerStart(logger_periodic_timer_id, 100);
 }
 
 /* Periodic thread function to send CAN message request for frames to Mitsuba 
@@ -73,12 +106,24 @@ void ToggleLights() {
     }
 }
 
-/* Periodic thread function to write log data to SD card */
-void LogData() {
-    FIL fil;
+/* 
+ * Periodic thread function to unblock SD logging thread
+ * Logging is not done in this periodic thread directly so the SD logging
+ * thread can be set to a lower priority than the timer task and so the stack
+ * size of the logging thread is configurable
+ */
+void LogDataPeriodic() {
+    osEventFlagsSet(log_event, 0x1);
+}
 
-    // Open the log file
-    f_open(&fil, "log.txt", FA_OPEN_ALWAYS | FA_WRITE);
+/* Thread function to log data to SD card */
+void LogData() {
+    while (1) {
+        // Wait for signal from periodic thread
+        osEventFlagsWait(log_event, 0x1, osFlagsWaitAny, osWaitForever);
+
+        Logger::LogInfo("Logging Data");
+    }
 }
 
 /* Callback executed when IoTestFrame received

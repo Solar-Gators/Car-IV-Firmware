@@ -12,9 +12,9 @@ extern "C" SPI_HandleTypeDef hspi1;
 /* FATFS globals */
 FATFS fs;
 FATFS *pfs;
+FIL fil;
 FRESULT fres;
 DWORD fre_clust;
-uint32_t totalSpace, freeSpace;
 
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
@@ -29,11 +29,8 @@ DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 // TODO: Use simple debounce instead? Need to register press and unpress
 Button kill_sw = Button(KILL_SW_GPIO_Port, KILL_SW_Pin, 50, GPIO_PIN_SET);
 
-/* Setup function, called from main before kernel initialization */
-void CPP_UserSetup(void) {
-    // Make sure that timer priorities are configured correctly
-    HAL_Delay(10);
-
+/* Setup functions */
+static void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
@@ -48,17 +45,108 @@ void CPP_UserSetup(void) {
 
     // Permanently request all Mitsuba frames
     MitsubaRequestFrame::Instance().SetRequestAll();
+}
+
+bool SD_Init() {
+    FILINFO fno;
+    DIR dir;
+
+    // Filename is in the format "LOGxxx.CSV"
+    char log_filename[11];
+
+    // Mount the filesystem
+    fres = f_mount(&fs, "", 1);
+    if (fres != FR_OK) {
+        Logger::LogError("SD card mount failed\n");
+        return false;
+    } else {
+        Logger::LogInfo("SD card mount successful\n");
+    }
+
+    // Open the root directory
+    fres = f_opendir(&dir, "/");
+    if (fres != FR_OK) {
+        Logger::LogError("Failed to open root directory\n");
+        return false;
+    }
+
+    // Find the next available log file number
+    int log_num = 0;
+    bool exists = true;
+    while (exists) {
+        sprintf(log_filename, "log%03d.csv", log_num);
+        fres = f_stat(log_filename, &fno);
+        if (fres != FR_OK) {
+            exists = false;
+        } else {
+            log_num++;
+            if (log_num > 999) {
+                Logger::LogError("Too many log files");
+                return false;
+            }
+        }
+    }
+
+    // Close the directory
+    f_closedir(&dir);
+
+    // Create a new file with log_filename
+    fres = f_open(&fil, log_filename, FA_CREATE_NEW | FA_WRITE);
+    if (fres != FR_OK) {
+        Logger::LogError("Failed to create new file: %s", log_filename);
+        return false;
+    }
+
+    // Write the csv header
+    UINT bw;
+    const char* csv_header = "time (ms),\
+                                SoC,\
+                                Battery Voltage,\
+                                Battery Current,\
+                                Battery Avg Temp,\
+                                Battery High T,\
+                                Motor RPM,\
+                                Motor Temp,\
+                                MPPT1 Voltage,\
+                                MPPT1 Current,\
+                                MPPT2 Voltage,\
+                                MPPT2 Current,\
+                                MPPT3 Voltage,\
+                                MPPT3 Current,\
+                                Throttle,\
+                                Regen,\
+                                Brake,\
+                                BMS Faults,\
+                                MC Faults\n";
+    f_write(&fil, csv_header, strlen(csv_header), &bw);
+    if (fres != FR_OK || bw < strlen(csv_header)) {
+        Logger::LogError("Failed to write new log file");
+        return false;
+    }
+
+    // Flush file
+    f_sync(&fil);
+
+    Logger::LogInfo("Created new file: %s", log_filename);
+
+    return true;
+}
+
+/* User entry function, called from main before kernel initialization */
+void CPP_UserSetup(void) {
+    // Make sure that timer priorities are configured correctly
+    HAL_Delay(10);
+
+    // Initialize CAN things
+    CAN_Modules_Init();
 
     // Setup kill switch callbacks
     // TODO: Check that kill switch is not pressed on startup
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);
 
-    // Attempt to mount SD card
-    if (f_mount(&fs, "", 1) != FR_OK) {
-        Logger::LogError("SD card mount failed\n");
-    } else {
-        Logger::LogInfo("SD card mount successful\n");
-    }
+    // Initialize SD card
+    // TODO: Do not setup SD thread if SD_Init() fails
+    SD_Init();
 
     // Turn on headlights
     HAL_GPIO_WritePin(HEADLIGHT_EN_GPIO_Port, HEADLIGHT_EN_Pin, GPIO_PIN_SET);

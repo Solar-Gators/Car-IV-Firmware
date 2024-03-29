@@ -3,18 +3,17 @@
 
 #include "user.hpp"
 
+void ThreadsStart();
+
 /* Defines */
-
-
-/* Task function prototypes */
 
 /* Periodic threads */
 void SendMitsubaRequest(void);
 void ToggleLights(void);
-void LogData(void);
+void LogDataPeriodic(void);
 
-/* Regular task definitions */
-void ThreadsStart();
+/* Regular threads */
+void LogData(void);
 
 /* Event flags */
 

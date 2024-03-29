@@ -19,6 +19,9 @@
 
 #endif /* USER_HPP_ */
 
+/* Externs */
+extern FIL fil;     // Log file
+
 void SetMotorState(bool state);
 void SetMotorMode(bool mode);
 void SetMotorDirection(bool direction);
