@@ -14,6 +14,8 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 
 	U temp;
 
+	temp.tempFloat = val;
+
 	for(int i = 0 ; i < 4; i++){
 		bytes[i] = temp.bytesArray[i];
 	}
