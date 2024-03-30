@@ -2,12 +2,15 @@
 
 #include "threads.h"
 
+#include "M24C02.hpp"
+
 
 extern "C" void CPP_UserSetup(void);
 
 extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
 extern "C" SPI_HandleTypeDef hspi1;
+extern "C" I2C_HandleTypeDef hi2c2;
 
 /* FATFS globals */
 FATFS fs;
@@ -193,6 +196,37 @@ void CPP_UserSetup(void) {
 
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
+
+
+
+
+    
+    // Driver test
+    M24C02 mem_dev;
+    M24C02_INIT(&mem_dev, &hi2c2);
+
+    uint8_t write_data[5] = {0x11, 0x22, 0x33, 0x44, 0x55};
+    M24C02_WriteRegister(&mem_dev, 0, write_data, 5);
+
+    HAL_Delay(10);
+
+    uint8_t read_data[5];
+    M24C02_ReadRegister(&mem_dev, 0, (uint8_t*)&read_data, 5);
+
+    Logger::LogInfo("Read data: %x", read_data);
+
+    while(1);
+
+
+
+
+
+
+
+
+
+
+
 
     // Initialize CAN things
     CAN_Modules_Init();

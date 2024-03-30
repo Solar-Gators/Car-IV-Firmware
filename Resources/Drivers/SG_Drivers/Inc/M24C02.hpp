@@ -122,7 +122,7 @@ HAL_StatusTypeDef M24C02_TickOdometer(M24C02 *dev);
 
 //Low level functions
 //Utilize overloading so only one function is needed
-HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data);
+// HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t data);
 HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, uint8_t length);
 
 HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data);
