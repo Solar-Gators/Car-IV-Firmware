@@ -165,6 +165,12 @@ HAL_StatusTypeDef M24C02TickOdometer(memory odomObj){
 
 //Low level functions
 
+HAL_StatusTypeDef M24C02_INIT(M24C02 *dev, I2C_HandleTypeDef *i2cHandle){
+	dev->i2cHandle    = i2cHandle;
+
+	return HAL_OK;
+}
+
 HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data){ //Function to read data off the EEPROM.
     return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, 1, HAL_MAX_DELAY);
 }
