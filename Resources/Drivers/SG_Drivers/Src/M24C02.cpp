@@ -154,6 +154,33 @@
 // 	IntToBytes(tempInt, tempBytes);
 
 
+M24C02::M24C02(){}
+
+HAL_StatusTypeDef M24C02::M24C02_INIT(M24C02 *dev, I2C_HandleTypeDef *i2cHandle){
+	dev->i2cHandle    = i2cHandle;
+
+	return HAL_OK;
+}
+
+HAL_StatusTypeDef M24C02::M24C02_ReadAll(M24C02 *dev, float *data){
+
+}
+
+HAL_StatusTypeDef M24C02::M24C02_UpdateOne(M24C02 *dev, int ID, uint8_t newVal){
+
+}
+
+HAL_StatusTypeDef M24C02::M24C02_TickOdometer(M24C02 *dev){
+
+}
+
+HAL_StatusTypeDef M24C02::M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+}
+
+HAL_StatusTypeDef M24C02::M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Write(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+}
 
 	
 
