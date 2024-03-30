@@ -12,13 +12,23 @@ using namespace std;
 #define M24C02_I2C_ADDR (0b10100000)
 
 
-class M24C02{
+//class M24C02{
 
 
 
-}
+//}
 
 struct {
+
+    float potential;
+    float integral;
+    float derivative;
+    float odomter;
+    float regen;
+    float speed;
+    bool fun;
+    char test;
+    int num;
 
 
 
