@@ -16,13 +16,17 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 
 	temp.tempFloat = val;
 
+	uint8_t* temp = bytes;
+
 	for(int i = 0 ; i < 4; i++){
 		bytes[i] = temp.bytesArray[i];
 	}
+
+	delete temp;
 }
 
 
-bool intToBytes(int val, uint8_t &bytes){
+bool intToBytes(int val, uint8_t* bytes){
 
 	union U //Creates a shared memory space of the largest item (4 bytes).
 	{
@@ -34,9 +38,13 @@ bool intToBytes(int val, uint8_t &bytes){
 
 	temp.tempInt = val;
 
+	uint8_t* temp = bytes;
+
 	for(int i = 0 ; i < 4; i++){
 		bytes[i] = temp.bytesArray[i];
 	}
+
+	delete temp;
 
 }
 
@@ -57,9 +65,15 @@ bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
 
 }
 
+// returns the data from the memory chip into data
 HAL_StatusTypeDef getData(memory obj, uint8_t *data){
 
+	uint8_t *temp = data;
+
 	Hal_StatusTypeDef status = M24C02_ReadRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
+
+	delete temp;
+
 	return status;
 	
 }
