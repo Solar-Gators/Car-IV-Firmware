@@ -14,19 +14,38 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 
 	U temp;
 
+	temp.tempFloat = val;
+
 	for(int i = 0 ; i < 4; i++){
 		bytes[i] = temp.bytesArray[i];
 	}
 }
 
+
 bool intToBytes(int val, uint8_t &bytes){
+
+	union U //Creates a shared memory space of the largest item (4 bytes).
+	{
+		int tempInt; //Both items are saved in the same memory space concurrently.
+		uint8_t bytesArray[4];
+	};
+
+	U temp;
+
+	temp.tempInt = val;
+
+	for(int i = 0 ; i < 4; i++){
+		bytes[i] = temp.bytesArray[i];
+	}
 
 }
 
-bool CstringToBytes(const char *name, int &length, uint8_t *nameData){
-	try{
-		int strLen = sizeof(name);
-		length = strLen;
+bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
+	
+	int strLen = sizeof(name);
+	length = strLen;
+
+	uint8_t *temp = nameData;
 		
 		for(int i = 0 ; i < strLen ; i++){
 
@@ -39,13 +58,16 @@ bool CstringToBytes(const char *name, int &length, uint8_t *nameData){
 		return false;
 	}
 
-}
-
-bool GetData(memory obj, uint8_t *data){
+	delete temp;
 
 }
 
+HAL_StatusTypeDef getData(memory obj, uint8_t *data){
 
+	Hal_StatusTypeDef status = M24C02_ReadRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
+	return status;
+	
+}
 
 
 HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
@@ -57,18 +79,20 @@ HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
 		int strSize = 0;
 		uint8_t tempInfo[20 * numStored];
 		
-		
+		const char *tempName = new const char;
+		uint8_t *nameData = new uint8_t;
 	
 		//Structure for data packets. byte 0, length of string in int, btyes n-m characters for the c-string, byte m+1 ID of object. Pattern repeats for all objects in storage.
 		for(int i = 0 ; i < numStored ; i++){
 
-			const char *tempName = storage[i].getName();
-			uint8_t *nameData;
-			bool pass = CstringToBytes(tempName, strSize, nameData);
+			const char *temp = tempName;
+			tempName = storage[i].getName();
+			delete temp;
+
+			bool pass = cstringToBytes(tempName, strSize, nameData);
 			if (pass == false){
 				throw;
 			}
-
 
 			tempInfo[currentSize] = strSize;
 			currentSize++;
@@ -80,19 +104,16 @@ HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
 			}
 			currentSize += strSize;
 
-			delete nameData;
-
 			tempInfo[currentSize] = storage[i].getID();
 			currentSize++;
-
-			delete tempName;
 
 		}
 
 		reqSize = currentSize;
 		info = tempInfo;
 		
-		delete tempInfo;
+		delete tempName;
+		delete nameData;
 
 	}
 
