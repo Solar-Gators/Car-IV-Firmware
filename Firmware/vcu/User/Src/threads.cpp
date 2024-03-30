@@ -38,7 +38,7 @@ osTimerId_t logger_periodic_timer_id = osTimerNew((osThreadFunc_t)LogDataPeriodi
                                                             &logger_periodic_timer_attr);
 
 /* Setup regular threads */
-uint32_t logger_thread_buffer[1024];
+uint32_t logger_thread_buffer[2048];
 StaticTask_t logger_thread_control_block;
 const osThreadAttr_t logger_thread_attributes = {
     .name = "Logging Thread",
@@ -205,10 +205,11 @@ void IoMsgCallback(uint8_t *data) {
     Handle Mitsuba GPIO, throttle, and regen */
 void DriverControls0Callback(uint8_t *data) {
     // If not in kill state or BMS trip, set motor state based on driver controls
-    if (!kill_state && !bms_trip)
-        SetMotorState(DriverControlsFrame0::GetMotorEnable());
-    else
-        SetMotorState(false);
+    // TODO: For testing, do nothing here
+    // if (!kill_state && !bms_trip)
+    //     SetMotorState(DriverControlsFrame0::GetMotorEnable());
+    // else
+    //     SetMotorState(false);
 
     // Drive mode and direction based on driver controls
     SetMotorMode(DriverControlsFrame0::GetDriveMode());

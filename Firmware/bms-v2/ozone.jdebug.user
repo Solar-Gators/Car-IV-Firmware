@@ -1,17 +1,19 @@
 
 
-OpenDocument="stm32l4xx_it.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-v1/Core/Src/stm32l4xx_it.c", Line=86
-OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-v1/Core/Src/main.c", Line=67
+OpenDocument="stm32l4xx_hal.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c", Line=329
+OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-v2/Core/Src/main.c", Line=69
+OpenDocument="", FilePath="", Line=0
+OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-v2/Core/Src/main.c", Line=69
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=357, h=512, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=357, h=502, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Registers 1", DockArea=BOTTOM, x=3, y=0, w=285, h=282, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
-OpenWindow="Disassembly", DockArea=LEFT, x=0, y=1, w=357, h=512, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=1, w=357, h=502, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory 1", DockArea=BOTTOM, x=0, y=0, w=396, h=298, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x1999A1C0
 OpenWindow="Global Data", DockArea=RIGHT, x=0, y=0, w=519, h=645, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Local Data", DockArea=RIGHT, x=0, y=0, w=519, h=645, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=0, w=519, h=645, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=357, h=132, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Call Graph", DockArea=LEFT, x=0, y=1, w=357, h=512, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=357, h=142, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Graph", DockArea=LEFT, x=0, y=1, w=357, h=502, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory Usage", DockArea=BOTTOM, x=3, y=0, w=285, h=282, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=2, y=0, w=350, h=298, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=250, h=298, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
@@ -26,4 +28,4 @@ TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Na
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[133;100;85;78;89;100]
 TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[266;100;100;100;100]
-TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;359]
+TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;762]

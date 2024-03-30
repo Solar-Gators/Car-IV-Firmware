@@ -124,10 +124,14 @@ void CANDevice::HandleRx(void* argument) {
             Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
             #endif
 
-            // Find message in map and populate data
-            rx_msg = (*rx_messages_)[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
+            // Find message in map
+            // If it exists, set rx_msg to point to the CANFrame object
+            auto messages_it = rx_messages_->find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
+            rx_msg = messages_it == rx_messages_->end() ? nullptr : (*messages_it).second;
+
             if (rx_msg != nullptr) {
                 osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+                memcpy(rx_msg->data, rxData, rx_msg->len);
                 for (uint32_t i = 0; i < rx_msg->len; i++)
                     rx_msg->data[i] = rxData[i];
                 osMutexRelease(rx_msg->mutex_id_);

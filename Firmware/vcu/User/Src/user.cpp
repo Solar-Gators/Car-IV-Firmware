@@ -36,11 +36,12 @@ Button kill_sw = Button(KILL_SW_GPIO_Port, KILL_SW_Pin, 50, GPIO_PIN_SET);
 /* Setup functions */
 static void Default_Outputs() {
     // Turn off motor
-    SetMotorState(false);
+    // TODO: For testing only, start motor on
+    SetMotorState(true);
 
     // Set throttle and regen to 0
-    SetThrottle(0);
-    SetRegen(0);
+    SetThrottle(0x0);
+    SetRegen(0x0);
 
     // Turn off MPPT contactors
     SetMPPTState(false);
