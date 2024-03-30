@@ -118,6 +118,17 @@ HAL_StatusTypeDef getData(memory obj, uint8_t *data){
 	
 }
 
+HAL_StatusTypeDef setData(memory obj, uint8_t *data){
+
+	uint8_t *temp = data;
+	HAL_StatusTypeDef status = M24C02_WriteRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
+
+	delete temp;
+
+	return status;
+
+}
+
 
 HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
 	try{
@@ -178,7 +189,23 @@ HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
 
 //}
 
-HAL_StatusTypeDef M24C02TickOdometer(int odomID){
+HAL_StatusTypeDef M24C02TickOdometer(memory odomObj){
+
+	uint8_t tempBytes[4];
+	getData[odomObj, tempBytes];
+
+
+	int tempInt;
+	BytesToInt(tempInt, tempBytes);
+
+	tempInt += 1;
+
+	IntToBytes(tempInt, tempBytes);
+
+
+
+	
+
 	
 
 }
