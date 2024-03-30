@@ -2,6 +2,8 @@
 
 #include "threads.h"
 
+#include "etl/format_spec.h"
+#include "etl/to_string.h"
 
 extern "C" void CPP_UserSetup(void);
 
@@ -105,9 +107,6 @@ bool SD_Init() {
     FILINFO fno;
     DIR dir;
 
-    // Filename is in the format "LOGxxx.CSV"
-    char log_filename[11];
-
     // Mount the filesystem
     fres = f_mount(&fs, "", 1);
     if (fres != FR_OK) {
@@ -124,30 +123,63 @@ bool SD_Init() {
         return false;
     }
 
-    // Find the next available log file number
-    int log_num = 0;
-    bool exists = true;
-    while (exists) {
-        sprintf(log_filename, "log%03d.csv", log_num);
-        fres = f_stat(log_filename, &fno);
-        if (fres != FR_OK) {
-            exists = false;
+    // Find the next available log file number using binary search
+    int low = 0;
+    int high = 999;
+    int middle;
+    bool found = false;
+
+    static constexpr etl::format_spec format_int(10, 3, 0, false, false, false, false, '0');
+    etl::string<11> log_filename = "log000.csv";
+    etl::string<3> log_number_string;
+
+    while (low <= high) {
+        middle = low + (high-low) / 2;
+
+        // Update the number part of the log_filename
+        etl::to_string(middle, log_number_string, format_int, false);
+        std::copy(log_number_string.begin(), log_number_string.end(), log_filename.begin() + 3);
+
+        // Search for file
+        fres = f_stat(log_filename.c_str(), &fno);
+        if (fres == FR_OK) {
+            // File exists, search in higher half
+            low = middle + 1;
         } else {
-            log_num++;
-            if (log_num > 999) {
-                Logger::LogError("Too many log files");
-                return false;
+            // File does not exist, check if the previous file exists
+            etl::to_string(middle-1, log_number_string, format_int, false);
+            std::copy(log_number_string.begin(), log_number_string.end(), log_filename.begin() + 3);
+            fres = f_stat(log_filename.c_str(), &fno);
+
+            // If file not found, search in lower half
+            if (fres != FR_OK) {
+                high = middle - 1;
+            }
+
+            // If file is found, current middle is the next available file
+            else {
+                found = true;
+                break;
             }
         }
     }
+
+    if (!found) {
+        Logger::LogError("Failed to find available log file number");
+        return false;
+    }
+
+    // middle holds the next available log file number
+    etl::to_string(middle, log_number_string, format_int, false);
+    std::copy(log_number_string.begin(), log_number_string.end(), log_filename.begin() + 3);
 
     // Close the directory
     f_closedir(&dir);
 
     // Create a new file with log_filename
-    fres = f_open(&fil, log_filename, FA_CREATE_NEW | FA_WRITE);
+    fres = f_open(&fil, log_filename.c_str(), FA_CREATE_NEW | FA_WRITE);
     if (fres != FR_OK) {
-        Logger::LogError("Failed to create new file: %s", log_filename);
+        Logger::LogError("Failed to create new file: %s", log_filename.c_str());
         return false;
     }
 
@@ -181,7 +213,7 @@ bool SD_Init() {
     // Flush file
     f_sync(&fil);
 
-    Logger::LogInfo("Created new file: %s", log_filename);
+    Logger::LogInfo("Created new file: %s", log_filename.c_str());
 
     return true;
 }

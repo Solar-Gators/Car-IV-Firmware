@@ -1,5 +1,9 @@
 #include "threads.h"
 
+#include "etl/to_string.h"
+#include "etl/format_spec.h"
+#include "etl/string_utilities.h"
+
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
 
@@ -124,16 +128,20 @@ void LogDataPeriodic() {
 
 /* Thread function to log data to SD card */
 void LogData() {
+    uint32_t log_counter = 0;
+
     while (1) {
         // Wait for signal from periodic thread
         osEventFlagsWait(log_event, 0x1, osFlagsWaitAny, osWaitForever);
+
+        log_counter++;
 
         // Get data from CAN frames
         int time = osKernelGetTickCount();
         
         int battery_soc = BMSFrame4::Instance().GetPackSOC();
-        float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0;
-        float battery_current = BMSFrame2::Instance().GetPackCurrent() / 10.0;
+        float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0f;
+        float battery_current = BMSFrame2::Instance().GetPackCurrent() / 10.0f;
         int battery_avg_temp = BMSFrame1::Instance().GetAverageTemp();
         int battery_high_temp = BMSFrame1::Instance().GetHighTemp();
 
@@ -156,40 +164,95 @@ void LogData() {
                                 (BMSFrame4::Instance().GetFaultFlags2() << 16);
         uint32_t mitsuba_faults = MitsubaFrame2::Instance().GetAllFlags();
 
+        // etl format specifier
+        // (base, width, precision, upper_case, left_justified, boolalpha, showbase, fill)
+        static constexpr etl::format_spec format_float(10, 8, 2, false, false, false, false, ' ');
+        static constexpr etl::format_spec format_int(10, 6, 0, false, false, false, false, ' ');
+        etl::string<8> float_buf;
+        etl::string<6> int_buf;
 
-        // Generate log line with sprintf since f_printf does not support floats
-        char log_buffer[256];
-        sprintf(log_buffer, 
-                "%d,%d,%.2f,%.2f,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%lu,%lu\n",
-                time, 
-                battery_soc,
-                battery_voltage, 
-                battery_current, 
-                battery_avg_temp, 
-                battery_high_temp, 
-                motor_rpm, 
-                motor_temp, 
-                mppt1_input_voltage, 
-                mppt1_input_current, 
-                mppt2_input_voltage, 
-                mppt2_input_current, 
-                mppt3_input_voltage, 
-                mppt3_input_current, 
-                throttle, 
-                regen, 
-                brake, 
-                bms_faults, 
-                mitsuba_faults);
-        
-        // Write log line to SD card
-        if (f_write(&fil, log_buffer, strlen(log_buffer), NULL) != FR_OK)
-            Logger::LogError("Error writing to SD card\n");
+        // Write data to line in file
+        etl::to_string(time, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
 
-        // Sync the SD card
-        // TODO: This is slow, can optimize to sync less often
-        // TODO: When sync fails, check if card is still inserted
-        if (f_sync(&fil) != FR_OK)
-            Logger::LogError("Error syncing SD card\n");
+        etl::to_string(battery_soc, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(battery_voltage, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(battery_current, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(battery_avg_temp, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(battery_high_temp, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(motor_rpm, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(motor_temp, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt1_input_voltage, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt1_input_current, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt2_input_voltage, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt2_input_current, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt3_input_voltage, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mppt3_input_current, float_buf, format_float, false);
+        f_puts(float_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(throttle, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(regen, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(brake, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(bms_faults, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc(',', &fil);
+
+        etl::to_string(mitsuba_faults, int_buf, format_int, false);
+        f_puts(int_buf.c_str(), &fil);
+        f_putc('\n', &fil);  // New line at the end of each data set
+
+        // Sync the SD card every 10 log cycles (1s) to waste less time on f_sync()
+        if (log_counter % 10) {
+            if (f_sync(&fil) != FR_OK)
+                Logger::LogError("Error syncing SD card\n");
+        }
     }
 }
 
