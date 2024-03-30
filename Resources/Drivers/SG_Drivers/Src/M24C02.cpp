@@ -16,6 +16,7 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 
 	temp.tempFloat = val;
 
+	// Creates a temp variable to reassign the pointer
 	uint8_t* temp = bytes;
 
 	for(int i = 0 ; i < 4; i++){
@@ -25,6 +26,22 @@ void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte arr
 	delete temp;
 }
 
+void BytesToFloat(float &val, uint8_t* bytes){
+
+	union U //Creates a shared memory space of the largest item (4 bytes).
+	{
+		float tempFloat; //Both items are saved in the same memory space concurrently.
+		uint8_t bytesArray[4];
+	};
+
+	U temp;
+
+	for(int i = 0 ; i < 4; i++){
+		temp.bytesArray[i] = bytes[i];
+	}
+
+	val = temp.tempFloat;
+}
 
 bool intToBytes(int val, uint8_t* bytes){
 
@@ -38,13 +55,31 @@ bool intToBytes(int val, uint8_t* bytes){
 
 	temp.tempInt = val;
 
-	uint8_t* temp = bytes;
+	uint8_t* tempBytes = bytes;
 
 	for(int i = 0 ; i < 4; i++){
 		bytes[i] = temp.bytesArray[i];
 	}
 
-	delete temp;
+	delete tempBytes;
+
+}
+
+void BytesToInt(int &val, uint8_t* bytes){
+
+	union U //Creates a shared memory space of the largest item (4 bytes).
+	{
+		int tempInt; //Both items are saved in the same memory space concurrently.
+		uint8_t bytesArray[4];
+	};
+
+	U temp;
+
+	for(int i = 0 ; i < 4; i++){
+		temp.bytesArray[i] = bytes[i];
+	}
+
+	val = temp.tempInt;
 
 }
 
