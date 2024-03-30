@@ -16,6 +16,10 @@ FIL fil;
 FRESULT fres;
 DWORD fre_clust;
 
+/* Global states */
+bool kill_state = true;
+bool bms_trip = false;
+
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
@@ -30,16 +34,65 @@ DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 Button kill_sw = Button(KILL_SW_GPIO_Port, KILL_SW_Pin, 50, GPIO_PIN_SET);
 
 /* Setup functions */
+static void Default_Outputs() {
+    // Turn off motor
+    SetMotorState(false);
+
+    // Set throttle and regen to 0
+    SetThrottle(0);
+    SetRegen(0);
+
+    // Turn off MPPT contactors
+    SetMPPTState(false);
+
+    // Turn on headlights
+    HAL_GPIO_WritePin(HEADLIGHT_EN_GPIO_Port, HEADLIGHT_EN_Pin, GPIO_PIN_SET);
+}
+
 static void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
+
+    // Add custom frames
     CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
     CANController::AddRxMessage(&DriverControlsFrame0::Instance(), DriverControls0Callback);
     CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
+
+    // Add BMS frames
+    // BMSFrame4 contains fault flags
+    CANController::AddRxMessage(&BMSFrame0::Instance());
+    CANController::AddRxMessage(&BMSFrame1::Instance());
+    CANController::AddRxMessage(&BMSFrame2::Instance());
+    CANController::AddRxMessage(&BMSFrame3::Instance());
+    CANController::AddRxMessage(&BMSFrame4::Instance());
+    CANController::AddRxMessage(&BMSFrame5::Instance());
+
+    // Add motor controller frames
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
     CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
     CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
+
+    // Add MPPT frames, no callbacks associated with these
+    // Don't care about MPPT outputs or preset limits
+    CANController::AddRxMessage(&MPPTInputMeasurementsFrame1::Instance());
+    // CANController::AddRxMessage(&MPPTOutputMeasurementsFrame1::Instance());
+    CANController::AddRxMessage(&MPPTTemperatureFrame1::Instance());
+    CANController::AddRxMessage(&MPPTAuxPowerFrame1::Instance());
+    // CANController::AddRxMessage(&MPPTLimitsFrame1::Instance());
+    CANController::AddRxMessage(&MPPTInputMeasurementsFrame2::Instance());
+    // CANController::AddRxMessage(&MPPTOutputMeasurementsFrame2::Instance());
+    CANController::AddRxMessage(&MPPTTemperatureFrame2::Instance());
+    CANController::AddRxMessage(&MPPTAuxPowerFrame2::Instance());
+    // CANController::AddRxMessage(&MPPTLimitsFrame2::Instance());
+    CANController::AddRxMessage(&MPPTInputMeasurementsFrame3::Instance());
+    // CANController::AddRxMessage(&MPPTOutputMeasurementsFrame3::Instance());
+    CANController::AddRxMessage(&MPPTTemperatureFrame3::Instance());
+    CANController::AddRxMessage(&MPPTAuxPowerFrame3::Instance());
+    // CANController::AddRxMessage(&MPPTLimitsFrame3::Instance());
+
+
+    // Accept all messages
     CANController::AddFilterAll();
     CANController::Start();
 
@@ -134,32 +187,25 @@ bool SD_Init() {
 
 /* User entry function, called from main before kernel initialization */
 void CPP_UserSetup(void) {
+    // Set initial GPIO states
+    Default_Outputs();
+
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
     // Initialize CAN things
     CAN_Modules_Init();
 
+    // Read initial kill switch state
+    if (kill_sw.ReadPin() == GPIO_PIN_SET)
+        kill_state = false;
+
     // Setup kill switch callbacks
-    // TODO: Check that kill switch is not pressed on startup
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);
 
     // Initialize SD card
     // TODO: Do not setup SD thread if SD_Init() fails
     SD_Init();
-
-    // Turn on headlights
-    HAL_GPIO_WritePin(HEADLIGHT_EN_GPIO_Port, HEADLIGHT_EN_Pin, GPIO_PIN_SET);
-
-    // TODO: Eventually get rid of this, get state from driver controls
-    SetThrottle(0);
-    SetRegen(0);
-    // Enable the motor
-    SetMotorState(true);
-    // Set the motor mode to eco
-    SetMotorMode(true);
-    // Set the motor direction to forward
-    SetMotorDirection(false);
 
     // Start periodic tasks
     ThreadsStart();
@@ -176,6 +222,28 @@ void SetMotorMode(bool mode) {
 
 void SetMotorDirection(bool direction) {
     HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, static_cast<GPIO_PinState>(direction));
+}
+
+void SetMPPTState(bool state) {
+    // If turning MPPTs off
+    if (!state) {
+        HAL_GPIO_WritePin(MPPT_CONTACTOR_EN_GPIO_Port, MPPT_CONTACTOR_EN_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(MPPT_PRECHARGE_EN_GPIO_Port, MPPT_PRECHARGE_EN_Pin, GPIO_PIN_RESET);
+    }
+    // If turning MPPTs on
+    else {
+        // If MPPTs are already on, do nothing
+        if (HAL_GPIO_ReadPin(MPPT_CONTACTOR_EN_GPIO_Port, MPPT_CONTACTOR_EN_Pin) == GPIO_PIN_SET) {
+            return;
+        }
+
+        // Turn on MPPT contactors
+        HAL_GPIO_WritePin(MPPT_PRECHARGE_EN_GPIO_Port, MPPT_PRECHARGE_EN_Pin, GPIO_PIN_SET);
+        osDelay(400);
+        HAL_GPIO_WritePin(MPPT_CONTACTOR_EN_GPIO_Port, MPPT_CONTACTOR_EN_Pin, GPIO_PIN_SET);
+        osDelay(100);
+        HAL_GPIO_WritePin(MPPT_PRECHARGE_EN_GPIO_Port, MPPT_PRECHARGE_EN_Pin, GPIO_PIN_RESET);
+    }
 }
 
 void SetThrottle(uint16_t value) {

@@ -23,6 +23,7 @@ void LogData(void);
 void IoMsgCallback(uint8_t *data);
 void DriverControls0Callback(uint8_t *data);
 void DriverControls1Callback(uint8_t *data);
+void BMSFaultCallback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
 void KillSwitchCallback(void);
 

@@ -22,10 +22,13 @@
 #endif /* USER_HPP_ */
 
 /* Externs */
-extern FIL fil;     // Log file
+extern FIL fil;         // Log file
+extern bool kill_state; // Kill switch state
+extern bool bms_trip;   // BMS trip state
 
 void SetMotorState(bool state);
 void SetMotorMode(bool mode);
 void SetMotorDirection(bool direction);
+void SetMPPTState(bool state);
 void SetThrottle(uint16_t val);
 void SetRegen(uint16_t val);

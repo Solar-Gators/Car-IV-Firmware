@@ -104,6 +104,12 @@ void ToggleLights() {
     if (!DriverControlsFrame0::GetBrakeEnable()) {
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_RESET);
     }
+
+    // If in kill state or BMS trip, turn on strobe light, otherwise off
+    if (kill_state || bms_trip)
+        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
+    else
+        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_RESET);
 }
 
 /* 
@@ -198,9 +204,13 @@ void IoMsgCallback(uint8_t *data) {
 /* Callback executed when DriverControlsFrame0 received 
     Handle Mitsuba GPIO, throttle, and regen */
 void DriverControls0Callback(uint8_t *data) {
-    // On/off, mode, and direction based solely on driver controls
-    // TODO: Error states should turn off motor
-    SetMotorState(DriverControlsFrame0::GetMotorEnable());
+    // If not in kill state or BMS trip, set motor state based on driver controls
+    if (!kill_state && !bms_trip)
+        SetMotorState(DriverControlsFrame0::GetMotorEnable());
+    else
+        SetMotorState(false);
+
+    // Drive mode and direction based on driver controls
     SetMotorMode(DriverControlsFrame0::GetDriveMode());
     SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
 
@@ -221,6 +231,9 @@ void DriverControls0Callback(uint8_t *data) {
         HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_SET);
     } 
+
+    // Set MPPT enable
+    SetMPPTState(DriverControlsFrame0::GetSolarEnable());
 }
 
 /* Callback executed when DriverControlsFrame1 received
@@ -241,6 +254,27 @@ void DriverControls1Callback(uint8_t *data) {
     HAL_GPIO_WritePin(HORN_EN_GPIO_Port,
                         HORN_EN_Pin,
                         static_cast<GPIO_PinState>(DriverControlsFrame1::GetHorn()));
+}
+
+/* Callback executed when BMSFrame4 is received 
+    Checks to see if any fault flags are set */
+void BMSFaultCallback(uint8_t *data) {
+    uint32_t fault_flags;
+    memcpy(&fault_flags, BMSFrame4::Instance().Data(), 3);
+
+    fault_flags &= ~(0x1 << 2);     // Ignore weak cell fault
+
+    if (fault_flags) {
+        Logger::LogError("BMS Fault: %lu\n", fault_flags);
+        bms_trip = true;
+        // Turn on strobe light
+        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
+
+        // Disable motor
+        SetMotorState(false);
+    } else {
+        bms_trip = false;
+    }
 }
 
 /* Callback executed when any of the Mitsuba frames are received */

@@ -48,6 +48,10 @@ DATAMODULE(
         inline static bool GetDriveDirection() {
             return static_cast<bool>(Data()[4] & 0x10);
         }
+
+        inline static bool GetSolarEnable() {
+            return static_cast<bool>(Data()[4] & 0x20);
+        }
     
         inline static void SetThrottleVal(uint16_t val) {
             Data()[1] = static_cast<uint8_t>((val >> 8) & 0xFF);
@@ -100,6 +104,14 @@ DATAMODULE(
                 Data()[4] |= 0x10;
             } else {
                 Data()[4] &= ~0x10;
+            }
+        }
+
+        inline static void SetSolarEnable(bool val) {
+            if (val) {
+                Data()[4] |= 0x20;
+            } else {
+                Data()[4] &= ~0x20;
             }
         }
 )
