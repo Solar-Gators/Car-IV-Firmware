@@ -90,6 +90,8 @@ class memory{ //Memory class containing ID, address, data type (i,f,c,b), and a 
 
 //Include all memory objects below in the array.
 memory storage[] = { //Defines an array to store all of the memory objects in.
+
+    //The IDs of every object should be the number of the object in the array. i.e. memory[0] == ID = 0
     memory(0, 0x00, 'f', "Potential"),
     memory(1, 0x03, 'f', "Integral"),
     memory(2, 0x08, 'f', "Derivative"),

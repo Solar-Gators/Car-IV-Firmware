@@ -23,27 +23,32 @@ bool intToBytes(int val, uint8_t &bytes){
 
 }
 
-bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
-	
-	int strLen = sizeof(name);
-	length = strLen;
+bool CstringToBytes(const char *name, int &length, uint8_t *nameData){
+	try{
+		int strLen = sizeof(name);
+		length = strLen;
 		
-	for(int i = 0 ; i < strLen ; i++){
+		for(int i = 0 ; i < strLen ; i++){
 
-		nameData[i] = name[i];
+			nameData[i] = name[i];
 
+		}
+		return true;
+	}
+	catch(...){
+		return false;
 	}
 
 }
 
-bool getData(memory obj, uint8_t *data){
+bool GetData(memory obj, uint8_t *data){
 
 }
 
 
 
 
-bool fetchInfo(uint8_t *info){
+HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
 	try{
 		int numStored = sizeof(storage);
 
@@ -59,7 +64,7 @@ bool fetchInfo(uint8_t *info){
 
 			const char *tempName = storage[i].getName();
 			uint8_t *nameData;
-			bool pass = cstringToBytes(tempName, strSize, nameData);
+			bool pass = CstringToBytes(tempName, strSize, nameData);
 			if (pass == false){
 				throw;
 			}
@@ -95,6 +100,17 @@ bool fetchInfo(uint8_t *info){
 		//strcpy((char*)buf, "Error: Conversion Error")
 	
 	}
+}
+
+//HAL_StatusTypeDef M24C02ReadAll{
+
+
+
+//}
+
+HAL_StatusTypeDef M24C02TickOdometer(int odomID){
+	
+
 }
 
 
