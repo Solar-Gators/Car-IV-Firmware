@@ -17,7 +17,7 @@ class M24C02{
 
         //Constructor definitions.
         M24C02();
-        M24C02(M24C02 *dev, I2C_HandleTypeDef *i2cHandle);
+        M24C02(I2C_HandleTypeDef *i2cHandle);
 
         //High level functions
 
