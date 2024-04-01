@@ -11,7 +11,7 @@ using namespace std;
 
 #define M24C02_I2C_ADDR (0b10100000)
 
-/class M24C02{
+class M24C02{
 
 public:
 
@@ -27,12 +27,15 @@ public:
     HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1);
 
 
-<<<<<<< HEAD
-}
-=======
 };
->>>>>>> f41bce63806239589d5422e8abd6072e2caca221
 
+//Pragma pack prevents padding from being added to the struct. 
+//With padding, additional bytes are added to align the values.
+//Removing padding ensures that only the bytes that are storing data re used.
+#pragma pack (push, 1)
+
+//Defines a struct to save the data. This struct will be converted to a byte pointer to be saved to the EEPROM.
+//On the reciving end (GUI) this struct can be used to convert the bytes back to the struct, retaining the data and their locations.
 struct {
 
     float potential;
@@ -49,6 +52,7 @@ struct {
 
 
 } typedef memory;
+#pragma pack(pop)
 
 //High level functions
 
