@@ -4,6 +4,17 @@
 //High level functions
 #include "M24C02.hpp"
 
+union FourBytes{
+	float f;
+	int i;
+	uint8_t bytesArray[4];
+};
+
+union dataStorage{
+	memory obj;
+	uint8_t bytesArray[sizeof(memory)];
+};
+
 // void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
 
 // 	union U //Creates a shared memory space of the largest item (4 bytes).
@@ -65,121 +76,67 @@
 
 // }
 
-// void BytesToInt(int &val, uint8_t* bytes){
+void BytesToInt(int &val, uint8_t* bytes){
 
-// 	union U //Creates a shared memory space of the largest item (4 bytes).
-// 	{
-// 		int tempInt; //Both items are saved in the same memory space concurrently.
-// 		uint8_t bytesArray[4];
-// 	};
+ 	FourBytes temp;
 
-// 	U temp;
+ 	for(int i = 0 ; i < 4; i++){
+ 		temp.bytesArray[i] = bytes[i];
+ 	}
 
-// 	for(int i = 0 ; i < 4; i++){
-// 		temp.bytesArray[i] = bytes[i];
-// 	}
+ 	val = temp.i;
 
-// 	val = temp.tempInt;
+}
 
-// }
+void StructToBytes(memory obj, uint8_t* bytes){
 
-// bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
-	
-// 	int strLen = sizeof(name);
-// 	length = strLen;
+	dataStorage temp;
 
-// 	uint8_t *temp = nameData;
-		
-// 		for(int i = 0 ; i < strLen ; i++){
+	temp.obj = obj;
 
-// 			nameData[i] = name[i];
-
-// 		}
-// 		return true;
-// 	}
-// 	catch(...){
-// 		return false;
-// 	}
-
-// 	delete temp;
-
-// }
-
-// // returns the data from the memory chip into data
-// HAL_StatusTypeDef getData(memory obj, uint8_t *data){
-
-// 	uint8_t *temp = data;
-
-// 	Hal_StatusTypeDef status = M24C02_ReadRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
-
-// 	delete temp;
-
-// 	return status;
-	
-// }
-
-// HAL_StatusTypeDef setData(memory obj, uint8_t *data){
-
-// 	uint8_t *temp = data;
-// 	HAL_StatusTypeDef status = M24C02_WriteRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
-
-// 	delete temp;
-
-// 	return status;
-
-// }
+	for(int i = 0 ; i < sizeof(bytes) ; i++){
+		bytes[i] = temp.bytesArray[i];
+	}
 
 
-// HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
-	
-// }
+}
 
-// //HAL_StatusTypeDef M24C02ReadAll{
+void BytesToStruct(memory obj, uint8_t* bytes){
 
+	dataStorage temp;
 
+	for(int i = 0 ; i < sizeof(obj) ; i++){
+		temp.bytesArray[i] = bytes[i];
+	}
 
-// //}
-
-// HAL_StatusTypeDef M24C02TickOdometer(memory odomObj){
-
-// 	uint8_t tempBytes[4];
-// 	getData[odomObj, tempBytes];
-
-
-// 	int tempInt;
-// 	BytesToInt(tempInt, tempBytes);
-
-// 	tempInt += 1;
-
-// 	IntToBytes(tempInt, tempBytes);
-
+	obj = temp.obj;
+}
 
 M24C02::M24C02(){}
 
-HAL_StatusTypeDef M24C02::M24C02_INIT(M24C02 *dev, I2C_HandleTypeDef *i2cHandle){
+M24C02::M24C02(M24C02 *dev, I2C_HandleTypeDef *i2cHandle){
 	dev->i2cHandle    = i2cHandle;
 
-	return HAL_OK;
 }
 
-HAL_StatusTypeDef M24C02::M24C02_ReadAll(M24C02 *dev, float *data){
-
-}
-
-HAL_StatusTypeDef M24C02::M24C02_UpdateOne(M24C02 *dev, int ID, uint8_t newVal){
+HAL_StatusTypeDef M24C02::M24C02_ReadAll(float *data){
 
 }
 
-HAL_StatusTypeDef M24C02::M24C02_TickOdometer(M24C02 *dev){
+HAL_StatusTypeDef M24C02::M24C02_UpdateOne(int ID, uint8_t newVal){
 
 }
 
-HAL_StatusTypeDef M24C02::M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1){
-	return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+HAL_StatusTypeDef M24C02::M24C02_TickOdometer(){
+
 }
 
-HAL_StatusTypeDef M24C02::M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1){
-	return HAL_I2C_Mem_Write(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+HAL_StatusTypeDef M24C02::M24C02_ReadRegister(uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Read(this->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+}
+
+HAL_StatusTypeDef M24C02::M24C02_WriteRegister(uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Write(this->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
 }
 
 	
@@ -192,16 +149,12 @@ HAL_StatusTypeDef M24C02::M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t
 
 //Low level functions
 
-HAL_StatusTypeDef M24C02_INIT(M24C02 *dev, I2C_HandleTypeDef *i2cHandle){
-	dev->i2cHandle    = i2cHandle;
 
-	return HAL_OK;
-}
 
 HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length = 1){ //Function to read data off the EEPROM.
-    return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+    return HAL_I2C_Mem_Read(dev->getI2CHandle(), M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
 }
 
 HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data, uint8_t length = 1){ //Function to write data to the EEPROM.
-	return HAL_I2C_Mem_Write(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+	return HAL_I2C_Mem_Write(dev->getI2CHandle(), M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
 }
