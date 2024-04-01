@@ -115,7 +115,7 @@ void BytesToStruct(memory obj, uint8_t* bytes){
 M24C02::M24C02(){}
 
 M24C02::M24C02(I2C_HandleTypeDef *i2cHandle){
-	i2cHandle    = i2cHandle;
+	i2cHandle = i2cHandle;
 
 }
 
