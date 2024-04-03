@@ -11,4 +11,11 @@
 #include "BQ76952.hpp"
 #include "ADS7138.hpp"
 
+/* Datamodules */
+#include "OrionBMSFrames.hpp"   // For now just replicate Orion frames
+
+extern BQ76952 bms;
+
+void SetAmplifierState(bool state);
+
 #endif /* USER_HPP_ */

@@ -33,6 +33,27 @@ DATAMODULE(
     inline static uint16_t GetLowCellVoltage() {
         return ((Data()[0] << 8) | Data()[1]);
     }
+
+    // all voltages in V * 1e-4
+    inline static void SetPackVoltage(uint16_t voltage) {
+        Data()[6] = (voltage >> 8) & 0xFF;
+        Data()[7] = voltage & 0xFF;
+    }
+
+    inline static void SetAvgCellVoltage(uint16_t voltage) {
+        Data()[4] = (voltage >> 8) & 0xFF;
+        Data()[5] = voltage & 0xFF;
+    }
+
+    inline static void SetHighCellVoltage(uint16_t voltage) {
+        Data()[2] = (voltage >> 8) & 0xFF;
+        Data()[3] = voltage & 0xFF;
+    }
+
+    inline static void SetLowCellVoltage(uint16_t voltage) {
+        Data()[0] = (voltage >> 8) & 0xFF;
+        Data()[1] = voltage & 0xFF;
+    }
 )
 
 DATAMODULE(

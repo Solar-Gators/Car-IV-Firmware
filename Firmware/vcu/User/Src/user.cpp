@@ -10,6 +10,7 @@ extern "C" void CPP_UserSetup(void);
 extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
 extern "C" SPI_HandleTypeDef hspi1;
+extern "C" I2C_HandleTypeDef hi2c2;
 
 /* FATFS globals */
 FATFS fs;

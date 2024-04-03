@@ -3,27 +3,21 @@
 
 #include "user.hpp"
 
+void ThreadsStart();
+
 /* Defines */
 
 
 /* Task function prototypes */
-void JoystickTask(void *argument);
-void SDTask(void *argument);
-void VoiceTask(void *argument);
-void MenuTask(void *argument);
-void InputHandlerTask(void *argument);
-
-void IoMsgCallback(uint8_t *data);
-void MotorUpdateCallback(uint8_t *data);
+void ReadVoltageThread(void *argument);
+void ReadCurrentThread(void *argument);
+void ReadTemperatureThread(void *argument);
 
 /* Periodic threads */
-extern osTimerId_t joystick_timer_id;
+extern osTimerId_t voltage_timer_id;
 
 /* Regular task definitions */
-extern osThreadId_t sd_task_id;
-extern osThreadId_t voice_task_id;
-extern osThreadId_t menu_task_id;
-extern osThreadId_t input_task_id;
+
 
 /* Event flags */
 extern osEventFlagsId_t regular_event;

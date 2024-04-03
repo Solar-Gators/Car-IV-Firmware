@@ -3,6 +3,15 @@
 #include "threads.h"
 
 
+// BMS to-do
+// - Voltage measurement (done)
+// - Temperature measurement (in progress)
+// - SOC calculation (in progress)
+// - Current measurement
+// - Contactor control
+// - Fan control
+// - Balancing control
+
 extern "C" void CPP_UserSetup(void);
 
 extern "C" CAN_HandleTypeDef hcan1;
@@ -22,9 +31,16 @@ BQ76952 bms;
 ADS7138 adc1 = ADS7138(&hi2c4, 0x13);
 ADS7138 adc2 = ADS7138(&hi2c4, 0x14);
 
+void DefaultOutputs() {
+    // Turn off thermistor amplifiers
+    SetAmplifierState(false);
+}
+
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
+
+    DefaultOutputs();
 
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
@@ -62,20 +78,10 @@ void CPP_UserSetup(void) {
     // Start fan PWM
     // HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
-    // Test LED
-    while (1) {
-        // if (bms.ReadVoltages() != HAL_OK)
-        //     Logger::LogError("BMS read failed");
-        // else
-        //     Logger::LogInfo("BMS read success");
+    ThreadsStart();
+}
 
-        // Logger::LogInfo("Cell 1: %d mV", bms.GetCellVoltage(0));
-        // Logger::LogInfo("Cell 2: %d mV", bms.GetCellVoltage(1));
-        // Logger::LogInfo("Cell 3: %d mV", bms.GetCellVoltage(2));
-        // Logger::LogInfo("Pack: %d mV", bms.GetPackVoltage() * 10);
-        
-        HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
-        HAL_Delay(1000);
-    }
-
+/* Controls power supply to thermistor amplifier ICs */
+void SetAmplifierState(bool state) {
+    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
