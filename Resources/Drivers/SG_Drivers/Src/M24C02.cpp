@@ -15,66 +15,40 @@ union dataStorage{
 	uint8_t bytesArray[sizeof(memory)];
 };
 
-// void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
+void FloatToBytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
 
-// 	union U //Creates a shared memory space of the largest item (4 bytes).
-// 	{
-// 		float tempFloat; //Both items are saved in the same memory space concurrently.
-// 		uint8_t bytesArray[4];
-// 	};
+ 	FourBytes temp;
 
-// 	U temp;
+ 	temp.f = val;
 
-// 	temp.tempFloat = val;
+ 	for(int i = 0 ; i < 4; i++){
+ 		bytes[i] = temp.bytesArray[i];
+ 	}
 
-// 	// Creates a temp variable to reassign the pointer
-// 	uint8_t* temp = bytes;
+}
 
-// 	for(int i = 0 ; i < 4; i++){
-// 		bytes[i] = temp.bytesArray[i];
-// 	}
+void BytesToFloat(float &val, uint8_t* bytes){
 
-// 	delete temp;
-// }
+	FourBytes temp;
 
-// void BytesToFloat(float &val, uint8_t* bytes){
+ 	for(int i = 0 ; i < 4; i++){
+ 		temp.bytesArray[i] = bytes[i];
+ 	}
 
-// 	union U //Creates a shared memory space of the largest item (4 bytes).
-// 	{
-// 		float tempFloat; //Both items are saved in the same memory space concurrently.
-// 		uint8_t bytesArray[4];
-// 	};
+ 	val = temp.f;
+}
 
-// 	U temp;
+void intToBytes(int val, uint8_t* bytes){
 
-// 	for(int i = 0 ; i < 4; i++){
-// 		temp.bytesArray[i] = bytes[i];
-// 	}
+ 	FourBytes temp;
 
-// 	val = temp.tempFloat;
-// }
+	temp.i = val;
 
-// bool intToBytes(int val, uint8_t* bytes){
+ 	for(int i = 0 ; i < 4; i++){
+ 		bytes[i] = temp.bytesArray[i];
+	}
 
-// 	union U //Creates a shared memory space of the largest item (4 bytes).
-// 	{
-// 		int tempInt; //Both items are saved in the same memory space concurrently.
-// 		uint8_t bytesArray[4];
-// 	};
-
-// 	U temp;
-
-// 	temp.tempInt = val;
-
-// 	uint8_t* tempBytes = bytes;
-
-// 	for(int i = 0 ; i < 4; i++){
-// 		bytes[i] = temp.bytesArray[i];
-// 	}
-
-// 	delete tempBytes;
-
-// }
+}
 
 void BytesToInt(int &val, uint8_t* bytes){
 
@@ -112,6 +86,9 @@ void BytesToStruct(memory obj, uint8_t* bytes){
 	obj = temp.obj;
 }
 
+memory storage;
+
+
 M24C02::M24C02(){}
 
 M24C02::M24C02(I2C_HandleTypeDef *i2cHandle){
@@ -119,7 +96,16 @@ M24C02::M24C02(I2C_HandleTypeDef *i2cHandle){
 
 }
 
-HAL_StatusTypeDef M24C02::M24C02_ReadAll(float *data){
+HAL_StatusTypeDef M24C02::M24C02_ReadAll(uint8_t *data){ 
+
+	try{
+		HAL_StatusTypeDef HALStat = M24C02_ReadRegister(0x00, data, sizeof(storage));
+		return HALStat;
+	}
+	catch(...){
+		return HAL_ERROR;
+	}
+
 
 }
 
@@ -128,6 +114,38 @@ HAL_StatusTypeDef M24C02::M24C02_UpdateOne(int ID, uint8_t newVal){
 }
 
 HAL_StatusTypeDef M24C02::M24C02_TickOdometer(){
+
+	uint8_t *structBytes = new uint8_t;
+	memory tempStore;
+
+	HAL_StatusTypeDef HALStat;
+	try{
+		HALStat = M24C02_ReadRegister(0, structBytes, sizeof(storage));
+
+		if (HALStat == HAL_ERROR){
+			throw;
+		} else {
+			BytesToStruct(tempStore, structBytes);
+			tempStore.odomter += 1;
+			StructToBytes(tempStore, structBytes);
+
+			HALStat = M24C02_WriteRegister(0, structBytes, sizeof(storage));
+			if (HALStat == HAL_ERROR){
+				throw;
+				
+			} else {
+
+				delete structBytes;
+				return HAL_OK;
+			}
+		}
+
+	}
+	catch(...){
+
+		delete structBytes;
+		return HAL_ERROR;
+	}
 
 }
 
