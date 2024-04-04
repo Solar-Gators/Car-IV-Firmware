@@ -133,22 +133,63 @@ enum class ADS7138_Register : uint8_t {
     GPO_VALUE_TRIG =          0xEB,
 };
 
+enum class DataCfg_AppendType : uint8_t {
+    NONE = 0x0,
+    ID = 0x1,
+    STATUS = 0x2,
+    BOTH = 0x3,
+};
+
+enum class OsrCfg_Type : uint8_t {
+    OSR_NONE = 0x0,
+    OSR_2 = 0x1,
+    OSR_4 = 0x2,
+    OSR_8 = 0x3,
+    OSR_16 = 0x4,
+    OSR_32 = 0x5,
+    OSR_64 = 0x6,
+    OSR_128 = 0x7,
+};
+
+enum class ConvMode_Type : uint8_t {
+    MANUAL = 0x0,
+    AUTONOMOUS = 0x1,
+    TURBO = 0x2,
+};
+
+/* SYSTEM_STATUS Register Fields */
+constexpr uint8_t ADS7138_SYSTEM_STATUS_SEQ_STATUS =(0x1 << 6);
+constexpr uint8_t ADS7138_SYSTEM_I2C_SPEED =        (0x1 << 5);
+constexpr uint8_t ADS7138_SYSTEM_OSR_DONE =         (0x1 << 3);
+constexpr uint8_t ADS7138_SYSTEM_CRC_ERR_FUSE =     (0x1 << 2);
+constexpr uint8_t ADS7138_SYSTEM_CRC_ERR_IN =       (0x1 << 1);
+constexpr uint8_t ADS7138_SYSTEM_BOR =              (0x1 << 0);
 
 /* GENERAL_CFG Register Fields */
-constexpr uint8_t ADS7138_GENERAL_CFG_RST =     (0x1 << 0);
-constexpr uint8_t ADS7138_GENERAL_CFG_CAL =     (0x1 << 1);
-constexpr uint8_t ADS7138_GENERAL_CFG_CH_RST =  (0x1 << 2);
-constexpr uint8_t ADS7138_GENERAL_CFG_CNVST =   (0x1 << 3);
-constexpr uint8_t ADS7138_GENERAL_CFG_DWC_EN =  (0x1 << 4);
-constexpr uint8_t ADS7138_GENERAL_CFG_STATS_EN =(0x1 << 5);
 constexpr uint8_t ADS7138_GENERAL_CFG_CRC_EN =  (0x1 << 6);
+constexpr uint8_t ADS7138_GENERAL_CFG_STATS_EN =(0x1 << 5);
+constexpr uint8_t ADS7138_GENERAL_CFG_CH_RST =  (0x1 << 2);
+constexpr uint8_t ADS7138_GENERAL_CFG_DWC_EN =  (0x1 << 4);
+constexpr uint8_t ADS7138_GENERAL_CFG_CNVST =   (0x1 << 3);
+constexpr uint8_t ADS7138_GENERAL_CFG_CAL =     (0x1 << 1);
+constexpr uint8_t ADS7138_GENERAL_CFG_RST =     (0x1 << 0);
 
 /* DATA_CFG Register Fields */
-constexpr uint8_t ADS7138_DATA_CFG_FIX_PAT =    (0x1 << 7);
+constexpr uint8_t ADS7138_DATA_CFG_FIX_PAT =        (0x1 << 7);
 constexpr uint8_t ADS7138_DATA_CFG_APPEND_STATUS =  (0x3 << 4);
 
 /* OSR_CFG Register Fields */
-constexpr uint8_t ADS7138_OSR_CFG_OSR =         (0x7 << 0);
+constexpr uint8_t ADS7138_OSR_CFG_OSR =             (0x7 << 0);
+
+/* OPMODE_CFG Register Fields */
+constexpr uint8_t ADS7138_OPMODE_CFG_CONV_ON_ERR =  (0x1 << 7);
+constexpr uint8_t ADS7138_OPMODE_CFG_CONV_MODE =    (0x3 << 5);
+constexpr uint8_t ADS7138_OPMODE_CFG_OSC_SEL =      (0x1 << 4);
+constexpr uint8_t ADS7138_OPMODE_CFG_CLK_DIV =      (0xF << 0);
+
+/* SEQUENCE_CFG Register Fields */
+constexpr uint8_t ADS7138_SEQUENCE_CFG_SEQ_START = (0x1 << 4);
+constexpr uint8_t ADS7138_SEQUENCE_CFG_SEQ_MODE =  (0x3 << 0);
 
 /* AVDD (VREF) operating range */
 #define ADS7138_VREF_MV_MIN	2350
@@ -160,9 +201,24 @@ public:
     ADS7138(I2C_HandleTypeDef *phi2c, uint8_t address);
     HAL_StatusTypeDef Init();
     HAL_StatusTypeDef TestI2C();
+    HAL_StatusTypeDef SequenceAll();
+
+    HAL_StatusTypeDef ConfigureData(bool fix_pattern, DataCfg_AppendType append_type);
+    HAL_StatusTypeDef ConfigureOversampling(OsrCfg_Type osr_cfg);
+    HAL_StatusTypeDef ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_mode);
+    HAL_StatusTypeDef ConfigurePinMode(uint8_t pin_mode);
+
+    HAL_StatusTypeDef ManualSelectChannel(uint8_t channel);
+
+    HAL_StatusTypeDef StartSequence();
+    HAL_StatusTypeDef StartConversion();
+    HAL_StatusTypeDef ReadChannel(uint8_t channel, uint16_t *data);
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;
+
     HAL_StatusTypeDef ReadReg(ADS7138_Register reg, uint8_t *data);
     HAL_StatusTypeDef WriteReg(ADS7138_Register reg, uint8_t data);
+    HAL_StatusTypeDef SetRegBits(ADS7138_Register reg, uint8_t mask);
+    HAL_StatusTypeDef ClearRegBits(ADS7138_Register reg, uint8_t mask);
 };

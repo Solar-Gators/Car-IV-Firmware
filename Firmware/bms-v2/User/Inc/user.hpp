@@ -15,6 +15,7 @@
 #include "OrionBMSFrames.hpp"   // For now just replicate Orion frames
 
 extern BQ76952 bms;
+extern ADS7138 adcs[3];
 
 void SetAmplifierState(bool state);
 

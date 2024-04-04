@@ -43,7 +43,7 @@ void ThreadsStart() {
     osTimerStart(current_timer_id, 8);
 
     // Toggle read temperature thread every 100ms (10Hz)
-    osTimerStart(temperature_timer_id, 100);
+    osTimerStart(temperature_timer_id, 1000);
 }
 
 /* 
@@ -61,10 +61,10 @@ void ReadVoltageThread(void *argument) {
     // Log the voltages every 2.5 seconds
     static int counter = 0;
     if (counter++ % 100 == 0) {
-        Logger::LogInfo("Pack Voltage: %d", bms.GetPackVoltage());
-        Logger::LogInfo("Avg Cell Voltage: %d", bms.GetAvgCellVoltage());
-        Logger::LogInfo("High Cell Voltage: %d", bms.GetHighCellVoltage());
-        Logger::LogInfo("Low Cell Voltage: %d", bms.GetLowCellVoltage());
+        // Logger::LogInfo("Pack Voltage: %d", bms.GetPackVoltage());
+        // Logger::LogInfo("Avg Cell Voltage: %d", bms.GetAvgCellVoltage());
+        // Logger::LogInfo("High Cell Voltage: %d", bms.GetHighCellVoltage());
+        // Logger::LogInfo("Low Cell Voltage: %d", bms.GetLowCellVoltage());
     }
 }
 
@@ -78,4 +78,21 @@ void ReadCurrentThread(void *argument) {
  * Periodic thread function to read the temperature of each cell in the battery
  */
 void ReadTemperatureThread(void *argument) {
+    SetAmplifierState(true);
+
+    HAL_Delay(10);
+
+    for (int i = 0; i < 8; i++) {
+        adcs[2].ManualSelectChannel(i);
+        adcs[2].StartConversion();
+
+        HAL_Delay(10);
+
+        uint16_t data = 0;
+        adcs[2].ReadChannel(i, &data);
+
+        Logger::LogInfo("Thermistor %d: %d", i, data);
+    }
+
+    SetAmplifierState(false);
 }

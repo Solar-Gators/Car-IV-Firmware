@@ -27,9 +27,10 @@ CANDevice candev2 = CANDevice(&hcan2);
 /* Initialize BMS */
 BQ76952 bms;
 
-/* Initialize ADC */
-ADS7138 adc1 = ADS7138(&hi2c4, 0x13);
-ADS7138 adc2 = ADS7138(&hi2c4, 0x14);
+/* Initialize ADCs */
+ADS7138 adcs[3] = {ADS7138(&hi2c4, 0x10), 
+                    ADS7138(&hi2c4, 0x13), 
+                    ADS7138(&hi2c4, 0x14)};
 
 void DefaultOutputs() {
     // Turn off thermistor amplifiers
@@ -45,18 +46,22 @@ void CAN_Modules_Init() {
 }
 
 void ADC_Modules_Init() {
-    // Initialize ADCs
-    // if (adc1.Init() != HAL_OK)
-    //     Logger::LogError("ADC init failed");
-    // else
-    //     Logger::LogInfo("ADC init success");
+    for (int i = 0; i < 3; i++) {
+        // Initialize ADC
+        if (adcs[i].Init() != HAL_OK)
+            Logger::LogError("ADC %d init failed", i);
+        else
+            Logger::LogInfo("ADC %d init success", i);
 
-    if (adc2.Init() != HAL_OK)
-        Logger::LogError("ADC init failed");
-    else
-        Logger::LogInfo("ADC init success");
+        // Set all ADC pins to analog inputs
+        // TODO: This may not be necessary, should be set correctly on reset
+        if (adcs[i].ConfigurePinMode(0x0) != HAL_OK)
+            Logger::LogError("ADC %d pin configuration failed", i);
 
-    adc2.TestI2C();
+        // Set ADCs to manual conversion mode
+        if (adcs[i].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
+            Logger::LogError("ADC %d configure opmode failed", i);
+    }
 }
 
 void CPP_UserSetup(void) {
