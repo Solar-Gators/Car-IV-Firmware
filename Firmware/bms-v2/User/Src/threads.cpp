@@ -80,19 +80,27 @@ void ReadCurrentThread(void *argument) {
 void ReadTemperatureThread(void *argument) {
     SetAmplifierState(true);
 
-    HAL_Delay(10);
+    HAL_Delay(1);
 
-    for (int i = 0; i < 8; i++) {
-        adcs[2].ManualSelectChannel(i);
-        adcs[2].StartConversion();
+    // Test auto-sequence
+    // uint16_t channel_vals[8];
+    // adcs[2].ConversionReadAutoSequence(channel_vals, 8);
 
-        HAL_Delay(10);
+    // for (int i = 0; i < 8; i++) {
+    //     float voltage = (float)channel_vals[i] * 3.3 / 0x10000;
+    //     char char_buf[50];
+    //     sprintf(char_buf, "Voltage %d: %f", i, voltage);
+    //     Logger::LogInfo(char_buf);
+    // }
 
-        uint16_t data = 0;
-        adcs[2].ReadChannel(i, &data);
+    // Test manual read
+    uint16_t channel_val;
+    adcs[2].ConversionReadManual(&channel_val, 0);
+    
+    float voltage = (float)channel_val * 3.3 / 0x10000;
+    char char_buf[50];
+    sprintf(char_buf, "Voltage 0: %f", voltage);
+    Logger::LogInfo(char_buf);
 
-        Logger::LogInfo("Thermistor %d: %d", i, data);
-    }
-
-    SetAmplifierState(false);
+    // SetAmplifierState(false);
 }

@@ -48,19 +48,22 @@ void CAN_Modules_Init() {
 void ADC_Modules_Init() {
     for (int i = 0; i < 3; i++) {
         // Initialize ADC
-        if (adcs[i].Init() != HAL_OK)
+        if (adcs[i].Init() != HAL_OK || adcs[i].TestI2C() != HAL_OK)
             Logger::LogError("ADC %d init failed", i);
         else
             Logger::LogInfo("ADC %d init success", i);
 
-        // Set all ADC pins to analog inputs
-        // TODO: This may not be necessary, should be set correctly on reset
-        if (adcs[i].ConfigurePinMode(0x0) != HAL_OK)
-            Logger::LogError("ADC %d pin configuration failed", i);
+        // Add all channels to the sequence
+        if (adcs[i].AutoSelectChannels(0xFF) != HAL_OK)
+            Logger::LogError("ADC %d auto select channels failed", i);
 
-        // Set ADCs to manual conversion mode
+        // Set ADCs to initiate conversion on request
         if (adcs[i].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
             Logger::LogError("ADC %d configure opmode failed", i);
+
+        // Append channel ID to data
+        if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
+            Logger::LogError("ADC %d configure data failed", i);
     }
 }
 

@@ -1,5 +1,7 @@
 #include "ADS7138.hpp"
 
+#include <cstring>
+
 ADS7138::ADS7138(I2C_HandleTypeDef *phi2c, uint8_t address) {
     this->_phi2c = phi2c;
     this->_address = address;
@@ -32,32 +34,25 @@ HAL_StatusTypeDef ADS7138::Init() {
 }
 
 HAL_StatusTypeDef ADS7138::TestI2C() {
-    // Turn on fixed pattern mode
-    uint8_t dataCfg = 0;
-    if (ReadReg(ADS7138_Register::DATA_CFG, &dataCfg) != HAL_OK)
-        return HAL_ERROR;
-    dataCfg |= 0x80;
-
-    if (WriteReg(ADS7138_Register::DATA_CFG, dataCfg) != HAL_OK)
+    // Write some bits to the pin configuration register
+    uint8_t initial_cfg;
+    if (ReadReg(ADS7138_Register::PIN_CFG, &initial_cfg) != HAL_OK)
         return HAL_ERROR;
 
-    // Read channel 0 LSB
-    uint8_t data = 0;
-    if (ReadReg(ADS7138_Register::RECENT_CH0_LSB, &data) != HAL_OK)
+    uint8_t test_cfg = 0x37;
+    if (WriteReg(ADS7138_Register::PIN_CFG, test_cfg) != HAL_OK)
+        return HAL_ERROR;
+    
+    // Read back the bits to verify
+    uint8_t read_cfg;
+    if (ReadReg(ADS7138_Register::PIN_CFG, &read_cfg) != HAL_OK)
         return HAL_ERROR;
 
-    Logger::LogInfo("ADS7138 TestI2C: Channel 0 LSB: %d", data);
-
-    // Read channel 0 MSB
-    data = 0;
-    if (ReadReg(ADS7138_Register::RECENT_CH0_MSB, &data) != HAL_OK)
+    if (read_cfg != test_cfg)
         return HAL_ERROR;
 
-    Logger::LogInfo("ADS7138 TestI2C: Channel 0 MSB: %d", data);
-
-    // Turn off fixed pattern mode
-    dataCfg &= 0x7F;
-    if (WriteReg(ADS7138_Register::DATA_CFG, dataCfg) != HAL_OK)
+    // Reset the bits to their initial state
+    if (WriteReg(ADS7138_Register::PIN_CFG, initial_cfg) != HAL_OK)
         return HAL_ERROR;
 
     return HAL_OK;
@@ -93,6 +88,16 @@ HAL_StatusTypeDef ADS7138::ConfigureData(bool fix_pattern, DataCfg_AppendType ap
     if (WriteReg(ADS7138_Register::DATA_CFG, dataCfg) != HAL_OK)
         return HAL_ERROR;
 
+    _append_type = append_type;
+
+    // TODO: Debug only, read back data to verify
+    uint8_t readDataCfg;
+    if (ReadReg(ADS7138_Register::DATA_CFG, &readDataCfg) != HAL_OK)
+        return HAL_ERROR;
+
+    if (readDataCfg != dataCfg)
+        return HAL_ERROR;
+
     return HAL_OK;
 }
 
@@ -104,16 +109,6 @@ HAL_StatusTypeDef ADS7138::ConfigureOversampling(OsrCfg_Type osr_cfg) {
     uint8_t osrCfg = static_cast<uint8_t>(osr_cfg);
 
     if (WriteReg(ADS7138_Register::OSR_CFG, osrCfg) != HAL_OK)
-        return HAL_ERROR;
-
-    return HAL_OK;
-}
-
-HAL_StatusTypeDef ADS7138::StartSequence() {
-    // Set start sequence bit, set sequence mode to auto sequence mode
-    uint8_t seq_cfg = ADS7138_SEQUENCE_CFG_SEQ_START | 0x1;
-
-    if (WriteReg(ADS7138_Register::SEQUENCE_CFG, seq_cfg) != HAL_OK)
         return HAL_ERROR;
 
     return HAL_OK;
@@ -134,6 +129,8 @@ HAL_StatusTypeDef ADS7138::ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_
 
     if (WriteReg(ADS7138_Register::GENERAL_CFG, generalCfg) != HAL_OK)
         return HAL_ERROR;
+
+    _conv_mode = conv_mode;
 
     return HAL_OK;
 }
@@ -163,8 +160,113 @@ HAL_StatusTypeDef ADS7138::ManualSelectChannel(uint8_t channel) {
     return HAL_OK;
 }
 
+/**
+ * @brief Select channels for auto sequence conversion (ADC must be in auto sequence mode)
+ * @param channels Bitmask of channels to select
+*/
+HAL_StatusTypeDef ADS7138::AutoSelectChannels(uint8_t channels) {
+    if (WriteReg(ADS7138_Register::AUTO_SEQ_CH_SEL, channels) != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef ADS7138::StartConversion() {
-    SetRegBits(ADS7138_Register::GENERAL_CFG, ADS7138_GENERAL_CFG_CNVST);
+    //SetRegBits(ADS7138_Register::GENERAL_CFG, ADS7138_GENERAL_CFG_CNVST);
+
+    for (int i = 0; i < 8; i++) {
+        uint8_t blank_data[2];
+        memset(blank_data, 0, 2 * sizeof(uint8_t));
+
+        HAL_I2C_Master_Receive(_phi2c, _address << 1, blank_data, 2, HAL_MAX_DELAY);
+
+        for (int i = 0; i < 2; i++) {
+            Logger::LogInfo("Blank data[%d]: %d", i, blank_data[i]);
+        }
+    }
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef ADS7138::StartSequence() {
+    SetRegBits(ADS7138_Register::SEQUENCE_CFG, 
+                ADS7138_SEQUENCE_CFG_SEQ_START | 0x1);
+
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef ADS7138::StopSequence() {
+    ClearRegBits(ADS7138_Register::SEQUENCE_CFG, 
+                ADS7138_SEQUENCE_CFG_SEQ_START | 0x1);
+
+    return HAL_OK;
+}
+
+/**
+ * @brief Read conversion data from the ADC in manual mode. ADC must be in manual conversion mode
+ * @param buf Buffer to store data. Data stored in 16-bit format
+ * @param channel Channel to read (0-7)
+*/
+HAL_StatusTypeDef ADS7138::ConversionReadManual(uint16_t *buf, uint8_t channel) {
+    if (channel > 7)
+        return HAL_ERROR;
+
+    if (_conv_mode != ConvMode_Type::MANUAL)
+        return HAL_ERROR;
+
+    // Select channel
+    ManualSelectChannel(channel);
+
+    // Read conversion data
+    HAL_I2C_Master_Receive(_phi2c, 
+                            _address << 1, 
+                            reinterpret_cast<uint8_t*>(buf),
+                            2, 
+                            HAL_MAX_DELAY);
+
+    // Swap endianness of each item in buffer
+    buf[0] = (buf[0] << 8) | (buf[0] >> 8);
+
+    // If channel ID append type is enabled, check that the channel ID matches
+    if (_append_type == DataCfg_AppendType::ID) {
+        uint8_t channel_id = buf[0] & 0xF;
+        if (channel_id != channel)
+            return HAL_ERROR;
+    }
+
+    return HAL_OK;
+}
+
+/**
+ * @brief Read conversion data from the ADC in auto-sequence mode. ADC must be in manual conversion mode
+ * @param buf Buffer to store data. Data stored in 16-bit format
+ * @param len Number of channels to read. Read will start at channel 0
+*/
+HAL_StatusTypeDef ADS7138::ConversionReadAutoSequence(uint16_t *buf, uint8_t len) {
+    if (len > 8)
+        return HAL_ERROR;
+
+    if (_conv_mode != ConvMode_Type::MANUAL)
+        return HAL_ERROR;
+
+    // Start sequence, scan in auto sequence mode
+    SetRegBits(ADS7138_Register::SEQUENCE_CFG, 
+                ADS7138_SEQUENCE_CFG_SEQ_START | 0x1);
+
+    // Read conversion data
+    HAL_I2C_Master_Receive(_phi2c, 
+                            _address << 1, 
+                            reinterpret_cast<uint8_t*>(buf),
+                            2 * len, 
+                            HAL_MAX_DELAY);
+
+    // Swap endianness of each item in buffer
+    for (int i = 0; i < len; i++) {
+        buf[i] = (buf[i] << 8) | (buf[i] >> 8);
+    }
+
+    // Stop sequence
+    ClearRegBits(ADS7138_Register::SEQUENCE_CFG, ADS7138_SEQUENCE_CFG_SEQ_START);
 
     return HAL_OK;
 }

@@ -210,12 +210,22 @@ public:
 
     HAL_StatusTypeDef ManualSelectChannel(uint8_t channel);
 
-    HAL_StatusTypeDef StartSequence();
+    HAL_StatusTypeDef AutoSelectChannels(uint8_t channels);
+
     HAL_StatusTypeDef StartConversion();
+    HAL_StatusTypeDef StartSequence();
+    HAL_StatusTypeDef StopSequence();
+
+    HAL_StatusTypeDef ConversionReadManual(uint16_t *buf, uint8_t channel); // working
+    HAL_StatusTypeDef ConversionReadAutoSequence(uint16_t *buf, uint8_t len); // working
+
     HAL_StatusTypeDef ReadChannel(uint8_t channel, uint16_t *data);
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;
+
+    ConvMode_Type _conv_mode;
+    DataCfg_AppendType _append_type;
 
     HAL_StatusTypeDef ReadReg(ADS7138_Register reg, uint8_t *data);
     HAL_StatusTypeDef WriteReg(ADS7138_Register reg, uint8_t data);
