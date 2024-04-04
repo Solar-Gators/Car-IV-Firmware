@@ -78,5 +78,4 @@ void ReadCurrentThread(void *argument) {
  * Periodic thread function to read the temperature of each cell in the battery
  */
 void ReadTemperatureThread(void *argument) {
-    adc2.ReadTemperatures();
 }

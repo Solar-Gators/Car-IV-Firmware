@@ -36,42 +36,44 @@ void DefaultOutputs() {
     SetAmplifierState(false);
 }
 
-void CPP_UserSetup(void) {
-    // Make sure that timer priorities are configured correctly
-    HAL_Delay(10);
-
-    DefaultOutputs();
-
+void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddFilterAll();
-    // CANController::Start();
+    CANController::Start();
+}
 
-    // Initialize BMS
-    if (bms.Init(&hi2c3) != HAL_OK)
-        Logger::LogError("BMS init failed");
-    else
-        Logger::LogInfo("BMS init success");
-
+void ADC_Modules_Init() {
     // Initialize ADCs
     // if (adc1.Init() != HAL_OK)
     //     Logger::LogError("ADC init failed");
     // else
     //     Logger::LogInfo("ADC init success");
 
-    // if (adc2.Init() != HAL_OK)
-    //     Logger::LogError("ADC init failed");
-    // else
-    //     Logger::LogInfo("ADC init success");
+    if (adc2.Init() != HAL_OK)
+        Logger::LogError("ADC init failed");
+    else
+        Logger::LogInfo("ADC init success");
 
-    // Turn on amplifiers
-    // HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_SET);
+    adc2.TestI2C();
+}
 
-    // while (1) {
-    //     adc1.TestI2C();
-    //     adc2.TestI2C();
-    // }
+void CPP_UserSetup(void) {
+    // Make sure that timer priorities are configured correctly
+    HAL_Delay(10);
+
+    DefaultOutputs();
+    
+    CAN_Modules_Init();
+
+    ADC_Modules_Init();
+
+    // Initialize BMS
+    if (bms.Init(&hi2c3) != HAL_OK)
+        Logger::LogError("BMS init failed");
+    else
+        Logger::LogInfo("BMS init success");
 
     // Configure REG1 voltage to 3.3v
 

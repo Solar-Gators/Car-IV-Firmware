@@ -14,45 +14,141 @@
 #include "logger.hpp"
 
 /* ADS7138 opcodes */
-#define ADS7138_OPCODE_READ		0x10
-#define ADS7138_OPCODE_WRITE	0x08
+enum class ADS7138_Opcode : uint8_t {
+    READ =  0x10,
+    WRITE = 0x08,
+};
 
 /* ADS7138 registers */
-#define ADS7138_REG_SYSTEM_STATUS	0x0
-#define ADS7138_REG_GENERAL_CFG		0x1
-#define ADS7138_REG_DATA_CFG		0x2
-#define ADS7138_REG_OSR_CFG			0x3
-#define ADS7138_REG_OPMODE_CFG		0x4
-#define ADS7138_REG_PIN_CFG			0x5
-#define ADS7138_REG_GPIO_CFG        0x7
-#define ADS7138_REG_GPIO_DRIVE_CFG  0x9
-#define ADS7138_REG_GPO_VALUE       0xB
-#define ADS7138_REG_GPI_VALUE       0xD
-#define ADS7138_REG_SEQUENCE_CFG    0x10
-#define ADS7138_REG_CHANNEL_SEL     0x11
-#define ADS7138_AUTO_SEQ_CH_SEL     0x12
-#define ADS7138_REG_ALERT_CH_SEL    0x14
-#define ADS7138_REG_ALERT_MAP       0x16
-#define ADS7138_REG_ALERT_PIN_CFG   0x17
-#define ADS7138_REG_EVENT_FLAG      0x18
-#define ADS7138_REG_EVENT_HIGH_FLAG 0x1A
-#define ADS7138_REG_EVENT_LOW_FLAG  0x1C
-#define ADS7138_REG_EVENT_RGN_FLAG  0x1E
+enum class ADS7138_Register : uint8_t {
+    SYSTEM_STATUS =           0x0,
+    GENERAL_CFG =             0x1,
+    DATA_CFG =                0x2,
+    OSR_CFG =                 0x3,
+    OPMODE_CFG =              0x4,
+    PIN_CFG =                 0x5,
+    GPIO_CFG =                0x7,
+    GPO_DRIVE_CFG =           0x9,
+    GPO_VALUE =               0xB,
+    GPI_VALUE =               0xD,
+    SEQUENCE_CFG =            0x10,
+    MANUAL_CH_SEL =           0x11,
+    AUTO_SEQ_CH_SEL =         0x12,
+    ALERT_CH_SEL =            0x14,
+    ALERT_FUNC_SEL =          0x16,
+    ALERT_PIN_CFG =           0x17,
+    EVENT_FLAG =              0x18,
+    EVENT_HIGH_FLAG =         0x1A,
+    EVENT_LOW_FLAG =          0x1C,
+    EVENT_RGN =               0x1E,
+    HYSTERESIS_CH0 =          0x20,
+    HIGH_TH_CH0 =             0x21,
+    EVENT_COUNT_CH0 =         0x22,
+    LOW_TH_CH0 =              0x23,
+    HYSTERESIS_CH1 =          0x24,
+    HIGH_TH_CH1 =             0x25,
+    EVENT_COUNT_CH1 =         0x26,
+    LOW_TH_CH1 =              0x27,
+    HYSTERESIS_CH2 =          0x28,
+    HIGH_TH_CH2 =             0x29,
+    EVENT_COUNT_CH2 =         0x2A,
+    LOW_TH_CH2 =              0x2B,
+    HYSTERESIS_CH3 =          0x2C,
+    HIGH_TH_CH3 =             0x2D,
+    EVENT_COUNT_CH3 =         0x2E,
+    LOW_TH_CH3 =              0x2F,
+    HYSTERESIS_CH4 =          0x30,
+    HIGH_TH_CH4 =             0x31,
+    EVENT_COUNT_CH4 =         0x32,
+    LOW_TH_CH4 =              0x33,
+    HYSTERESIS_CH5 =          0x34,
+    HIGH_TH_CH5 =             0x35,
+    EVENT_COUNT_CH5 =         0x36,
+    LOW_TH_CH5 =              0x37,
+    HYSTERESIS_CH6 =          0x38,
+    HIGH_TH_CH6 =             0x39,
+    EVENT_COUNT_CH6 =         0x3A,
+    LOW_TH_CH6 =              0x3B,
+    HYSTERESIS_CH7 =          0x3C,
+    HIGH_TH_CH7 =             0x3D,
+    EVENT_COUNT_CH7 =         0x3E,
+    LOW_TH_CH7 =              0x3F,
+    MAX_CH0_LSB =             0x60,
+    MAX_CH0_MSB =             0x61,
+    MAX_CH1_LSB =             0x62,
+    MAX_CH1_MSB =             0x63,
+    MAX_CH2_LSB =             0x64,
+    MAX_CH2_MSB =             0x65,
+    MAX_CH3_LSB =             0x66,
+    MAX_CH3_MSB =             0x67,
+    MAX_CH4_LSB =             0x68,
+    MAX_CH4_MSB =             0x69,
+    MAX_CH5_LSB =             0x6A,
+    MAX_CH5_MSB =             0x6B,
+    MAX_CH6_LSB =             0x6C,
+    MAX_CH6_MSB =             0x6D,
+    MAX_CH7_LSB =             0x6E,
+    MAX_CH7_MSB =             0x6F,
+    MIN_CH0_LSB =             0x80,
+    MIN_CH0_MSB =             0x81,
+    MIN_CH1_LSB =             0x82,
+    MIN_CH1_MSB =             0x83,
+    MIN_CH2_LSB =             0x84,
+    MIN_CH2_MSB =             0x85,
+    MIN_CH3_LSB =             0x86,
+    MIN_CH3_MSB =             0x87,
+    MIN_CH4_LSB =             0x88,
+    MIN_CH4_MSB =             0x89,
+    MIN_CH5_LSB =             0x8A,
+    MIN_CH5_MSB =             0x8B,
+    MIN_CH6_LSB =             0x8C,
+    MIN_CH6_MSB =             0x8D,
+    MIN_CH7_LSB =             0x8E,
+    MIN_CH7_MSB =             0x8F,
+    RECENT_CH0_LSB =          0xA0,
+    RECENT_CH0_MSB =          0xA1,
+    RECENT_CH1_LSB =          0xA2,
+    RECENT_CH1_MSB =          0xA3,
+    RECENT_CH2_LSB =          0xA4,
+    RECENT_CH2_MSB =          0xA5,
+    RECENT_CH3_LSB =          0xA6,
+    RECENT_CH3_MSB =          0xA7,
+    RECENT_CH4_LSB =          0xA8,
+    RECENT_CH4_MSB =          0xA9,
+    RECENT_CH5_LSB =          0xAA,
+    RECENT_CH5_MSB =          0xAB,
+    RECENT_CH6_LSB =          0xAC,
+    RECENT_CH6_MSB =          0xAD,
+    RECENT_CH7_LSB =          0xAE,
+    RECENT_CH7_MSB =          0xAF,
+    GPO0_TRIG_EVENT_SEL =     0xC3,
+    GPO1_TRIG_EVENT_SEL =     0xC5,
+    GPO2_TRIG_EVENT_SEL =     0xC7,
+    GPO3_TRIG_EVENT_SEL =     0xC9,
+    GPO4_TRIG_EVENT_SEL =     0xCB,
+    GPO5_TRIG_EVENT_SEL =     0xCD,
+    GPO6_TRIG_EVENT_SEL =     0xCF,
+    GPO7_TRIG_EVENT_SEL =     0xD1,
+    GPO_TRIGGER_CFG =         0xE9,
+    GPO_VALUE_TRIG =          0xEB,
+};
 
-
-#define ADS7138_REG_RECENT_CH0_LSB  0xA0
-#define ADS7138_REG_RECENT_CH0_MSB  0xA1
 
 /* GENERAL_CFG Register Fields */
-#define ADS7138_GENERAL_CFG_RST		0x1
+constexpr uint8_t ADS7138_GENERAL_CFG_RST =     (0x1 << 0);
+constexpr uint8_t ADS7138_GENERAL_CFG_CAL =     (0x1 << 1);
+constexpr uint8_t ADS7138_GENERAL_CFG_CH_RST =  (0x1 << 2);
+constexpr uint8_t ADS7138_GENERAL_CFG_CNVST =   (0x1 << 3);
+constexpr uint8_t ADS7138_GENERAL_CFG_DWC_EN =  (0x1 << 4);
+constexpr uint8_t ADS7138_GENERAL_CFG_STATS_EN =(0x1 << 5);
+constexpr uint8_t ADS7138_GENERAL_CFG_CRC_EN =  (0x1 << 6);
 
 /* DATA_CFG Register Fields */
-#define ADS7138_DATA_CFG_FIX_PAT 	0x80
-#define ADS7138_DATA_CFG_CH_ID	 	0x10
+constexpr uint8_t ADS7138_DATA_CFG_FIX_PAT =    (0x1 << 7);
+constexpr uint8_t ADS7138_DATA_CFG_APPEND_STATUS =  (0x3 << 4);
 
 /* OSR_CFG Register Fields */
-#define ADS7138_OSR_CFG_NO_AVG	 	0x0
-#define ADS7138_OSR_CFG_2	 		0x1
+constexpr uint8_t ADS7138_OSR_CFG_OSR =         (0x7 << 0);
 
 /* AVDD (VREF) operating range */
 #define ADS7138_VREF_MV_MIN	2350
@@ -67,6 +163,6 @@ public:
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;
-    HAL_StatusTypeDef ReadReg(uint8_t reg, uint8_t *data);
-    HAL_StatusTypeDef WriteReg(uint8_t reg, uint8_t data);
+    HAL_StatusTypeDef ReadReg(ADS7138_Register reg, uint8_t *data);
+    HAL_StatusTypeDef WriteReg(ADS7138_Register reg, uint8_t data);
 };
