@@ -21,8 +21,8 @@ class M24C02{
 
         //High level functions
 
-        HAL_StatusTypeDef M24C02_ReadAll(float *data);
-        HAL_StatusTypeDef M24C02_UpdateOne(int ID, uint8_t newVal);
+        HAL_StatusTypeDef M24C02_ReadAll(uint8_t *data);
+        HAL_StatusTypeDef M24C02_UpdateOne(int ID, uint8_t *newVal);
         HAL_StatusTypeDef M24C02_TickOdometer();
     
         //Low level functions
@@ -69,12 +69,6 @@ struct {
 
 } typedef memory;
 #pragma pack(pop)
-
-//High level functions
-
-
-
-
 
 #endif /* USER_HPP_ */
 
