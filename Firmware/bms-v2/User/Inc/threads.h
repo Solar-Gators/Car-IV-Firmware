@@ -12,21 +12,20 @@ void ThreadsStart();
 void ReadVoltageThread(void *argument);
 void ReadCurrentThread(void *argument);
 void ReadTemperatureThread(void *argument);
+void BroadcastThread(void *argument);
 
 /* Periodic threads */
 extern osTimerId_t voltage_timer_id;
+extern osTimerId_t current_timer_id;
+extern osTimerId_t temperature_timer_id;
+extern osTimerId_t broadcast_timer_id;
 
 /* Regular task definitions */
 
 
 /* Event flags */
-extern osEventFlagsId_t regular_event;
-extern osEventFlagsId_t filename_event; // SD file open request
-extern osEventFlagsId_t lineread_event; // SD line read request/response
 
 /* Mutexes */
-extern osMutexId_t spi_mutex_id;
-extern osMutexId_t text_mutex_id;
 
 /* Callbacks */
 //extern void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);

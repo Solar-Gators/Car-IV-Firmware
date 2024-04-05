@@ -23,6 +23,13 @@ jobs:
           cmake -S . -B build
           cmake --build build
           cd ../..
+
+      - name: Build bms-v2
+        run: |
+          cd Firmware/bms-v2
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
           
       - name: Build nucleof072rb-base
         run: |

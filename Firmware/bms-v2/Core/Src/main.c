@@ -591,11 +591,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|OK_LED_Pin|CONTACTOR4_CTRL_Pin|CONTACTOR3_CTRL_Pin
+  HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|OK_LED_Pin|CONTACTOR1_CTRL_Pin|CONTACTOR2_CTRL_Pin
                           |AMP_EN_Pin|NWC_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, CURRENT_EN_Pin|CONTACTOR2_CTRL_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, CURRENT_EN_Pin|CONTACTOR4_CTRL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, CONTACTOR_SOURCE_SEL_Pin|FAN_SEL_1_Pin|FAN_SEL_0_Pin, GPIO_PIN_RESET);
@@ -606,27 +606,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ERROR_LED_Pin OK_LED_Pin CONTACTOR4_CTRL_Pin CONTACTOR3_CTRL_Pin
+  /*Configure GPIO pins : ERROR_LED_Pin OK_LED_Pin CONTACTOR1_CTRL_Pin CONTACTOR2_CTRL_Pin
                            AMP_EN_Pin NWC_Pin */
-  GPIO_InitStruct.Pin = ERROR_LED_Pin|OK_LED_Pin|CONTACTOR4_CTRL_Pin|CONTACTOR3_CTRL_Pin
+  GPIO_InitStruct.Pin = ERROR_LED_Pin|OK_LED_Pin|CONTACTOR1_CTRL_Pin|CONTACTOR2_CTRL_Pin
                           |AMP_EN_Pin|NWC_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CURRENT_EN_Pin CONTACTOR2_CTRL_Pin */
-  GPIO_InitStruct.Pin = CURRENT_EN_Pin|CONTACTOR2_CTRL_Pin;
+  /*Configure GPIO pins : CURRENT_EN_Pin CONTACTOR4_CTRL_Pin */
+  GPIO_InitStruct.Pin = CURRENT_EN_Pin|CONTACTOR4_CTRL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : CONTACTOR1_CTRL_Pin */
-  GPIO_InitStruct.Pin = CONTACTOR1_CTRL_Pin;
+  /*Configure GPIO pin : CONTACTOR3_CTRL_Pin */
+  GPIO_InitStruct.Pin = CONTACTOR3_CTRL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(CONTACTOR1_CTRL_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(CONTACTOR3_CTRL_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CONTACTOR_SOURCE_SEL_Pin FAN_SEL_1_Pin FAN_SEL_0_Pin */
   GPIO_InitStruct.Pin = CONTACTOR_SOURCE_SEL_Pin|FAN_SEL_1_Pin|FAN_SEL_0_Pin;

@@ -5,7 +5,8 @@
 
 // BMS to-do
 // - Voltage measurement (done)
-// - Temperature measurement (in progress)
+// - Temperature measurement (done)
+// - CAN frame (in progress)
 // - SOC calculation (in progress)
 // - Current measurement
 // - Contactor control
@@ -35,6 +36,15 @@ ADS7138 adcs[3] = {ADS7138(&hi2c4, 0x10),
 void DefaultOutputs() {
     // Turn off thermistor amplifiers
     SetAmplifierState(false);
+
+    // Set contactors power source to supplemental battery
+    SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
+
+    // TODO: Debug only
+    HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, GPIO_PIN_SET);
 }
 
 void CAN_Modules_Init() {
@@ -53,18 +63,26 @@ void ADC_Modules_Init() {
         else
             Logger::LogInfo("ADC %d init success", i);
 
-        // Add all channels to the sequence
-        if (adcs[i].AutoSelectChannels(0xFF) != HAL_OK)
-            Logger::LogError("ADC %d auto select channels failed", i);
-
-        // Set ADCs to initiate conversion on request
+        // Set all ADCs to initiate conversion on request
         if (adcs[i].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
             Logger::LogError("ADC %d configure opmode failed", i);
 
-        // Append channel ID to data
+        // For all ADCs, append channel ID to data
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
     }
+
+    // For adc0, sequence channels 5 and 7 for current sense
+    if (adcs[0].AutoSelectChannels((0x1 << 5) | (0x1 << 7)) != HAL_OK)
+        Logger::LogError("ADC 0 auto select channels failed");
+
+    // For adc1, sequence all channels, all channels are thermistors
+    if (adcs[1].AutoSelectChannels(0xFF) != HAL_OK)
+        Logger::LogError("ADC 1 auto select channels failed");
+
+    // For adc2, sequence all channels, all channels are thermistors
+    if (adcs[2].AutoSelectChannels(0xFF) != HAL_OK)
+        Logger::LogError("ADC 2 auto select channels failed");
 }
 
 void CPP_UserSetup(void) {
@@ -94,4 +112,23 @@ void CPP_UserSetup(void) {
 /* Controls power supply to thermistor amplifier ICs */
 void SetAmplifierState(bool state) {
     HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+/* Selects contactor power supply between main 12V and supplemental battery */
+void SetContactorSource(ContactorSource_Type source) {
+    HAL_GPIO_WritePin(CONTACTOR_SOURCE_SEL_GPIO_Port, 
+                        CONTACTOR_SOURCE_SEL_Pin, 
+                        static_cast<GPIO_PinState>(source));
+}
+
+/* Converts raw ADC value to temperature in degrees C */
+float ADCToTemp(uint16_t adc_val) {
+    // Constant slope for linear estimator
+    static const float m = 1.0 / 1180;
+
+    // Constant offset for linear estimator
+    static const float b = 19000.0 / 1180;
+
+    // Convert ADC value to temperature
+    return (float)adc_val * m + b;
 }

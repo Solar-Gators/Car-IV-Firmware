@@ -13,7 +13,7 @@ DATAMODULE(
 
     BMSFrame0,
     0x6B0,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
     
@@ -60,7 +60,7 @@ DATAMODULE(
 
     BMSFrame1,
     0x6B1,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
 
@@ -92,7 +92,7 @@ DATAMODULE(
 
     BMSFrame2,
     0x6B2,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
 
@@ -117,7 +117,7 @@ DATAMODULE(
 
     BMSFrame3,
     0x6B3,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
 
@@ -138,7 +138,7 @@ DATAMODULE(
 
     BMSFrame4,
     0x6B4,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
 
@@ -190,7 +190,7 @@ DATAMODULE(
 
     BMSFrame5,
     0x6B5,
-    CAN_ID_EXT,
+    CAN_ID_STD,
     CAN_RTR_DATA,
     8,
 
