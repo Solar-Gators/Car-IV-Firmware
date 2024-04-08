@@ -214,6 +214,9 @@ HAL_StatusTypeDef ADS7138::ConversionReadManual(uint16_t *buf, uint8_t channel) 
     if (_conv_mode != ConvMode_Type::MANUAL)
         return HAL_ERROR;
 
+    // Get out of auto sequence mode
+    ClearRegBits(ADS7138_Register::SEQUENCE_CFG, 0x3);
+
     // Select channel
     ManualSelectChannel(channel);
 
@@ -250,7 +253,7 @@ HAL_StatusTypeDef ADS7138::ConversionReadAutoSequence(uint16_t *buf, uint8_t len
         return HAL_ERROR;
 
     // Start sequence, scan in auto sequence mode
-    SetRegBits(ADS7138_Register::SEQUENCE_CFG, 
+    WriteReg(ADS7138_Register::SEQUENCE_CFG, 
                 ADS7138_SEQUENCE_CFG_SEQ_START | 0x1);
 
     // Read conversion data
@@ -265,8 +268,8 @@ HAL_StatusTypeDef ADS7138::ConversionReadAutoSequence(uint16_t *buf, uint8_t len
         buf[i] = (buf[i] << 8) | (buf[i] >> 8);
     }
 
-    // Stop sequence
-    ClearRegBits(ADS7138_Register::SEQUENCE_CFG, ADS7138_SEQUENCE_CFG_SEQ_START);
+    // Stop sequence and switch to manual select mode
+    WriteReg(ADS7138_Register::SEQUENCE_CFG, 0x0);
 
     return HAL_OK;
 }

@@ -1,5 +1,7 @@
 #include "threads.h"
 
+#include <algorithm>
+
 #include "etl/to_string.h"
 #include "etl/format_spec.h"
 #include "etl/string_utilities.h"
@@ -275,8 +277,14 @@ void DriverControls0Callback(uint8_t *data) {
     //     SetMotorState(false);
 
     // Drive mode and direction based on driver controls
-    SetMotorMode(DriverControlsFrame0::GetDriveMode());
-    SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
+
+
+    // SetMotorMode(DriverControlsFrame0::GetDriveMode());
+    // TODO: For testing, force motor on
+    SetMotorState(true);
+		SetMotorDirection(true);
+    
+    // SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
 
     // If regen or brake is active, set throttle to 0 and regen to value
     if (DriverControlsFrame0::GetRegenVal() > 0 || DriverControlsFrame0::GetBrakeEnable()) {
@@ -285,7 +293,12 @@ void DriverControls0Callback(uint8_t *data) {
     }
     // If no regen or brake, set throttle to value and regen to 0
     else {
-        SetThrottle(DriverControlsFrame0::GetThrottleVal());
+        uint16_t throttle = 0;
+        if (DriverControlsFrame0::GetThrottleVal() < 58000)
+            throttle = DriverControlsFrame0::GetThrottleVal();
+        else
+            throttle = 58000;
+        SetThrottle(throttle);
         SetRegen(0);
     }
 

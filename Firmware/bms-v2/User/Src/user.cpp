@@ -74,7 +74,7 @@ void ADC_Modules_Init() {
 
     // For adc0, sequence channels 5 and 7 for current sense
     if (adcs[0].AutoSelectChannels((0x1 << 5) | (0x1 << 7)) != HAL_OK)
-        Logger::LogError("ADC 0 auto select channels failed");
+       Logger::LogError("ADC 0 auto select channels failed");
 
     // For adc1, sequence all channels, all channels are thermistors
     if (adcs[1].AutoSelectChannels(0xFF) != HAL_OK)
@@ -88,6 +88,31 @@ void ADC_Modules_Init() {
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
+
+    // TODO: Debug contactors
+    while (1) {
+        SetContactorSource(ContactorSource_Type::MAIN);
+        SetContactorState(1, true);
+
+        Logger::LogInfo("Contactor 1 on");
+        HAL_Delay(1000);
+
+        SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
+
+        Logger::LogInfo("Contactor 1 supp");
+        HAL_Delay(1000);
+
+        SetContactorSource(ContactorSource_Type::MAIN);
+
+        Logger::LogInfo("Contactor 1 main");
+        HAL_Delay(1000);
+
+        SetContactorSource(ContactorSource_Type::MAIN);
+        SetContactorState(1, false);
+
+        Logger::LogInfo("Contactor 1 off");
+        HAL_Delay(1000);
+    }
 
     DefaultOutputs();
     
@@ -106,6 +131,8 @@ void CPP_UserSetup(void) {
     // Start fan PWM
     // HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
+    
+
     ThreadsStart();
 }
 
@@ -119,6 +146,26 @@ void SetContactorSource(ContactorSource_Type source) {
     HAL_GPIO_WritePin(CONTACTOR_SOURCE_SEL_GPIO_Port, 
                         CONTACTOR_SOURCE_SEL_Pin, 
                         static_cast<GPIO_PinState>(source));
+}
+
+/* Sets contactor */
+void SetContactorState(uint8_t contactor, bool state) {
+    switch (contactor) {
+        case 1:
+            HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            break;
+        case 2:
+            HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            break;
+        case 3:
+            HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            break;
+        case 4:
+            HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            break;
+        default:
+            Logger::LogError("Invalid contactor number");
+    }
 }
 
 /* Converts raw ADC value to temperature in degrees C */

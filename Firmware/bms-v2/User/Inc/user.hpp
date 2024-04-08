@@ -25,6 +25,7 @@ enum class ContactorSource_Type : int {
 
 void SetAmplifierState(bool state);
 void SetContactorSource(ContactorSource_Type source);
+void SetContactorState(uint8_t contactor, bool state);
 float ADCToTemp(uint16_t adc_val);
 
 /**
