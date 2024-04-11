@@ -4,6 +4,11 @@
 HAL_StatusTypeDef BQ76952::Init(I2C_HandleTypeDef *hi2c){
     hi2c_ = hi2c;
 
+    manual_bal_enabled_ = 1; // default states of balancing
+    auto_bal_charging_enabled_ = 0;
+    auto_bal_relax_enabled_ = 0;
+    auto_bal_sleep_enabled_ = 0;
+
     return HAL_I2C_IsDeviceReady(hi2c_, BQ_I2C_ADDR_WRITE, 10, 50);
 }
 
@@ -132,8 +137,74 @@ HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
     return HAL_OK;
 }
 
+HAL_StatusTypeDef BQ76952::ChangeBalancingStatus(bool enableManualBal, bool enableBalWhileSleep, bool enableBalWhileRelax, bool enableBalWhileCharging){
+    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, (enableManualBal << 4) | (enableBalWhileSleep << 2) | (enableBalWhileRelax << 1) | (enableBalWhileCharging << 0));
+    if (status != HAL_OK) 
+        return status;
+    
+    manual_bal_enabled_ = enableManualBal;
+    auto_bal_sleep_enabled_ = enableBalWhileSleep;
+    auto_bal_relax_enabled_ = enableBalWhileRelax;
+    auto_bal_charging_enabled_ = enableBalWhileCharging;
+
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::DisableBalancing(){
+    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, 0x00);
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::EnableManualBalancing(){ // already enabled by default on startup
+    HAL_StatusTypeDef status = ChangeBalancingStatus(1, auto_bal_sleep_enabled_, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    return status;
+} 
+HAL_StatusTypeDef BQ76952::DisableManualBalancing(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(0, auto_bal_sleep_enabled_, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::EnableBalancingWhileSleeping(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, 1, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::DisableBalancingWhileSleeping(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, 0, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::EnableBalancingWhileRelaxing(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, 1, auto_bal_charging_enabled_);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::DisableBalancingWhileRelaxing(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, 0, auto_bal_charging_enabled_);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::EnableBalancingWhileCharging(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, auto_bal_relax_enabled_, 1);
+    return status;
+}
+HAL_StatusTypeDef BQ76952::DisableBalancingWhileCharging(){
+    HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, auto_bal_relax_enabled_, 0);
+    return status;
+}
+
 HAL_StatusTypeDef BQ76952::Shutdown() {
     return SubcmdCmdOnly(BQ769X2_SUBCMD_SHUTDOWN);
+}
+
+HAL_StatusTypeDef BQ76952::StartBalancingOnCells(uint16_t cell_bitmask){
+    HAL_StatusTypeDef status = SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, cell_bitmask);
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::ClearManualBalancing(){
+    HAL_StatusTypeDef status = SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, 0x0000);
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::ModifyMaxBalancedCells(uint8_t amount){
+    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_MAX_CELLS, amount);
+    return status;
 }
 
 int16_t BQ76952::GetCellVoltage(uint32_t cell_num) {

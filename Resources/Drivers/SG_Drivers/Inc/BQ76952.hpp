@@ -29,6 +29,22 @@ public:
     HAL_StatusTypeDef ReadCurrent();
     HAL_StatusTypeDef ReadTemperatures();
 
+    // Balancing Related Functions
+    HAL_StatusTypeDef ChangeBalancingStatus(bool enableManualBal, bool enableBalWhileSleep, bool enableBalWhileRelax, bool enableBalWhileCharging); // 1 for enable, 0 for disable
+    HAL_StatusTypeDef DisableBalancing();
+    HAL_StatusTypeDef EnableManualBalancing(); // already enabled by default on startup
+    HAL_StatusTypeDef DisableManualBalancing();
+    HAL_StatusTypeDef EnableBalancingWhileSleeping();
+    HAL_StatusTypeDef DisableBalancingWhileSleeping();
+    HAL_StatusTypeDef EnableBalancingWhileRelaxing();
+    HAL_StatusTypeDef DisableBalancingWhileRelaxing();
+    HAL_StatusTypeDef EnableBalancingWhileCharging();
+    HAL_StatusTypeDef DisableBalancingWhileCharging();
+    HAL_StatusTypeDef StartBalancingOnCells(uint16_t cell_bitmask); // manual balancing, input a bitmask with a 1 in the cells you want to receive active balancing
+    HAL_StatusTypeDef ClearManualBalancing();
+    HAL_StatusTypeDef ModifyMaxBalancedCells(uint8_t amount); // 0-16, does not affect manual balancing, affects how many cells can be automatically balanced at once
+
+
     HAL_StatusTypeDef Shutdown();
 
     int16_t GetCellVoltage(uint32_t cell_num);
@@ -87,6 +103,11 @@ private:
     float chip_temperature_; // temperature of chip in C
 
     bool config_update_enabled_; // whether config update mode is currently enabled
+
+    bool manual_bal_enabled_;
+    bool auto_bal_charging_enabled_;
+    bool auto_bal_relax_enabled_;
+    bool auto_bal_sleep_enabled_;
 };
 
 #endif  /* BQ76952_HPP_ */
