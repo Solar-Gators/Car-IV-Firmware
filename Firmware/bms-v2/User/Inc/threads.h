@@ -24,7 +24,7 @@ extern osTimerId_t broadcast_timer_id;
 extern osThreadId_t read_temperature_thread_id;
 
 /* Event flags */
-osEventFlagsId_t read_temperature_event;
+extern osEventFlagsId_t read_temperature_event;
 
 /* Mutexes */
 extern osMutexId_t adc_mutex_id;

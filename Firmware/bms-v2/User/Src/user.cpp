@@ -72,7 +72,7 @@ void ADC_Modules_Init() {
             Logger::LogError("ADC %d configure data failed", i);
     }
 
-    // For adc0, sequence channels 5 and 7 for current sense
+    // For adc0, sequence channels 5, 7 for current sense
     if (adcs[0].AutoSelectChannels((0x1 << 5) | (0x1 << 7)) != HAL_OK)
        Logger::LogError("ADC 0 auto select channels failed");
 
@@ -89,34 +89,9 @@ void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
-    // TODO: Debug contactors
-    while (1) {
-        SetContactorSource(ContactorSource_Type::MAIN);
-        SetContactorState(1, true);
-
-        Logger::LogInfo("Contactor 1 on");
-        HAL_Delay(1000);
-
-        SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
-
-        Logger::LogInfo("Contactor 1 supp");
-        HAL_Delay(1000);
-
-        SetContactorSource(ContactorSource_Type::MAIN);
-
-        Logger::LogInfo("Contactor 1 main");
-        HAL_Delay(1000);
-
-        SetContactorSource(ContactorSource_Type::MAIN);
-        SetContactorState(1, false);
-
-        Logger::LogInfo("Contactor 1 off");
-        HAL_Delay(1000);
-    }
-
     DefaultOutputs();
     
-    CAN_Modules_Init();
+    // CAN_Modules_Init();
 
     ADC_Modules_Init();
 

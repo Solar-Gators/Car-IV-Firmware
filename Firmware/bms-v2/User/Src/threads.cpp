@@ -45,10 +45,10 @@ osTimerAttr_t temperature_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperatureThread, 
-                                            osTimerPeriodic, 
-                                            NULL, 
-                                            &temperature_periodic_timer_attr);
+// osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperatureThread, 
+//                                             osTimerPeriodic, 
+//                                             NULL, 
+//                                             &temperature_periodic_timer_attr);
 
 osTimerAttr_t broadcast_periodic_timer_attr = {
     .name = "Broadcast Thread",
@@ -80,10 +80,10 @@ void ThreadsStart() {
     osTimerStart(voltage_timer_id, 25);
 
     // Toggle read current thread every 8ms (125Hz)
-    osTimerStart(current_timer_id, 8);
+    osTimerStart(current_timer_id, 50);
 
     // Toggle read temperature thread every 1000ms (1Hz)
-    osTimerStart(temperature_timer_id, 1000);
+    //osTimerStart(temperature_timer_id, 1000);
 
     // Broadcast BMS frames every 2500ms (0.4Hz)
     osTimerStart(broadcast_timer_id, 2500);
@@ -95,23 +95,24 @@ void ThreadsStart() {
 void ReadVoltageThread(void *argument) {
     bms.ReadVoltages();
 
-    for (int i = 0; i < 20; i++) {
-        Logger::LogInfo("Cell %d: %d", i, bms.GetCellVoltage(i));
-    }
+    
 
     // Update the BMS frame
-    BMSFrame0::Instance().SetPackVoltage(bms.GetPackVoltage());
-    BMSFrame0::Instance().SetAvgCellVoltage(bms.GetAvgCellVoltage());
-    BMSFrame0::Instance().SetHighCellVoltage(bms.GetHighCellVoltage());
-    BMSFrame0::Instance().SetLowCellVoltage(bms.GetLowCellVoltage());
+    // BMSFrame0::Instance().SetPackVoltage(bms.GetPackVoltage());
+    // BMSFrame0::Instance().SetAvgCellVoltage(bms.GetAvgCellVoltage());
+    // BMSFrame0::Instance().SetHighCellVoltage(bms.GetHighCellVoltage());
+    // BMSFrame0::Instance().SetLowCellVoltage(bms.GetLowCellVoltage());
 
     // Log the voltages every 2.5 seconds
     static int counter = 0;
     if (counter++ % 100 == 0) {
-        // Logger::LogInfo("Pack Voltage: %d", bms.GetPackVoltage());
-        // Logger::LogInfo("Avg Cell Voltage: %d", bms.GetAvgCellVoltage());
-        // Logger::LogInfo("High Cell Voltage: %d", bms.GetHighCellVoltage());
-        // Logger::LogInfo("Low Cell Voltage: %d", bms.GetLowCellVoltage());
+        for (int i = 0; i < 16; i++) {
+            Logger::LogInfo("Cell %d: %d", i, bms.GetCellVoltage(i));
+        }
+        Logger::LogInfo("Pack Voltage: %d", bms.GetPackVoltage());
+        Logger::LogInfo("Avg Cell Voltage: %d", bms.GetAvgCellVoltage());
+        Logger::LogInfo("High Cell Voltage: %d", bms.GetHighCellVoltage());
+        Logger::LogInfo("Low Cell Voltage: %d", bms.GetLowCellVoltage());
 
         // TODO: Debug only, remove
         HAL_GPIO_TogglePin(CONTACTOR_SOURCE_SEL_GPIO_Port, CONTACTOR_SOURCE_SEL_Pin);
@@ -123,20 +124,34 @@ void ReadVoltageThread(void *argument) {
  */
 void ReadCurrentThread(void *argument) {
     // Read current H and L from adc0
+    // current[1] will be a thermistor output, just ignore it
     uint16_t current[2];
 
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_SET);
-    osDelay(1);
+
+    osDelay(10);
 
     osMutexAcquire(adc_mutex_id, osWaitForever);
-    adcs[0].ConversionReadAutoSequence(current, 2);
+    adcs[0].ConversionReadAutoSequence(&current[0], 2);
     osMutexRelease(adc_mutex_id);
+
+    static uint16_t current_l_avg = 0;
+    static uint16_t current_h_avg = 0;
+
+    current_l_avg = current_l_avg * 0.9 + current[0] * 0.1;
+    current_h_avg = current_h_avg * 0.9 + current[1] * 0.1;
+
+    static int counter = 0;
+    if (counter++ % 10 == 0) {
+        for (int i = 0; i < 2; i++) {
+            //Logger::LogInfo("Current L Average: %d", current_l_avg);
+            //Logger::LogInfo("Current H Average: %d", current_h_avg);
+        }
+    }
 
     HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
-
-    // TODO: Interpret current values
 }
 
 /*
@@ -189,17 +204,6 @@ void ReadTemperatureThread(void *argument) {
     for (int i = 0; i < 8; i++)
         thermistor_vals[MapADCChannelToThermistor(2, i)] = temp_thermistor_vals[i];
 
-    // Test auto-sequence
-    // uint16_t thermistor_vals[8];
-    // adcs[2].ConversionReadAutoSequence(thermistor_vals, 8);
-
-    // for (int i = 0; i < 8; i++) {
-    //     float voltage = (float)thermistor_vals[i] * 3.3 / 0x10000;
-    //     char char_buf[50];
-    //     sprintf(char_buf, "Voltage %d: %f", i, voltage);
-    //     Logger::LogInfo(char_buf);
-    // }
-
     // Output voltage values for all channels
     // TODO: Debug only, remove later
     for (int i = 1; i <= 22; i++) {
@@ -207,7 +211,7 @@ void ReadTemperatureThread(void *argument) {
         char char_buf[50];
         // TODO: Use etl formatting instead of sprintf
         sprintf(char_buf, "Thermistor %d: %f", i, temperature);
-        //Logger::LogInfo(char_buf);
+        Logger::LogInfo(char_buf);
     }
 
     // Find minimum and maximum cell temp and ids
