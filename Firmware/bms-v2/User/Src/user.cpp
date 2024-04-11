@@ -21,6 +21,8 @@ extern "C" I2C_HandleTypeDef hi2c3;
 extern "C" I2C_HandleTypeDef hi2c4;
 extern "C" TIM_HandleTypeDef htim3;
 
+/* Global data */
+
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
@@ -146,11 +148,35 @@ void SetContactorState(uint8_t contactor, bool state) {
 /* Converts raw ADC value to temperature in degrees C */
 float ADCToTemp(uint16_t adc_val) {
     // Constant slope for linear estimator
-    static const float m = 1.0 / 1180;
+    static constexpr float m = 1.0 / 1180;
 
     // Constant offset for linear estimator
-    static const float b = 19000.0 / 1180;
+    static constexpr float b = 19000.0 / 1180;
 
     // Convert ADC value to temperature
+    return (float)adc_val * m + b;
+}
+
+/* Converts raw ADC value to current in A for low channel */
+float ADCToCurrentL(uint16_t adc_val) {
+    // Constant slope for linear estimator
+    static constexpr float m = 1.0 / 133.13;
+
+    // Constant offset for linear estimator
+    static constexpr float b = -(31515 / 133.13);
+
+    // Convert ADC value to current
+    return (float)adc_val * m + b;
+}
+
+/* Converts raw ADC value to current in A for high channel */
+float ADCToCurrentH(uint16_t adc_val) {
+    // Constant slope for linear estimator
+    static constexpr float m = 1.0 / 526.5;
+
+    // Constant offset for linear estimator
+    static constexpr float b = -(31509 / 526.5);
+
+    // Convert ADC value to current
     return (float)adc_val * m + b;
 }

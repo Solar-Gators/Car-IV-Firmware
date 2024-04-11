@@ -12,9 +12,40 @@
 #include "ADS7138.hpp"
 
 /* Datamodules */
-//#include "OrionBMSFrames.hpp"   // For now just replicate Orion frames
 #include "CustomBMSFrames.hpp"
 
+/* User configuration values */
+// TODO: Store configuration in EEPROM
+struct BMSConfig {
+    int CELL_OFFSET;
+    int NUM_CELLS;
+    int NUM_THERMISTORS;
+    int16_t MAX_CELL_VOLTAGE;
+    int16_t MIN_CELL_VOLTAGE;
+    float MAX_DISCHARGE_CURRENT;
+    float MAX_CHARGE_CURRENT;
+    float MAX_CHARGE_TEMP;
+    float MAX_DISCHARGE_TEMP;
+    bool LOG_VOLTAGE;
+    bool LOG_CURRENT;
+    bool LOG_TEMPERATURE;
+};
+const struct BMSConfig bms_config = {
+    .CELL_OFFSET = 0,
+    .NUM_CELLS = 16,
+    .NUM_THERMISTORS = 20,
+    .MAX_CELL_VOLTAGE = 4200,
+    .MIN_CELL_VOLTAGE = 2500,
+    .MAX_DISCHARGE_CURRENT = 100.0,
+    .MAX_CHARGE_CURRENT = 21.775,
+    .MAX_CHARGE_TEMP = 60.0,
+    .MAX_DISCHARGE_TEMP = 45.0,
+    .LOG_VOLTAGE = true,
+    .LOG_CURRENT = true,
+    .LOG_TEMPERATURE = true,
+};
+
+/* Device handles */
 extern BQ76952 bms;
 extern ADS7138 adcs[3];
 
@@ -27,6 +58,8 @@ void SetAmplifierState(bool state);
 void SetContactorSource(ContactorSource_Type source);
 void SetContactorState(uint8_t contactor, bool state);
 float ADCToTemp(uint16_t adc_val);
+float ADCToCurrentL(uint16_t adc_val);
+float ADCToCurrentH(uint16_t adc_val);
 
 /**
  * ADC Mappings

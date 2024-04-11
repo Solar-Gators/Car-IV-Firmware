@@ -166,3 +166,155 @@ DATAMODULE(
         Data()[1] = (current_limit >> 8) & 0xFF;
     }
 )
+
+DATAMODULE (
+
+    BMSFrame3,
+    0x6C3,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    4,
+
+    inline static uint8_t GetPackSoC() {
+        return Data()[3];
+    }
+
+    inline static uint8_t GetFaultFlags2() {
+        return Data()[2];
+    }
+
+    inline static uint8_t GetFaultFlags1() {
+        return Data()[1];
+    }
+
+    inline static uint8_t GetFaultFlags0() {
+        return Data()[0];
+    }
+
+    inline static void SetPackSoC(uint8_t soc) {
+        Data()[3] = soc;
+    }
+
+    inline static void SetFaultFlags2(uint8_t flags) {
+        Data()[2] = flags;
+    }
+
+    inline static void SetFaultFlags1(uint8_t flags) {
+        Data()[1] = flags;
+    }
+
+    inline static void SetFaultFlags0(uint8_t flags) {
+        Data()[0] = flags;
+    }
+)
+
+DATAMODULE(
+
+    BMSInternalFrame0,
+    0x6C4,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    8,
+
+    inline static uint16_t GetSubpackVoltage() {
+        return ((Data()[6] << 8) | Data()[7]);
+    }
+
+    inline static uint16_t GetAverageVoltage() {
+        return ((Data()[4] << 8) | Data()[5]);
+    }
+
+    inline static uint16_t GetHighVoltage() {
+        return ((Data()[2] << 8) | Data()[3]);
+    }
+
+    inline static uint16_t GetLowVoltage() {
+        return ((Data()[0] << 8) | Data()[1]);
+    }
+
+    inline static void SetSubpackVoltage(uint16_t voltage) {
+        Data()[6] = (voltage >> 8) & 0xFF;
+        Data()[7] = voltage & 0xFF;
+    }
+
+    inline static void SetAverageVoltage(uint16_t voltage) {
+        Data()[4] = (voltage >> 8) & 0xFF;
+        Data()[5] = voltage & 0xFF;
+    }
+
+    inline static void SetHighVoltage(uint16_t voltage) {
+        Data()[2] = (voltage >> 8) & 0xFF;
+        Data()[3] = voltage & 0xFF;
+    }
+
+    inline static void SetLowVoltage(uint16_t voltage) {
+        Data()[0] = (voltage >> 8) & 0xFF;
+        Data()[1] = voltage & 0xFF;
+    }
+)
+
+DATAMODULE(
+
+    BMSInternalFrame1,
+    0x6C5,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    8,
+
+    inline static uint16_t GetContstantVal() {
+        return ((Data()[6] << 8) | Data()[7]);
+    }
+
+    inline static uint8_t GetInternalTemp() {
+        return Data()[5];
+    }
+
+    inline static uint8_t GetAverageTemp() {
+        return Data()[4];
+    }
+
+    inline static uint8_t GetLowTempCellID() {
+        return Data()[3];
+    }
+
+    inline static uint8_t GetLowTemp() {
+        return Data()[2];
+    }
+
+    inline static uint8_t GetHighTempCellID() {
+        return Data()[1];
+    }
+
+    inline static uint8_t GetHighTemp() {
+        return Data()[0];
+    }
+
+    inline static void SetConstantVal(uint16_t value) {
+        Data()[6] = value & 0xFF;
+        Data()[7] = (value >> 8) & 0xFF;
+    }
+
+    inline static void SetInternalTemp(uint8_t temp) {
+        Data()[5] = temp;
+    }
+
+    inline static void SetAverageTemp(uint8_t temp) {
+        Data()[4] = temp;
+    }
+
+    inline static void SetLowTempCellID(uint8_t cell) {
+        Data()[3] = cell;
+    }
+
+    inline static void SetLowTemp(uint8_t temp) {
+        Data()[2] = temp;
+    }
+
+    inline static void SetHighTempCellID(uint8_t cell) {
+        Data()[1] = cell;
+    }
+
+    inline static void SetHighTemp(uint8_t temp) {
+        Data()[0] = temp;
+    }
+)
