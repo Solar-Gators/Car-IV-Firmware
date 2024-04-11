@@ -25,7 +25,12 @@ HAL_StatusTypeDef BQ76952::ConfigUpdate(bool config_update){
     if(status != HAL_OK)
         return status;
 
-    config_update_enabled_ = config_update;
+    if (config_update) {
+        current_mode_ = BQ_MODE_CONFIGUPDATE;
+    }
+    else {
+        current_mode_ = BQ_MODE_NORMAL;
+    }
 
     return HAL_OK;
 }
@@ -138,7 +143,12 @@ HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
 }
 
 HAL_StatusTypeDef BQ76952::ChangeBalancingStatus(bool enableManualBal, bool enableBalWhileSleep, bool enableBalWhileRelax, bool enableBalWhileCharging){
-    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, (enableManualBal << 4) | (enableBalWhileSleep << 2) | (enableBalWhileRelax << 1) | (enableBalWhileCharging << 0));
+    HAL_StatusTypeDef status;
+    status = ConfigUpdate(true);
+    if (status != HAL_OK) 
+        return status;
+
+    status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, (enableManualBal << 4) | (enableBalWhileSleep << 2) | (enableBalWhileRelax << 1) | (enableBalWhileCharging << 0));
     if (status != HAL_OK) 
         return status;
     
@@ -147,44 +157,90 @@ HAL_StatusTypeDef BQ76952::ChangeBalancingStatus(bool enableManualBal, bool enab
     auto_bal_relax_enabled_ = enableBalWhileRelax;
     auto_bal_charging_enabled_ = enableBalWhileCharging;
 
+    status = ConfigUpdate(false);
     return status;
 }
 
 HAL_StatusTypeDef BQ76952::DisableBalancing(){
-    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, 0x00);
+    HAL_StatusTypeDef status = ConfigUpdate(true);
+    if (status != HAL_OK) 
+        return status;
+
+    status = DatamemWriteU1(BQ769X2_SET_CBAL_CONF, 0x00);
+    if (status != HAL_OK) 
+        return status;
+    
+    manual_bal_enabled_ = 0;
+    auto_bal_sleep_enabled_ = 0;
+    auto_bal_relax_enabled_ = 0;
+    auto_bal_charging_enabled_ = 0;
+
+    status = ConfigUpdate(false);
     return status;
 }
 
 HAL_StatusTypeDef BQ76952::EnableManualBalancing(){ // already enabled by default on startup
     HAL_StatusTypeDef status = ChangeBalancingStatus(1, auto_bal_sleep_enabled_, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+
+    manual_bal_enabled_ = 1;
     return status;
 } 
 HAL_StatusTypeDef BQ76952::DisableManualBalancing(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(0, auto_bal_sleep_enabled_, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+
+    manual_bal_enabled_ = 0;
     return status;
 }
 HAL_StatusTypeDef BQ76952::EnableBalancingWhileSleeping(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, 1, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+    
+    auto_bal_sleep_enabled_ = 1;
     return status;
 }
 HAL_StatusTypeDef BQ76952::DisableBalancingWhileSleeping(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, 0, auto_bal_relax_enabled_ , auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+
+    auto_bal_sleep_enabled_ = 0;
     return status;
 }
 HAL_StatusTypeDef BQ76952::EnableBalancingWhileRelaxing(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, 1, auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+
+    auto_bal_relax_enabled_ = 1;
     return status;
 }
 HAL_StatusTypeDef BQ76952::DisableBalancingWhileRelaxing(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, 0, auto_bal_charging_enabled_);
+    if (status != HAL_OK) 
+        return status;
+
+    auto_bal_relax_enabled_ = 0;
     return status;
 }
 HAL_StatusTypeDef BQ76952::EnableBalancingWhileCharging(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, auto_bal_relax_enabled_, 1);
+    if (status != HAL_OK) 
+        return status;
+
+    auto_bal_charging_enabled_ = 1;
     return status;
 }
 HAL_StatusTypeDef BQ76952::DisableBalancingWhileCharging(){
     HAL_StatusTypeDef status = ChangeBalancingStatus(manual_bal_enabled_, auto_bal_sleep_enabled_, auto_bal_relax_enabled_, 0);
+    if (status != HAL_OK) 
+        return status;
+    
+    auto_bal_charging_enabled_ = 0;
     return status;
 }
 
@@ -193,18 +249,45 @@ HAL_StatusTypeDef BQ76952::Shutdown() {
 }
 
 HAL_StatusTypeDef BQ76952::StartBalancingOnCells(uint16_t cell_bitmask){
-    HAL_StatusTypeDef status = SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, cell_bitmask);
-    return status;
+    return SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, cell_bitmask);
 }
 
 HAL_StatusTypeDef BQ76952::ClearManualBalancing(){
-    HAL_StatusTypeDef status = SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, 0x0000);
-    return status;
+    return SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, 0x0000);
 }
 
 HAL_StatusTypeDef BQ76952::ModifyMaxBalancedCells(uint8_t amount){
-    HAL_StatusTypeDef status = DatamemWriteU1(BQ769X2_SET_CBAL_MAX_CELLS, amount);
+    HAL_StatusTypeDef status = ConfigUpdate(true);
+    if (status != HAL_OK) 
+        return status;
+
+    status = DatamemWriteU1(BQ769X2_SET_CBAL_MAX_CELLS, amount);
+    if (status != HAL_OK) 
+        return status;
+
+    status = ConfigUpdate(false);
+
     return status;
+}
+
+HAL_StatusTypeDef BQ76952::EnterDeepSleep(){
+    HAL_StatusTypeDef status = SubcmdCmdOnly(BQ769X2_SUBCMD_DEEPSLEEP);
+    if (status != HAL_OK) 
+        return status;
+    status = SubcmdCmdOnly(BQ769X2_SUBCMD_DEEPSLEEP);
+    if (status != HAL_OK) 
+        return status;
+    
+    current_mode_ = BQ_MODE_DEEPSLEEP;
+    
+    return status;
+}
+
+HAL_StatusTypeDef BQ76952::ExitDeepSleep(){
+    HAL_StatusTypeDef status = SubcmdCmdOnly(BQ769X2_SUBCMD_EXIT_DEEPSLEEP);
+    if (status != HAL_OK) 
+        return status;
+    current_mode_ = BQ_MODE_NORMAL;
 }
 
 int16_t BQ76952::GetCellVoltage(uint32_t cell_num) {
@@ -236,7 +319,7 @@ int16_t BQ76952::GetLowCellVoltage() {
 }
 
 bool BQ76952::GetConfigUpdateStatus(){
-    return config_update_enabled_;
+    return current_mode_ == BQ_MODE_CONFIGUPDATE;
 }
 
 HAL_StatusTypeDef BQ76952::WriteBytes(const uint8_t reg_addr, const uint8_t *data, const size_t num_bytes) {
@@ -493,89 +576,35 @@ HAL_StatusTypeDef BQ76952::DatamemReadU1(const uint16_t reg_addr, uint8_t *value
     return status;
 }
 HAL_StatusTypeDef BQ76952::DatamemWriteU1(const uint16_t reg_addr, uint8_t value){
-    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !(current_mode_ == BQ_MODE_CONFIGUPDATE)){
         return HAL_ERROR;
     }
     return SubcmdWrite(reg_addr, value, 1);
 }
 HAL_StatusTypeDef BQ76952::DatamemWriteU2(const uint16_t reg_addr, uint16_t value){
-    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !(current_mode_ == BQ_MODE_CONFIGUPDATE)){
         return HAL_ERROR;
     }
     return SubcmdWrite(reg_addr, value, 2);
 }
 HAL_StatusTypeDef BQ76952::DatamemWriteI1(const uint16_t reg_addr, int8_t value){
-    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !(current_mode_ == BQ_MODE_CONFIGUPDATE)){
         return HAL_ERROR;
     }
     return SubcmdWrite(reg_addr, value, 1);
 }
 HAL_StatusTypeDef BQ76952::DatamemWriteI2(const uint16_t reg_addr, int16_t value){
-    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !(current_mode_ == BQ_MODE_CONFIGUPDATE)){
         return HAL_ERROR;
     }
     return SubcmdWrite(reg_addr, value, 2);
 }
 HAL_StatusTypeDef BQ76952::DatamemWriteF4(const uint16_t reg_addr, float value){
-    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !config_update_enabled_){
+    if(!BQ769X2_IS_DATA_MEM_REG_ADDR(reg_addr) || !(current_mode_ == BQ_MODE_CONFIGUPDATE)){
         return HAL_ERROR;
     }
 
     uint32_t *u32 = (uint32_t *)&value;
 
     return SubcmdWrite(reg_addr, *u32, 4);
-}
-
-HAL_StatusTypeDef BQ76952::EnableThermistorPins(){
-    HAL_StatusTypeDef status;
-
-    // need to talk to Matthew about what settins to configure thermistor to (18 or 180 kOhm, which temperature model to use)
-    // current value (0b00000111) sets for 18k, 18k curve
-
-    //set ALERT for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_ALERT, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set TS1 for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_TS1, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set TS2 for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_TS2, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set TS3 for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_TS3, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set HDQ for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_HDQ, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set CFETOFF for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_CFETOFF, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set DFETOFF for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_DFETOFF, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set DCHG for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_DCHG, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    //set DDSG for 18k, 18k curve, for use in measuring cell
-    status = DatamemWriteU1(BQ769X2_SET_CONF_DDSG, 0b00000111);
-    if(status != HAL_OK)
-        return status;
-
-    return HAL_OK;
 }
