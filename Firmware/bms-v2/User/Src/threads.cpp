@@ -1,20 +1,12 @@
 #include "threads.h"
 
-/* Setup regular threads */
-osThreadId_t read_temperature_thread_id;
-uint32_t read_temperature_thread_buffer[128];
-StaticTask_t read_temperature_thread_control_block;
-const osThreadAttr_t regular_task_attributes = {
-    .name = "Read Temperature Thread",
-    .attr_bits = osThreadDetached,
-    .cb_mem = &read_temperature_thread_control_block,
-    .cb_size = sizeof(read_temperature_thread_control_block),
-    .stack_mem = &read_temperature_thread_buffer[0],
-    .stack_size = sizeof(read_temperature_thread_buffer),
-    .priority = (osPriority_t) osPriorityNormal,    // Lower priority than timer
-    .tz_module = 0,
-    .reserved = 0,
-};
+#include "etl/string.h"
+#include "etl/to_string.h"
+#include "etl/format_spec.h"
+
+/* Global variables */
+static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
+static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
 /* Setup periodic threads */
 static const uint32_t read_voltage_period = 25;
@@ -48,10 +40,10 @@ osTimerAttr_t temperature_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-// osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperatureThread, 
-//                                             osTimerPeriodic, 
-//                                             NULL, 
-//                                             &temperature_periodic_timer_attr);
+osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePeriodic, 
+                                            osTimerPeriodic, 
+                                            NULL, 
+                                            &temperature_periodic_timer_attr);
 
 static const uint32_t broadcast_period = 2500;
 osTimerAttr_t broadcast_periodic_timer_attr = {
@@ -60,10 +52,26 @@ osTimerAttr_t broadcast_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t broadcast_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePeriodic, 
+osTimerId_t broadcast_timer_id = osTimerNew((osThreadFunc_t)BroadcastThread, 
                                             osTimerPeriodic, 
                                             NULL, 
                                             &broadcast_periodic_timer_attr);
+
+/* Setup regular threads */
+osThreadId_t thermistor_thread_id;
+uint32_t thermistor_thread_buffer[2048];
+StaticTask_t thermistor_thread_control_block;
+const osThreadAttr_t thermistor_thread_attributes = {
+    .name = "Thermistor Thread",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &thermistor_thread_control_block,
+    .cb_size = sizeof(thermistor_thread_control_block),
+    .stack_mem = &thermistor_thread_buffer[0],
+    .stack_size = sizeof(thermistor_thread_buffer),
+    .priority = (osPriority_t) osPriorityNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
 
 /* Mutexes */
 StaticSemaphore_t adc_mutex_cb;
@@ -75,7 +83,16 @@ const osMutexAttr_t adc_mutex_attr = {
 };
 osMutexId_t adc_mutex_id = osMutexNew(NULL);
 
-/* Event flag to trigger read_temperature_thread */
+StaticSemaphore_t logger_mutex_cb;
+const osMutexAttr_t logger_mutex_attr = {
+    .name = "Logger Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &logger_mutex_cb,
+    .cb_size = sizeof(logger_mutex_cb),
+};
+osMutexId_t logger_mutex_id = osMutexNew(NULL);
+
+/* Event flag to trigger read_thermistor_thread */
 osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
 
 /* Start periodic threads */
@@ -91,6 +108,8 @@ void ThreadsStart() {
 
     // Broadcast BMS frames every 2500ms (0.4Hz)
     osTimerStart(broadcast_timer_id, broadcast_period);
+
+    thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
 }
 
 /* 
@@ -132,7 +151,9 @@ void ReadVoltageThread(void *argument) {
 
     // Check for overvoltage and undervoltage conditions
     if (high_cell_voltage > bms_config.MAX_CELL_VOLTAGE) {
-        Logger::LogError("High cell voltage on cell %d: %dmV", high_cell_voltage_id, high_cell_voltage);
+        char msg[100];
+        sprintf(msg, "High cell voltage on cell %d: %dmV", high_cell_voltage_id, high_cell_voltage);
+        // Logger::LogError(msg);
 
         // Set high cell voltage error bit
         // This error can only be cleared by a power cycle
@@ -140,7 +161,7 @@ void ReadVoltageThread(void *argument) {
     }
 
     if (low_cell_voltage < bms_config.MIN_CELL_VOLTAGE) {
-        Logger::LogError("Low cell voltage on cell %d: %dmV", low_cell_voltage_id, low_cell_voltage);
+        //Logger::LogError("Low cell voltage on cell %d: %dmV", low_cell_voltage_id, low_cell_voltage);
 
         // Set low cell voltage error bit
         // This error can only be cleared by a power cycle
@@ -193,7 +214,7 @@ void ReadCurrentThread(void *argument) {
 
     // Check if current is above threshold
     if (current > bms_config.MAX_DISCHARGE_CURRENT) {
-        Logger::LogError("Current discharge limit exceeded: %fA", current);
+        //Logger::LogError("Current discharge limit exceeded: %fA", current);
 
         // Set current error bit
         // This error can only be cleared by a power cycle
@@ -203,7 +224,7 @@ void ReadCurrentThread(void *argument) {
 
 
     if (current_l < -bms_config.MAX_CHARGE_CURRENT) {
-        Logger::LogError("Current charge limit exceeded: %fA", current_l);
+        //Logger::LogError("Current charge limit exceeded: %fA", current_l);
 
         // Set current error bit
         // This error can only be cleared by a power cycle
@@ -216,8 +237,13 @@ void ReadCurrentThread(void *argument) {
         static int counter = 0;
         static constexpr int log_interval = 2500 / read_current_period;
         if (counter++ % log_interval == 0) {
-            Logger::LogInfo("Current L: %fA", current_l);
-            Logger::LogInfo("Current H: %fA", current_h);
+            etl::string<5> float_buf;
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            etl::to_string(current_l, float_buf, format_float, false);
+            Logger::LogInfo("Current L: %s A", float_buf.c_str());
+            etl::to_string(current_h, float_buf, format_float, false);
+            Logger::LogInfo("Current H: %s A", float_buf.c_str());
+            osMutexRelease(logger_mutex_id);
         }
     }
 }
@@ -282,23 +308,30 @@ void ReadTemperatureThread(void *argument) {
 
             if (thermistor_vals[i] > thermistor_vals[max_index]) {
                 max_index = i;
+            }
 
             if (thermistor_vals[i] < thermistor_vals[min_index]) {
                 min_index = i;
             }
         }
 
-        // Log the temperatures every 2.5 seconds
+        // Log the temperatures every 2.5 seconds if configured
         if (bms_config.LOG_TEMPERATURE) {
             static int counter = 0;
             static constexpr int log_interval = 2500 / read_temperature_period;
             if (counter++ % log_interval == 0) {
+                etl::string<5> float_buf;
+                osMutexAcquire(logger_mutex_id, osWaitForever);
                 for (int i = 1; i <= 22; i++) {
-                    Logger::LogInfo("Thermistor %d: %f", i, temps[i]);
+                    etl::to_string(temps[i], float_buf, format_float, false);
+                    Logger::LogInfo("Thermistor %d temp: %s", i, float_buf.c_str());
                 }
+                etl::to_string(temps[max_index], float_buf, format_float, false);
+                Logger::LogInfo("Max Temp: %s on thermistor %d", float_buf.c_str(), max_index);
+                etl::to_string(temps[min_index], float_buf, format_float, false);
+                Logger::LogInfo("Min Temp: %s on thermistor %d", float_buf.c_str(), min_index);
+                osMutexRelease(logger_mutex_id);
             }
-            Logger::LogInfo("Max Temp: %f on thermistor %d", temps[max_index], max_index);
-            Logger::LogInfo("Min Temp: %f on thermistor %d", temps[min_index], min_index);
         }
     }
 }
