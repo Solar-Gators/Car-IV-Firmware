@@ -8,10 +8,13 @@ void ThreadsStart();
 /* Defines */
 
 
-/* Task function prototypes */
+/* Periodic thread function prototypes */
 void ReadVoltageThread(void *argument);
 void ReadCurrentThread(void *argument);
 void ReadTemperaturePeriodic(void *argument);
+void BroadcastPeriodic(void *argument);
+
+/* Regular thread function prototypes */
 void ReadTemperatureThread(void *argument);
 void BroadcastThread(void *argument);
 
@@ -26,6 +29,7 @@ extern osThreadId_t read_temperature_thread_id;
 
 /* Event flags */
 extern osEventFlagsId_t read_temperature_event;
+extern osEventFlagsId_t broadcast_event;
 
 /* Mutexes */
 extern osMutexId_t adc_mutex_id;
