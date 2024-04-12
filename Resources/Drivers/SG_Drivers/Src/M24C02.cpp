@@ -157,38 +157,16 @@ HAL_StatusTypeDef M24C02::UpdateOne(member memb, uint8_t *newVal){
 	}
 }
 
-void AddDataTo(char div, char type){
+void M24C02::ShiftData(uint8_t startAddr, uint8_t byteShift){ //Shifts all the data starting at a given address for the given byte shift length. Used to make space to add new member variables in the structs.
 
-	//VCU
-	const int VCUFloatCnt = 6;
-	const int VCUIntCnt = 1;
-	const int VCUCharCnt = 1;
-	const int VCUBoolCnt = 1;
+	uint8_t *tempData = new uint8_t;
 
-	//BMS
-	const int BMSFloatCnt = 1;
-	const int BMSIntCnt = 0;
-	const int BMSCharCnt = 0;
-	const int BMSBoolCnt = 0;
+	HAL_StatusTypeDef HALStat = ReadRegister(startAddr, tempData, (sizeof(memory) - startAddr + 1));
 
-	const int VCUFAddr = 0x00;
-	const int VCUIAddr = 0x00 + (VCUIntCnt * 4) -1;
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, 0x00, byteShift);
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + byteShift, tempData, sizeof(tempData));
 
-
-	switch(div){
-
-		case 'v':
-		
-
-
-		break;
-
-		case 'b':
-
-		break;
-
-	}
-
+	delete tempData;
 }
 
 //VCU Functions

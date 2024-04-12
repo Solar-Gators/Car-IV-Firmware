@@ -23,7 +23,7 @@ class M24C02{
 
         HAL_StatusTypeDef ReadAll(uint8_t *data);
         HAL_StatusTypeDef UpdateOne(member memb, uint8_t *newVal);
-        void AddDataTo(char type, char div); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
+        void ShiftData(uint8_t startAddr, uint8_t byteShift); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
         
 
         //High level individual functions
@@ -85,6 +85,7 @@ struct {
     bool fun;
     
 } typedef VCU;
+
 struct {
 
     float maxTemp;
