@@ -97,6 +97,21 @@ const osThreadAttr_t broadcast_thread_attributes = {
     .reserved = 0,
 };
 
+osThreadId_t contactors_thread_id;
+uint32_t contactors_thread_buffer[64];
+StaticTask_t contactors_thread_control_block;
+const osThreadAttr_t contactors_thread_attributes = {
+    .name = "Contactors Thread",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &contactors_thread_control_block,
+    .cb_size = sizeof(contactors_thread_control_block),
+    .stack_mem = &contactors_thread_buffer[0],
+    .stack_size = sizeof(contactors_thread_buffer),
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
+
 /* Mutexes */
 StaticSemaphore_t adc_mutex_cb;
 const osMutexAttr_t adc_mutex_attr = {
@@ -122,6 +137,12 @@ osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
 /* Event flag to trigger CAN broadcast */
 osEventFlagsId_t broadcast_event = osEventFlagsNew(NULL);
 
+/* Event flags to trigger contactor action 
+ * Bit 0: Close main contactors
+ * Bit 1: Open main contactors
+*/
+osEventFlagsId_t contactors_event = osEventFlagsNew(NULL);
+
 /* Start periodic threads */
 void ThreadsStart() {
     // Toggle read voltage thread every 25ms (40Hz)
@@ -136,8 +157,10 @@ void ThreadsStart() {
     // Broadcast BMS frames every 2500ms (0.4Hz)
     osTimerStart(broadcast_timer_id, broadcast_period);
 
+    // Initialize regular threads
     thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
     broadcast_thread_id = osThreadNew((osThreadFunc_t)BroadcastThread, NULL, &broadcast_thread_attributes);
+    contactors_thread_id = osThreadNew((osThreadFunc_t)ContactorsThread, NULL, &contactors_thread_attributes);
 }
 
 /* 
@@ -385,10 +408,38 @@ void BroadcastThread(void* argument) {
     }
 }
 
+void ContactorsThread(void* argument) {
+    while (1) {
+        osEventFlagsWait(contactors_event, 0x3, osFlagsWaitAny, osWaitForever);
+
+        // Close main contactors
+        if (osEventFlagsGet(contactors_event) & 0x1) {
+            SetContactorState(3, true);
+            osDelay(500);
+            SetContactorState(4, true);
+        }
+
+        // Open main contactors
+        if (osEventFlagsGet(contactors_event) & 0x2) {
+            SetContactorState(4, false);
+            SetContactorState(3, false);
+        }
+    }
+}
+
 void SecondaryFrame0Callback(uint8_t *data) {
     // Update total pack voltage
     total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage();
 
     // Update average cell voltage
     uint32_t sum_cell_voltages = avg_cell_voltage * num_total_cells;
+}
+
+void VCUFrameCallback(uint8_t *data) {
+    // If kill switch is not pressed, close contactors
+    if (VCUFrame0::Instance().GetKillStatus() == 0) {
+        osEventFlagsSet(contactors_event, 0x1);
+    } else {
+        osEventFlagsSet(contactors_event, 0x2);
+    }
 }
