@@ -576,6 +576,7 @@ void ErrorThread(void* argument) {
         // If no errors, close contactors
         else if (fault_flags == 0) {
             SetContactorState(3, true);
+            osDelay(500);
             SetContactorState(4, true);
         }
     }
