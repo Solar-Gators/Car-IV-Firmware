@@ -19,8 +19,10 @@
 // TODO: Store configuration in EEPROM
 struct BMSConfig {
     int CELL_OFFSET;
-    int NUM_CELLS;
-    int NUM_THERMISTORS;
+    int NUM_CELLS_PRIMARY;
+    int NUM_CELLS_SECONDARY;
+    int NUM_THERMISTORS_PRIMARY;
+    int NUM_THERMISTORS_SECONDARY;
     int16_t MAX_CELL_VOLTAGE;
     int16_t MIN_CELL_VOLTAGE;
     float MAX_DISCHARGE_CURRENT;
@@ -33,8 +35,10 @@ struct BMSConfig {
 };
 const struct BMSConfig bms_config = {
     .CELL_OFFSET = 0,
-    .NUM_CELLS = 16,
-    .NUM_THERMISTORS = 20,
+    .NUM_CELLS_PRIMARY = 16,
+    .NUM_CELLS_SECONDARY = 0,
+    .NUM_THERMISTORS_PRIMARY = 20,
+    .NUM_THERMISTORS_SECONDARY = 0,
     .MAX_CELL_VOLTAGE = 4200,
     .MIN_CELL_VOLTAGE = 2500,
     .MAX_DISCHARGE_CURRENT = 100.0,

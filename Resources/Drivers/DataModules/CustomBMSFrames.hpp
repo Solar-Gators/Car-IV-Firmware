@@ -12,11 +12,11 @@
 
 DATAMODULE(
     
-    BMSVoltageFrame,
+    BMSFrame0,
     0x6C0,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    6,
+    8,
 
     // Voltage in V * 1e-1
     inline static uint16_t GetPackVoltage() {
@@ -25,17 +25,17 @@ DATAMODULE(
 
     // Voltage in mV
     inline static uint16_t GetAvgCellVoltage() {
-        return ((Data()[2] << 8) | Data()[1]);
+        return ((Data()[3] << 8) | Data()[2]);
     }
 
     // Voltage in mV
     inline static uint16_t GetHighCellVoltage() {
-        return ((Data()[4] << 8) | Data()[3]);
+        return ((Data()[5] << 8) | Data()[4]);
     }
 
     // Voltage in mV
     inline static uint16_t GetLowCellVoltage() {
-        return ((Data()[6] << 8) | Data()[5]);
+        return ((Data()[7] << 8) | Data()[6]);
     }
 
     // Voltage in V * 1e-1
@@ -61,74 +61,121 @@ DATAMODULE(
 
 DATAMODULE (
 
-    BMSCurrentFrame,
+    BMSFrame1,
     0x6C1,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    4,
+    8,
 
     // Current in A * 1e-2
-    inline static int32_t GetPackCurrent() {
-        return ((Data()[3] << 24) | (Data()[2] << 16) | (Data()[1] << 8) | Data()[0]);
+    inline static int16_t GetPackCurrent() {
+        return ((Data()[1] << 8) | Data()[0]);
+    }
+
+    // Charge in μAh
+    inline static int16_t GetIntegralCurrent() {
+        return ((Data()[3] << 8) | Data()[2]);
+    }
+
+    // Power in W
+    inline static int16_t GetAveragePower() {
+        return ((Data()[5] << 8) | Data()[4]);
+    }
+
+    inline static uint8_t GetHighCellVoltageID() {
+        return Data()[6];
+    }
+
+    inline static uint8_t GetLowCellVoltageID() {
+        return Data()[7];
     }
 
     // Current in A * 1e-2
-    inline static void SetPackCurrent(int32_t current) {
-        memcpy(Data(), &current, 4);
+    inline static void SetPackCurrent(int16_t current) {
+        memcpy(Data(), &current, 2);
+    }
+
+    // Charge in μAh
+    inline static void SetIntegralCurrent(int16_t current) {
+        memcpy(Data() + 2, &current, 2);
+    }
+
+    // Power in W
+    inline static void SetAveragePower(int16_t power) {
+        memcpy(Data() + 4, &power, 2);
+    }
+
+    inline static void SetHighCellVoltageID(uint8_t cell) {
+        Data()[6] = cell;
+    }
+
+    inline static void SetLowCellVoltageID(uint8_t cell) {
+        Data()[7] = cell;
     }
 )
 
 DATAMODULE(
 
-    BMSTemperatureFrame,
+    BMSFrame2,
     0x6C2,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    6,
+    8,
 
-    // Temperature in C
-    inline static uint8_t GetInternalTemp() {
-        return Data()[5];
+    // Temperature in °C /100
+    inline static uint16_t GetHighTemp() {
+        return ((Data()[1] << 8) | Data()[0]);
     }
 
-    // Temperature in C
-    inline static uint8_t GetAvgTemp() {
+    // Temperature in °C /100
+    inline static uint16_t GetLowTemp() {
+        return ((Data()[3] << 8) | Data()[2]);
+    }
+
+    inline static uint8_t GetHighTempCellID() {
         return Data()[4];
     }
 
-    // ID of the cell with the lowest temperature
-    inline static uint8_t GetLowTempID() {
-        return Data()[3];
+    inline static uint8_t GetLowTempCellID() {
+        return Data()[5];
     }
 
-    // Temperature in C
-    inline static uint8_t GetLowTemp() {
-        return Data()[2];
+    // Temperature in °C /100
+    inline static uint16_t GetInternalTemp() {
+        return ((Data()[7] << 8) | Data()[6]);
     }
 
-    // ID of the cell with the highest temperature
-    inline static uint8_t GetHighTempID() {
-        return Data()[1];
+    // Temperature in °C /100
+    inline static void SetHighTemp(uint16_t temp) {
+        memcpy(Data(), &temp, 2);
     }
 
-    // Temperature in C
-    inline static uint8_t GetHighTemp() {
-        return Data()[0];
+    // Temperature in °C /100
+    inline static void SetLowTemp(uint16_t temp) {
+        memcpy(Data() + 2, &temp, 2);
+    }
+
+    inline static void SetHighTempCellID(uint8_t cell) {
+        Data()[4] = cell;
+    }
+
+    inline static void SetLowTempCellID(uint8_t cell) {
+        Data()[5] = cell;
+    }
+
+    // Temperature in °C /100
+    inline static void SetInternalTemp(uint16_t temp) {
+        memcpy(Data() + 6, &temp, 2);
     }
 )
 
 DATAMODULE (
 
-    BMSFlagsFrame,
+    BMSFrame3,
     0x6C3,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    3,
-
-    // SoC in %
-    inline static uint8_t GetPackSoC() {
-        return Data()[2];
-    }
+    5,
 
     /*
      * Bit 0: Low Cell Voltage
@@ -141,35 +188,35 @@ DATAMODULE (
      * Bit 7: Reserved
     */
     inline static uint8_t GetFaultFlags() {
-        return Data()[1];
+        return Data()[0];
     }
 
     inline static bool GetLowCellVoltageFault() {
-        return Data()[1] & 0b1;
+        return Data()[0] & 0b1;
     }
 
     inline static bool GetHighCellVoltageFault() {
-        return Data()[1] & 0b10;
+        return Data()[0] & 0b10;
     }
 
     inline static bool GetHighDischargeCurrentFault() {
-        return Data()[1] & 0b100;
+        return Data()[0] & 0b100;
     }
 
     inline static bool GetHighChargeCurrentFault() {
-        return Data()[1] & 0b1000;
+        return Data()[0] & 0b1000;
     }
 
     inline static bool GetHighTempFault() {
-        return Data()[1] & 0b10000;
+        return Data()[0] & 0b10000;
     }
 
     inline static bool GetThermistorDisconnectedFault() {
-        return Data()[1] & 0b100000;
+        return Data()[0] & 0b100000;
     }
 
     inline static bool GetCurrentSensorDisconnectedFault() {
-        return Data()[1] & 0b1000000;
+        return Data()[0] & 0b1000000;
     }
 
     /*
@@ -183,19 +230,24 @@ DATAMODULE (
      * Bit 7: Reserved
     */
     inline static uint8_t GetStatusFlags() {
-        return Data()[0];
+        return Data()[1];
     }
 
     inline static bool GetContactorStatus(uint8_t contactor) {
-        return Data()[0] & (0b1 << contactor);
+        return Data()[1] & (0b1 << contactor);
     }
 
     inline static bool GetContactorSource() {
-        return Data()[0] & 0b10000;
+        return Data()[1] & 0b10000;
     }
 
     inline static bool GetBalancingActive() {
-        return Data()[0] & 0b100000;
+        return Data()[1] & 0b100000;
+    }
+
+    // SoC in % * 1e-1
+    inline static uint16_t GetPackSoC() {
+        return (Data()[4] << 8) | Data()[3];
     }
 
     /*
@@ -209,69 +261,69 @@ DATAMODULE (
      * Bit 7: Reserved
     */
     inline static void SetFaultFlags(uint8_t flags) {
-        Data()[1] = flags;
+        Data()[0] = flags;
     }
 
     inline static void SetLowCellVoltageFault(bool status) {
         uint8_t flag = 0b1;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetHighCellVoltageFault(bool status) {
         uint8_t flag = 0b10;
         if (status) {
-            Data()[1] |= 0b10;
+            Data()[0] |= 0b10;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetHighDischargeCurrentFault(bool status) {
         uint8_t flag = 0b100;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetHighChargeCurrentFault(bool status) {
         uint8_t flag = 0b1000;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetHighTempFault(bool status) {
         uint8_t flag = 0b10000;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetThermistorDisconnectedFault(bool status) {
         uint8_t flag = 0b100000;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
     inline static void SetCurrentSensorDisconnectedFault(bool status) {
         uint8_t flag = 0b1000000;
         if (status) {
-            Data()[1] |= flag;
+            Data()[0] |= flag;
         } else {
-            Data()[1] &= ~flag;
+            Data()[0] &= ~flag;
         }
     }
 
@@ -286,34 +338,39 @@ DATAMODULE (
      * Bit 7: Reserved
     */
     inline static void SetStatusFlags(uint8_t flags) {
-        Data()[0] = flags;
+        Data()[1] = flags;
     }
 
     inline static void SetContactorStatus(uint8_t contactor, bool status) {
         uint8_t flag = 0b1 << contactor;
         if (status) {
-            Data()[0] |= flag;
+            Data()[1] |= flag;
         } else {
-            Data()[0] &= ~flag;
+            Data()[1] &= ~flag;
         }
     }
 
     inline static void SetContactorSource(bool source) {
         uint8_t flag = 0b10000;
         if (source) {
-            Data()[0] |= flag;
+            Data()[1] |= flag;
         } else {
-            Data()[0] &= ~flag;
+            Data()[1] &= ~flag;
         }
     }
 
     inline static void SetBalancingActive(bool status) {
         uint8_t flag = 0b100000;
         if (status) {
-            Data()[0] |= flag;
+            Data()[1] |= flag;
         } else {
-            Data()[0] &= ~flag;
+            Data()[1] &= ~flag;
         }
+    }
+
+    // SoC in % * 1e-1
+    inline static void SetPackSoC(uint16_t soc) {
+        memcpy(Data() + 3, &soc, 2);
     }
 )
 
@@ -325,44 +382,44 @@ DATAMODULE(
     CAN_RTR_DATA,
     8,
 
-    // Voltage in V * 1e-1
+    // Voltage in V * 1e-2
     inline static uint16_t GetSubpackVoltage() {
-        return ((Data()[6] << 8) | Data()[7]);
+        return ((Data()[1] << 8) | Data()[0]);
     }
 
     // Voltage in mV
     inline static uint16_t GetAverageVoltage() {
-        return ((Data()[4] << 8) | Data()[5]);
+        return ((Data()[3] << 8) | Data()[2]);
     }
 
     // Voltage in mV
-    inline static uint16_t GetHighVoltage() {
-        return ((Data()[2] << 8) | Data()[3]);
+    inline static uint16_t GetHighCellVoltage() {
+        return ((Data()[5] << 8) | Data()[4]);
     }
 
     // Voltage in mV
-    inline static uint16_t GetLowVoltage() {
-        return ((Data()[0] << 8) | Data()[1]);
+    inline static uint16_t GetLowCellVoltage() {
+        return ((Data()[7] << 8) | Data()[6]);
     }
 
-    // Voltage in mV
+    // Voltage in V * 1e-2
     inline static void SetSubpackVoltage(uint16_t voltage) {
-        memcpy(Data() + 6, &voltage, 2);
+        memcpy(Data(), &voltage, 2);
     }
 
     // Voltage in mV
     inline static void SetAverageVoltage(uint16_t voltage) {
-        memcpy(Data() + 4, &voltage, 2);
-    }
-
-    // Voltage in mV
-    inline static void SetHighVoltage(uint16_t voltage) {
         memcpy(Data() + 2, &voltage, 2);
     }
 
     // Voltage in mV
+    inline static void SetHighVoltage(uint16_t voltage) {
+        memcpy(Data() + 4, &voltage, 2);
+    }
+
+    // Voltage in mV
     inline static void SetLowVoltage(uint16_t voltage) {
-        memcpy(Data(), &voltage, 2);
+        memcpy(Data() + 6, &voltage, 2);
     }
 )
 
@@ -372,66 +429,22 @@ DATAMODULE(
     0x6C5,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    8,
+    2,
 
-    // Temperature in C
-    inline static uint8_t GetInternalTemp() {
-        return Data()[5];
-    }
-
-    // Temperature in C
-    inline static uint8_t GetAverageTemp() {
-        return Data()[4];
-    }
-
-    // ID of the cell with the lowest temperature
-    inline static uint8_t GetLowTempCellID() {
-        return Data()[3];
-    }
-
-    // Temperature in C
-    inline static uint8_t GetLowTemp() {
-        return Data()[2];
-    }
-
-    // ID of the cell with the highest temperature
-    inline static uint8_t GetHighTempCellID() {
-        return Data()[1];
-    }
-
-    // Temperature in C
-    inline static uint8_t GetHighTemp() {
+    inline static uint8_t GetHighCellVoltageID() {
         return Data()[0];
     }
 
-    // Temperature in C
-    inline static void SetInternalTemp(uint8_t temp) {
-        Data()[5] = temp;
+    inline static uint8_t GetLowCellVoltageID() {
+        return Data()[1];
     }
 
-    // Temperature in C
-    inline static void SetAverageTemp(uint8_t temp) {
-        Data()[4] = temp;
+    inline static void SetHighCellVoltageID(uint8_t cell) {
+        Data()[0] = cell;
     }
 
-    // ID of the cell with the lowest temperature
-    inline static void SetLowTempCellID(uint8_t cell) {
-        Data()[3] = cell;
-    }
-
-    // Temperature in C
-    inline static void SetLowTemp(uint8_t temp) {
-        Data()[2] = temp;
-    }
-
-    // ID of the cell with the highest temperature
-    inline static void SetHighTempCellID(uint8_t cell) {
+    inline static void SetLowCellVoltageID(uint8_t cell) {
         Data()[1] = cell;
-    }
-
-    // Temperature in C
-    inline static void SetHighTemp(uint8_t temp) {
-        Data()[0] = temp;
     }
 )
 
@@ -441,7 +454,76 @@ DATAMODULE(
     0x6C6,
     CAN_ID_STD,
     CAN_RTR_DATA,
+    8,
+
+    // Temperature in °C /100
+    inline static uint8_t GetHighTemp() {
+        return (Data()[1] << 8) | Data()[0];
+    }
+
+    // Temperature in °C /100
+    inline static uint8_t GetLowTemp() {
+        return (Data()[3] << 8) | Data()[2];
+    }
+
+    inline static uint8_t GetHighTempCellID() {
+        return Data()[4];
+    }
+
+    inline static uint8_t GetLowTempCellID() {
+        return Data()[5];
+    }
+
+    // Temperature in °C /100
+    inline static uint8_t GetInternalTemp() {
+        return (Data()[7] << 8) | Data()[6];
+    }
+
+    // Temperature in °C /100
+    inline static void SetHighTemp(uint8_t temp) {
+        memcpy(Data(), &temp, 2);
+    }
+
+    // Temperature in °C /100
+    inline static void SetLowTemp(uint8_t temp) {
+        memcpy(Data() + 2, &temp, 2);
+    }
+
+    inline static void SetHighTempCellID(uint8_t cell) {
+        Data()[4] = cell;
+    }
+
+    inline static void SetLowTempCellID(uint8_t cell) {
+        Data()[5] = cell;
+    }
+
+    // Temperature in °C /100
+    inline static void SetInternalTemp(uint8_t temp) {
+        memcpy(Data() + 6, &temp, 2);
+    }
+)
+
+DATAMODULE(
+
+    BMSSecondaryFrame3,
+    0x6C7,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
     2,
+
+    /*
+     * Bit 0: Thermistor Disconnected
+     * Bit 1: Cell Balancing Status
+     * Bit 2: Reserved
+     * Bit 3: Reserved
+     * Bit 4: Reserved
+     * Bit 5: Reserved
+     * Bit 6: Reserved
+     * Bit 7: Reserved
+     */
+    inline static uint8_t GetStatusFlags() {
+        return Data()[0];
+    }
 
     inline static uint8_t GetNumCells() {
         return Data()[1];
@@ -457,25 +539,11 @@ DATAMODULE(
      * Bit 6: Reserved
      * Bit 7: Reserved
      */
-    inline static uint8_t GetStatusFlags() {
-        return Data()[0];
+    inline static void SetStatusFlags(uint8_t flags) {
+        Data()[0] = flags;
     }
 
     inline static void SetNumCells(uint8_t num) {
         Data()[1] = num;
-    }
-
-    /*
-     * Bit 0: Thermistor Disconnected
-     * Bit 1: Cell Balancing Status
-     * Bit 2: Reserved
-     * Bit 3: Reserved
-     * Bit 4: Reserved
-     * Bit 5: Reserved
-     * Bit 6: Reserved
-     * Bit 7: Reserved
-     */
-    inline static void SetStatusFlags(uint8_t flags) {
-        Data()[0] = flags;
     }
 )
