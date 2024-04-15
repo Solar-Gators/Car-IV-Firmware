@@ -374,6 +374,30 @@ HAL_StatusTypeDef M24C02::ReadBMS(uint8_t *data){
 	}
 }
 
+//Update Functions
+HAL_StatusTypeDef M24C02::ChangeMaxTemp(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.BMS.maxTemp = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
 //Low Level Functions
 
 HAL_StatusTypeDef M24C02::ReadRegister(uint8_t reg, uint8_t *data, int length = 1){

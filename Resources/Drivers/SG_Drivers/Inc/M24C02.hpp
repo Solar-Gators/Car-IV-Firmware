@@ -48,6 +48,7 @@ class M24C02{
         HAL_StatusTypeDef ReadBMS(uint8_t *data);
 
         //Update Functions
+        HAL_StatusTypeDef ChangeMaxTemp(float val);
     
         //Low level functions
 
@@ -64,14 +65,11 @@ class M24C02{
     private:
         I2C_HandleTypeDef* i2cHandle;
 
-
-
-
 };
 
 //Pragma pack prevents padding from being added to the struct. 
 //With padding, additional bytes are added to align the values.
-//Removing padding ensures that only the bytes that are storing data re used.
+//Removing padding ensures that only the bytes that are storing data are used.
 #pragma pack (push, 1)
 
 //Defines a struct to save the data. This struct will be converted to a byte pointer to be saved to the EEPROM.
