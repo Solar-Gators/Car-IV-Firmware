@@ -157,16 +157,35 @@ HAL_StatusTypeDef M24C02::UpdateOne(uint8_t *newVal){
 	}
 }
 
-void M24C02::ShiftData(uint8_t startAddr, uint8_t byteShift){ //Shifts all the data starting at a given address for the given byte shift length. Used to make space to add new member variables in the structs.
+void M24C02::ShiftDataForwards(uint8_t startAddr, uint8_t byteShift){ //Shifts all the data starting at a given address for the given byte shift length. Used to make space to add new member variables in the structs.
 
 	uint8_t *tempData = new uint8_t;
 
-	HAL_StatusTypeDef HALStat = ReadRegister(startAddr, tempData, (sizeof(memory) - startAddr + 1));
+	// Read from start address until end of memory
+	HAL_StatusTypeDef HALStat = ReadRegister(startAddr, tempData, (sizeof(memory) - startAddr));
 
+	// Makes room for the data of size byteShift
 	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, 0x00, byteShift);
+	// Write the rest of the data after the byteShift
 	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + byteShift, tempData, sizeof(tempData));
 
 	delete tempData;
+}
+
+void M24C02::ShiftDataBackwards(uint8_t startAddr, uint8_t byteShift){
+
+	uint8_t *tempData = new uint8_t;
+
+	// Read from after what we want to shift till the end
+	HAL_StatusTypeDef HALStat = ReadRegister(startAddr + byteShift, tempData, (sizeof(memory) - startAddr - byteShift));
+
+	// Write starting at the start address, overwriting the memory at the byteShift
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, tempData, sizeof(tempData));
+	// Write zeros at the end where memory would be
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + sizeof(tempData), 0x00, byteshift);
+
+	delete tempData;
+
 }
 
 //VCU Functions
