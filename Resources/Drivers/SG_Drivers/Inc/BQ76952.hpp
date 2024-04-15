@@ -53,6 +53,7 @@ public:
     //Sleep and Deep Sleep related functions
     HAL_StatusTypeDef EnterDeepSleep();
     HAL_StatusTypeDef ExitDeepSleep();
+    HAL_StatusTypeDef ModifySleepCurrentBoundary(int16_t boundary); // in mA, signed integer but minimum value is zero, max is 32767, startup is 20 mA
 
     HAL_StatusTypeDef Shutdown();
 

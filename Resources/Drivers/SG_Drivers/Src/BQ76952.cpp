@@ -290,6 +290,14 @@ HAL_StatusTypeDef BQ76952::ExitDeepSleep(){
     current_mode_ = BQ_MODE_NORMAL;
 }
 
+HAL_StatusTypeDef BQ76952::ModifySleepCurrentBoundary(int16_t boundary){
+    HAL_StatusTypeDef status = ConfigUpdate(true);
+    if (status != HAL_OK) 
+        return status;
+
+    return DatamemWriteI2(BQ769X2_PWR_SLEEP_CURRENT, boundary);
+}
+
 int16_t BQ76952::GetCellVoltage(uint32_t cell_num) {
     if (cell_num > 16) {
         return -1;
