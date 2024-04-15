@@ -2,13 +2,8 @@
 
 #include "threads.h"
 
-<<<<<<< HEAD
-#include "M24C02.hpp"
-
-=======
 #include "etl/format_spec.h"
 #include "etl/to_string.h"
->>>>>>> e3464fe47eb23fbb7851b3addb7069797a87a54d
 
 extern "C" void CPP_UserSetup(void);
 
@@ -237,16 +232,15 @@ void CPP_UserSetup(void) {
 
     
     // Driver test
-    M24C02 mem_dev;
-    M24C02_INIT(&mem_dev, &hi2c2);
+    M24C02 mem_dev(&hi2c2);
 
     uint8_t write_data[5] = {0x11, 0x22, 0x33, 0x44, 0x55};
-    M24C02_WriteRegister(&mem_dev, 0, write_data, 5);
+    mem_dev.WriteRegister(0, write_data, 5);
 
     HAL_Delay(10);
 
     uint8_t read_data[5];
-    M24C02_ReadRegister(&mem_dev, 0, (uint8_t*)&read_data, 5);
+    mem_dev.ReadRegister(0, (uint8_t*)&read_data, 5);
 
     Logger::LogInfo("Read data: %x", read_data);
 

@@ -134,7 +134,7 @@ HAL_StatusTypeDef M24C02::ReadAll(uint8_t *data){
 
 }
 
-HAL_StatusTypeDef M24C02::UpdateOne(member memb, uint8_t *newVal){
+HAL_StatusTypeDef M24C02::UpdateOne(uint8_t *newVal){
 
 	memory tempStore;
 
@@ -218,6 +218,145 @@ HAL_StatusTypeDef M24C02::ReadVCU(uint8_t *data){
 	catch(...){
 		return HAL_ERROR;
 	}
+}
+
+//Update Functions
+HAL_StatusTypeDef M24C02::ChangePotential(float val){
+	
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.potential = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+	
+}
+
+HAL_StatusTypeDef M24C02::ChangeIntegral(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	} else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.integral = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
+HAL_StatusTypeDef M24C02::ChangeDerivative(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.derivative = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
+HAL_StatusTypeDef M24C02::ChangeOdometer(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.odomter = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
+HAL_StatusTypeDef M24C02::ChangeRegen(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.regen = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
+HAL_StatusTypeDef M24C02::ChangeSpeed(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.speed = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
 }
 
 //BMS Functions

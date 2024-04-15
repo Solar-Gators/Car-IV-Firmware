@@ -8,7 +8,6 @@
 using namespace std;
 
 
-typedef member;
 #define M24C02_I2C_ADDR (0b10100000)
 
 class M24C02{
@@ -22,7 +21,7 @@ class M24C02{
         //High level general functions
 
         HAL_StatusTypeDef ReadAll(uint8_t *data);
-        HAL_StatusTypeDef UpdateOne(member memb, uint8_t *newVal);
+        HAL_StatusTypeDef UpdateOne(uint8_t *newVal);
         void ShiftData(uint8_t startAddr, uint8_t byteShift); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
         
 
@@ -30,9 +29,25 @@ class M24C02{
         //VCU
         HAL_StatusTypeDef ReadVCU(uint8_t *data);
         HAL_StatusTypeDef TickOdometer();
+        
+
+        /*
+        Update functions should be defined as follows
+        HAL_StatusTypeDef Change{name of member}({data type} val)
+        */
+
+        //Update Functions
+        HAL_StatusTypeDef ChangePotential(float val);
+        HAL_StatusTypeDef ChangeIntegral(float val);
+        HAL_StatusTypeDef ChangeDerivative(float val);
+        HAL_StatusTypeDef ChangeOdometer(float val);
+        HAL_StatusTypeDef ChangeRegen(float val);
+        HAL_StatusTypeDef ChangeSpeed(float val);
 
         //BMS
         HAL_StatusTypeDef ReadBMS(uint8_t *data);
+
+        //Update Functions
     
         //Low level functions
 
@@ -67,8 +82,9 @@ class M24C02{
 //ints
 //chars
 //bools
-//If new data is to be added, first run the AddDataTo function with the proper data type and substruct
-//Then add the data to the end of the list for that type of data.
+
+//If new data is to be added, first run the ShiftData function with the proper memory address and substruct
+//Then add the data to the end of the list for the desired type of data.
 struct {
 
     float potential;
@@ -78,25 +94,25 @@ struct {
     float regen;
     float speed;
 
-    int num;
+    //int num;
 
-    char test;
+    //char test;
 
-    bool fun;
+    //bool fun;
     
-} typedef VCU;
+} typedef subVCU;
 
 struct {
 
     float maxTemp;
 
-} typedef BMS;
+} typedef subBMS;
 
 struct{
 
     //DO NOT CHANGE ORDER OF STRUCTS
-    VCU VCU;
-    BMS BMS;
+    subVCU VCU;
+    subBMS BMS;
 
 } typedef memory;
 
