@@ -22,7 +22,8 @@ class M24C02{
 
         HAL_StatusTypeDef ReadAll(uint8_t *data);
         HAL_StatusTypeDef UpdateOne(uint8_t *newVal);
-        void ShiftData(uint8_t startAddr, uint8_t byteShift); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
+        void ShiftDataForwards(uint8_t startAddr, uint8_t byteShift); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
+        void ShiftDataBackwards(uint8_t startAddr, uint8_t byteshift);
         
 
         //High level individual functions
