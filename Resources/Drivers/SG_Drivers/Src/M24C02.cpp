@@ -182,7 +182,7 @@ void M24C02::ShiftDataBackwards(uint8_t startAddr, uint8_t byteShift){
 	// Write starting at the start address, overwriting the memory at the byteShift
 	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, tempData, sizeof(tempData));
 	// Write zeros at the end where memory would be
-	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + sizeof(tempData), 0x00, byteshift);
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + sizeof(tempData), 0x00, byteShift);
 
 	delete tempData;
 
