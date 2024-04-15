@@ -616,3 +616,30 @@ HAL_StatusTypeDef BQ76952::DatamemWriteF4(const uint16_t reg_addr, float value){
 
     return SubcmdWrite(reg_addr, *u32, 4);
 }
+
+HAL_StatusTypeDef BQ76952::UpdateMode(){
+    uint16_t buf;
+    HAL_StatusTypeDef status = DirectReadU2(BQ769X2_CMD_BATTERY_STATUS, &buf);
+    if(status != HAL_OK)
+        return HAL_ERROR;
+
+    if(buf & (1 << 15)){
+        current_mode_ = BQ_MODE_SLEEP;
+        return status;
+    }else if(buf & (1 << 0)){
+        current_mode_ = BQ_MODE_CONFIGUPDATE;
+        return status;
+    }
+
+    HAL_StatusTypeDef status = DirectReadU2(BQ769X2_CMD_CONTROL_STATUS, &buf);
+    if(status != HAL_OK)
+        return HAL_ERROR;
+
+    if(buf & (1 << 2)){
+        current_mode_ = BQ_MODE_DEEPSLEEP;
+        return status;
+    }
+
+    current_mode_ = BQ_MODE_NORMAL;
+    return status;
+}

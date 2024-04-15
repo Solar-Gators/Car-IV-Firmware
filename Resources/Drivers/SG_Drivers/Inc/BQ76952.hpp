@@ -50,7 +50,7 @@ public:
     HAL_StatusTypeDef ClearManualBalancing();
     HAL_StatusTypeDef ModifyMaxBalancedCells(uint8_t amount); // 0-16, does not affect manual balancing, affects how many cells can be automatically balanced at once
 
-    //Sleep and Deep Sleep related functions
+    //Sleep and Deep Sleep / Mode related functions
     HAL_StatusTypeDef EnterDeepSleep();
     HAL_StatusTypeDef ExitDeepSleep();
     HAL_StatusTypeDef ModifySleepCurrentBoundary(int16_t boundary); // in mA, signed integer but minimum value is zero, max is 32767, startup is 20 mA
@@ -93,6 +93,7 @@ private:
     HAL_StatusTypeDef DatamemWriteI1(const uint16_t reg_addr, int8_t value);
     HAL_StatusTypeDef DatamemWriteI2(const uint16_t reg_addr, int16_t value);
     HAL_StatusTypeDef DatamemWriteF4(const uint16_t reg_addr, float value);
+    HAL_StatusTypeDef UpdateMode();
 
     I2C_HandleTypeDef *hi2c_;
 
@@ -111,7 +112,7 @@ private:
     float low_temperature_; // low temperature of temp_registers in  C
     float chip_temperature_; // temperature of chip in C
 
-    uint8_t current_mode_; // whether config update mode is currently enabled
+    uint8_t current_mode_; // current mode BMS chip is in
 
     bool manual_bal_enabled_;
     bool auto_bal_charging_enabled_;
