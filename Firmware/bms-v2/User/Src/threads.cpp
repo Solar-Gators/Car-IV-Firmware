@@ -225,6 +225,8 @@ void ThreadsStart() {
     // Broadcast BMS frames every 2500ms (0.4Hz)
     osTimerStart(broadcast_timer_id, broadcast_period);
 
+    // osEventFlagsSet(error_event, 0x1); // Trigger contactors once
+
     // Initialize regular threads
     thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
     broadcast_thread_id = osThreadNew((osThreadFunc_t)BroadcastThread, NULL, &broadcast_thread_attributes);
@@ -259,9 +261,12 @@ void ReadVoltageThread(void *argument) {
     }
 
     // Reset and update high and low cell voltages from secondary bms
-    high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage();
+    // If cell voltage is not reported, use the configured min and max values
+    high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() == 0 ? 
+                            bms_config.MIN_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetHighCellVoltage();
     high_cell_voltage_id = BMSSecondaryFrame1::Instance().GetHighCellVoltageID();
-    low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage();
+    low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() == 0 ? 
+                            bms_config.MAX_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetLowCellVoltage();
     low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID();
 
     // Voltage sum for computing average
@@ -338,19 +343,16 @@ void ReadCurrentThread(void *argument) {
     // Current_L in adc_vals[0] and Current_H in adc_vals[1]
     static uint16_t adc_vals[2];
 
-    HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_SET);
-
-    // TODO: Find minimum delay to allow values to settle
-    osDelay(5);
-
     osMutexAcquire(adc_mutex_id, osWaitForever);
-    adcs[0].ConversionReadAutoSequence(&adc_vals[0], 2);
-    osMutexRelease(adc_mutex_id);
+    HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
+    SetAmplifierState(true);
 
-    // TODO: Figure out how to manage amplifier state
-    // HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, GPIO_PIN_RESET);
-    // HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
+    osDelay(5); // TODO: Figure out minimum value to allow current value to settle
+
+    adcs[0].ConversionReadAutoSequence(&adc_vals[0], 2);
+
+    HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
+    osMutexRelease(adc_mutex_id);
 
     // Convert ADC values to current
     float current_l = ADCToCurrentL(adc_vals[0]);
@@ -455,12 +457,12 @@ void ReadTemperatureThread(void *argument) {
         // For adc2, read auto-sequence all channels
         osMutexAcquire(adc_mutex_id, osWaitForever);
         adcs[2].ConversionReadAutoSequence(temp_thermistor_vals, 8);
-        osMutexRelease(adc_mutex_id);
         for (int i = 0; i < 8; i++)
             thermistor_vals[MapADCChannelToThermistor(2, i)] = temp_thermistor_vals[i];
 
         // Disable thermistor amplifiers
         SetAmplifierState(false);
+        osMutexRelease(adc_mutex_id);
 
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= 22; i++) {
@@ -559,6 +561,8 @@ void ErrorThread(void* argument) {
     while (1) {
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
+        SetContactorSource(ContactorSource_Type::MAIN);
+
         // Any set bit in fault_flags indicates an error
         if (fault_flags) {
             // Open main contactors
@@ -575,9 +579,9 @@ void ErrorThread(void* argument) {
 
         // If no errors, close contactors
         else if (fault_flags == 0) {
-            SetContactorState(3, true);
-            osDelay(500);
             SetContactorState(4, true);
+            osDelay(500);
+            SetContactorState(3, true);
         }
     }
 }

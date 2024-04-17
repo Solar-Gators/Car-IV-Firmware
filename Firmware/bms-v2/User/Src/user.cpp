@@ -40,13 +40,13 @@ void DefaultOutputs() {
     SetAmplifierState(false);
 
     // Set contactors power source to supplemental battery
-    SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
+    SetContactorSource(ContactorSource_Type::MAIN);
 
     // TODO: Debug only
-    HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, GPIO_PIN_SET);
 }
 
 void CAN_Modules_Init() {
@@ -160,10 +160,10 @@ float ADCToTemp(uint16_t adc_val) {
 /* Converts raw ADC value to current in A for low channel */
 float ADCToCurrentL(uint16_t adc_val) {
     // Constant slope for linear estimator
-    static constexpr float m = 1.0 / 133.13;
+    static constexpr float m = 0.001894;
 
     // Constant offset for linear estimator
-    static constexpr float b = -(31515 / 133.13);
+    static constexpr float b = -62.87;
 
     // Convert ADC value to current
     return (float)adc_val * m + b;
@@ -172,10 +172,10 @@ float ADCToCurrentL(uint16_t adc_val) {
 /* Converts raw ADC value to current in A for high channel */
 float ADCToCurrentH(uint16_t adc_val) {
     // Constant slope for linear estimator
-    static constexpr float m = 1.0 / 526.5;
+    static constexpr float m = 0.007609;
 
     // Constant offset for linear estimator
-    static constexpr float b = -(31509 / 526.5);
+    static constexpr float b = -252.4;
 
     // Convert ADC value to current
     return (float)adc_val * m + b;
