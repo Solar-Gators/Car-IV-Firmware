@@ -1,9 +1,9 @@
 #include "sg_can.hpp"
 
 /* Only STM32L4 supported for now */
-//#ifndef STM32L496xx
-//#error This driver is only compatible with STM32L496xx devices
-//#endif
+// #ifndef STM32L496xx
+// #error This driver is only compatible with STM32L496xx devices
+// #endif
 
 /* Must be running FreeRTOS */
 #if (USE_FREERTOS != 1)
@@ -362,7 +362,7 @@ HAL_StatusTypeDef CANController::Start() {
         for (auto device : devices_)
             HAL_CAN_ConfigFilter(device->hcan_, &filter);
 
-    // Start all devices
+    // // Start all devices
     for (auto device : devices_)
         if (device->Start() != HAL_OK)
             return HAL_ERROR;

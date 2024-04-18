@@ -54,12 +54,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -74,7 +69,7 @@ static void MX_TIM2_Init(void);
 static void MX_DAC_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_IWDG_Init(void);
-void StartDefaultTask(void *argument);
+
 
 /* USER CODE BEGIN PFP */
 void CPP_UserSetup(void);
@@ -108,7 +103,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
- HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 1U, 0U);
+   HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 1U, 0U);
   __enable_irq();
   __set_BASEPRI(6);
   /* USER CODE END SysInit */
@@ -127,13 +122,13 @@ int main(void)
 //  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 //  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, sine_vals, 100, DAC_ALIGN_12B_R);
 
+  HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 15U, 0U);
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
+ 
   CPP_UserSetup();
 
-  HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 15U, 0U);
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -152,7 +147,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -606,12 +601,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-// {
-//   // Call into C++ Domain
-//   // CPP_HandleGPIOInterrupt(GPIO_Pin);
-// }
-
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -621,18 +610,18 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-	HAL_GPIO_TogglePin(STM_OK_GPIO_Port, STM_OK_Pin);
-	// HAL_GPIO_TogglePin(DAC_OUT1_GPIO_Port, DAC_OUT1_Pin);
-	osDelay(500);
-  }
-  /* USER CODE END 5 */
-}
+// void StartDefaultTask(void *argument)
+// {
+//   /* USER CODE BEGIN 5 */
+//   /* Infinite loop */
+//   for(;;)
+//   {
+// 	HAL_GPIO_TogglePin(STM_OK_GPIO_Port, STM_OK_Pin);
+// 	// HAL_GPIO_TogglePin(DAC_OUT1_GPIO_Port, DAC_OUT1_Pin);
+// 	osDelay(500);
+//   }
+//   /* USER CODE END 5 */
+// }
 
 /**
   * @brief  Period elapsed callback in non blocking mode

@@ -41,6 +41,6 @@
         "ff.h": "c",
         "ffconf.h": "c"
     },
-    "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
+    "cmake.sourceDirectory": "C:/Users/antho/Car-IV-Firmware/Firmware/steering-dev",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
 }

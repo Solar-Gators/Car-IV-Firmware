@@ -1,9 +1,9 @@
 #include "sg_can.hpp"
 
 /* Only STM32L4 supported for now */
-//#ifndef STM32L496xx
-//#error This driver is only compatible with STM32L496xx devices
-//#endif
+// #ifndef STM32L496xx
+// #error This driver is only compatible with STM32L496xx devices
+// #endif
 
 /* Must be running FreeRTOS */
 #if (USE_FREERTOS != 1)
