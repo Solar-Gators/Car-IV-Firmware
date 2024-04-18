@@ -8,23 +8,31 @@ HAL_StatusTypeDef INA226::Init(I2C_HandleTypeDef *hi2c){
 
 HAL_StatusTypeDef INA226::GetShuntVoltage(){
     uint8_t buff[2];
-    uint16_t val;
+    int16_t val;
     HAL_StatusTypeDef status;
 
     status = ReadWordReg(INA_SHUNT_VOLTAGE, buff);
     if(status != HAL_OK) return status;
 
-    val = (buff[1] << 8) | buff[0];
+    val = uint16_t(buff[0] << 8) | buff[1];
 
-    shunt_voltage_ = val * 2.5 / 1e6;
+    shunt_voltage_ = val * 2.5 * 0.000001;
+
     return HAL_OK;
 }
 
 HAL_StatusTypeDef INA226::GetCurrent(){
-    HAL_StatusTypeDef status = GetShuntVoltage();
+    HAL_StatusTypeDef status;
+    uint8_t buff[2];
+    int16_t val;
+
+    status = ReadWordReg(INA_CURRENT, buff);
     if(status != HAL_OK) return status;
 
-    current_ = shunt_voltage_ / shunt_resistance_;
+    val = uint16_t(buff[0] << 8) | buff[1];
+
+    current_ = val * current_LSB_;
+
     return status;
 }
 
@@ -36,15 +44,39 @@ HAL_StatusTypeDef INA226::GetBusVoltage(){
     status = ReadWordReg(INA_BUS_VOLTAGE, buff);
     if(status != HAL_OK) return status;
 
-    val = (buff[1] << 8) | buff[0];
+    val = uint16_t(buff[0] << 8) | buff[1];
 
-    shunt_voltage_ = val * 2.5 / 1e6;
+    bus_voltage_ = val * 1.25 * 0.001;
     return HAL_OK;
 }
 
-HAL_StatusTypeDef INA226::SetShuntResistance(float ohms){
-    shunt_resistance_ = ohms;
+HAL_StatusTypeDef INA226::GetPower(){
+    uint8_t buff[2];
+    uint16_t val;
+    HAL_StatusTypeDef status;
+
+    status = ReadWordReg(INA_POWER, buff);
+    if(status != HAL_OK) return status;
+
+    val = uint16_t(buff[0] << 8) | buff[1];
+
+    power_ = val * power_LSB_;
     return HAL_OK;
+}
+
+HAL_StatusTypeDef INA226::SetCalibrationReg(float ohms, float maxExpectedCurrent){
+    HAL_StatusTypeDef status;
+    shunt_resistance_ = ohms;
+
+    current_LSB_ = maxExpectedCurrent / 32768.0F; // 2^15
+
+    power_LSB_ = current_LSB_ * 25;
+
+    uint16_t CAL = 0.00512 / (current_LSB_ * ohms);
+
+    status = WriteWordReg(INA_CALIBRATION, CAL);
+
+    return status;
 }
 
 HAL_StatusTypeDef INA226::Reset(){

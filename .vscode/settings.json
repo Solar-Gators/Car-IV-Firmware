@@ -39,7 +39,8 @@
         "diskio.h": "c",
         "ff_gen_drv.h": "c",
         "ff.h": "c",
-        "ffconf.h": "c"
+        "ffconf.h": "c",
+        "memory": "cpp"
     },
     "cmake.sourceDirectory": "C:/Users/antho/Car-IV-Firmware/Firmware/steering-dev",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",

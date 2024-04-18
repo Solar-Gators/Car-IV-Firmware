@@ -23,6 +23,7 @@ class BQ76952 {
 public:
     HAL_StatusTypeDef Init(I2C_HandleTypeDef *hi2c);
     HAL_StatusTypeDef ConfigUpdate(bool config_update); // TODO
+    HAL_StatusTypeDef ConfigureVoltageRegs(); // TODO
     HAL_StatusTypeDef ReadVoltages();       // TODO: Add support for connected cells
     HAL_StatusTypeDef ReadSafetyFaults();
     HAL_StatusTypeDef ReadCurrent();
@@ -38,6 +39,7 @@ public:
     int16_t GetLowCellVoltage();
     bool GetConfigUpdateStatus();
 private:
+    constexpr uint8_t CELL_NO_TO_ADDR(uint8_t cell_no) { return BQ769X2_CMD_VOLTAGE_CELL_1 + ((cell_no-1)*2); }
     HAL_StatusTypeDef WriteBytes(const uint8_t reg_addr, const uint8_t *data, const size_t num_bytes);
     HAL_StatusTypeDef ReadBytes(uint8_t reg_addr, uint8_t *data, const size_t num_bytes);
     HAL_StatusTypeDef DirectReadU2(const uint8_t reg_addr, uint16_t *value); // TODO

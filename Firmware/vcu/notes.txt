@@ -1,0 +1,10 @@
+Features to implement:
+-SD card logging (BMS, MPPT, MC, throttle, brake)
+-Kill switch persistent state
+
+VCU Errata:
+-No SD card detect
+    -Detect presence of SD card over SPI instead
+-Wrong FTDI IC
+    -Switch to FT232 on next iteration
+-Labels on big connectors upside down
