@@ -4,32 +4,6 @@
 //High level functions
 #include "M24C02.hpp"
 
-template <typename ObjType, typename member>
-void saveValToMemb(uint8_t *data, ObjType* objPtr, member memb){
-	type = typeid(objPtr*->memb)
-	switch(type){
-		case float:
-			float tempFloat;
-			FloatToBytes(tempFloat, data);
-			objPtr*->memb = tempFloat;
-		break;
-
-		case int:
-			int tempInt;
-			IntToBytes(tempInt, data);
-			objPtr*->memb = tempInt;
-		break;
-
-		case char:
-			objPtr*->memb = data;
-		break;
-
-		case bool:
-			objPtr*->memb = data;
-		break;
-	}
-}
-
 union FourBytes{
 	float f;
 	int i;

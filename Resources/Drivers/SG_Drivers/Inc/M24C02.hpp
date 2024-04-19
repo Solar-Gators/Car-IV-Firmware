@@ -21,7 +21,6 @@ class M24C02{
         //High level general functions
 
         HAL_StatusTypeDef ReadAll(uint8_t *data);
-        HAL_StatusTypeDef UpdateOne(uint8_t *newVal);
         void ShiftDataForwards(uint8_t startAddr, uint8_t byteShift); //Creates a space for new data to be added to either sub-struct of the memory struct. Pass the type (f,i,c,b) and the sub-struct (v,b).
         void ShiftDataBackwards(uint8_t startAddr, uint8_t byteshift);
         
@@ -84,7 +83,7 @@ class M24C02{
 
 //If new data is to be added, first run the ShiftData function with the proper memory address and substruct
 //Then add the data to the end of the list for the desired type of data.
-struct {
+struct { //VCU Data
 
     float potential;
     float integral;
@@ -93,15 +92,15 @@ struct {
     float regen;
     float speed;
 
-    //int num;
+    //int integer;
 
-    //char test;
+    //char character;
 
-    //bool fun;
+    //bool boolean;
     
 } typedef subVCU;
 
-struct {
+struct { //BMS Data
 
     float maxTemp;
 
