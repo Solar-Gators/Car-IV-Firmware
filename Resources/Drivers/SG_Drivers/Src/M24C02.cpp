@@ -108,28 +108,18 @@ HAL_StatusTypeDef M24C02::ReadAll(uint8_t *data){
 
 }
 
-HAL_StatusTypeDef M24C02::UpdateOne(uint8_t *newVal){
+HAL_StatusTypeDef M24C02::UpdateAll(void* struc){//
 
-	memory tempStore;
+	uint8_t *tempData = new uint8_t;
 
-	uint8_t *structBytes = new uint8_t;
-	float tempFloat;
-	int tempInt;
+	StructToBytes(struct, tempData);
+	WriteRegister(0x00, tempData, sizeof(struc))
 
-	try{
 
-		ReadRegister(0x00, structBytes, sizeof(storage));
 
-		BytesToStruct(tempStore, structBytes);
-
-		delete structBytes;
-
-	} catch(...){
-
-		delete structBytes;
-		return HAL_ERROR;
-	}
+	delete tempData;
 }
+
 
 void M24C02::ShiftDataForwards(uint8_t startAddr, uint8_t byteShift){ //Shifts all the data starting at a given address for the given byte shift length. Used to make space to add new member variables in the structs.
 
