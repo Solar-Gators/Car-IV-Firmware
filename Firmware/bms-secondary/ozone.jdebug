@@ -4,9 +4,9 @@
 *                         www.segger.com                             *
 **********************************************************************
 
-File          : C:/Dev/Car-IV-Firmware/Firmware/bms-prototype2/ozone.jdebug
-Created       : 20 Oct 2023 15:43
-Ozone Version : V3.30b
+File          : C:/Dev/Car-IV-Firmware/Firmware/testboard-base/ozone.jdebug
+Created       : 21 Nov 2023 11:52
+Ozone Version : V3.30a
 */
 
 /*********************************************************************
@@ -22,17 +22,19 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
-  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/bms-prototype2", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/bms-prototype2", "$(ProjectDir)");
-  Project.SetDevice ("STM32L476RG");
-  Project.SetHostIF ("USB", "770506940");
+  Project.SetDevice ("STM32L496RG");
+  Project.SetHostIF ("USB", "801022976");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
+  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/testboard-base", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/testboard-base", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
   //
-  File.Open ("$(ProjectDir)/build/bms-prototype2.elf");
+  Edit.SysVar (VAR_RTT_ENABLED, 1);
+  Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
+  File.Open ("$(ProjectDir)/build/testboard-base.elf");
 }
 
 /*********************************************************************

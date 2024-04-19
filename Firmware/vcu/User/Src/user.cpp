@@ -233,6 +233,8 @@ void CPP_UserSetup(void) {
     // Read initial kill switch state
     if (kill_sw.ReadPin() == GPIO_PIN_SET)
         kill_state = false;
+    VCUFrame0::Instance().SetKillStatus(kill_state);
+    CANController::Send(&VCUFrame0::Instance());
 
     // Setup kill switch callbacks
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);

@@ -457,12 +457,12 @@ DATAMODULE(
     8,
 
     // Temperature in °C /100
-    inline static uint8_t GetHighTemp() {
+    inline static uint16_t GetHighTemp() {
         return (Data()[1] << 8) | Data()[0];
     }
 
     // Temperature in °C /100
-    inline static uint8_t GetLowTemp() {
+    inline static uint16_t GetLowTemp() {
         return (Data()[3] << 8) | Data()[2];
     }
 
@@ -475,17 +475,17 @@ DATAMODULE(
     }
 
     // Temperature in °C /100
-    inline static uint8_t GetInternalTemp() {
+    inline static uint16_t GetInternalTemp() {
         return (Data()[7] << 8) | Data()[6];
     }
 
     // Temperature in °C /100
-    inline static void SetHighTemp(uint8_t temp) {
+    inline static void SetHighTemp(uint16_t temp) {
         memcpy(Data(), &temp, 2);
     }
 
     // Temperature in °C /100
-    inline static void SetLowTemp(uint8_t temp) {
+    inline static void SetLowTemp(uint16_t temp) {
         memcpy(Data() + 2, &temp, 2);
     }
 
@@ -498,7 +498,7 @@ DATAMODULE(
     }
 
     // Temperature in °C /100
-    inline static void SetInternalTemp(uint8_t temp) {
+    inline static void SetInternalTemp(uint16_t temp) {
         memcpy(Data() + 6, &temp, 2);
     }
 )

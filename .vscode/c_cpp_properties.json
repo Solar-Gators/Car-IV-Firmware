@@ -54,22 +54,22 @@
     },
     "configurations": [
         {
-            "name": "bms-prototype2",
+            "name": "bms-primary",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/bms-prototype2/Core/Inc",
-                "Firmware/bms-prototype2/User/Inc",
-                "${stm32l4_includes}"
+                "Firmware/bms-primary/Core/Inc",     // Project dependent
+                "Firmware/bms-primary/User/Inc",     // Project dependent
+                "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {
                 "path": [
-                    "${stm32l4_sources}"
+                    "${stm32l4_sources}"            // Project dependent
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
-                "STM32L476xx",
+                "STM32L496xx",                          // Project dependent
                 "USE_HAL_DRIVER"
             ],
             "compilerArgs": [
@@ -84,12 +84,12 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "bms-v2",                   // Project dependent
+            "name": "bms-secondary",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/bms-v2/Core/Inc",     // Project dependent
-                "Firmware/bms-v2/User/Inc",     // Project dependent
+                "Firmware/bms-secondary/Core/Inc",     // Project dependent
+                "Firmware/bms-secondary/User/Inc",     // Project dependent
                 "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {

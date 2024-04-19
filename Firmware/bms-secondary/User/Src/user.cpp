@@ -93,7 +93,7 @@ void CPP_UserSetup(void) {
 
     DefaultOutputs();
     
-    // CAN_Modules_Init();
+    CAN_Modules_Init();
 
     ADC_Modules_Init();
 

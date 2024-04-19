@@ -53,22 +53,13 @@
 /* Global variables */
 static const uint8_t num_total_cells = bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY;
 
-static uint8_t fault_flags = 0;
-static uint8_t status_flags = 0;
-
 static unsigned int voltage_thread_counter = 0;
-static uint16_t cell_voltages[32];  // Array to store cell voltages in mV
-static uint32_t local_pack_voltage; // Voltage of pack voltage measured by this BMS in mV
-static uint32_t total_pack_voltage; // Voltage of pack voltage measured by all BMS in mV
-static uint16_t high_cell_voltage = bms_config.MIN_CELL_VOLTAGE;
-static uint16_t low_cell_voltage = bms_config.MAX_CELL_VOLTAGE;
+static int16_t cell_voltages[32];  // Array to store cell voltages in mV
+static int16_t high_cell_voltage = INT16_MIN;
+static int16_t low_cell_voltage = INT16_MAX;
 static uint8_t high_cell_voltage_id = 0;
 static uint8_t low_cell_voltage_id = 0;
 static uint16_t avg_cell_voltage;
-
-static unsigned int current_thread_counter = 0;
-static float pack_current;
-static uint16_t integral_current;
 
 static uint16_t high_temp;
 static uint16_t low_temp;
@@ -92,18 +83,6 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                             NULL, 
                                             &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 50;
-osTimerAttr_t current_periodic_timer_attr = {
-    .name = "Read Current Thread",
-    .attr_bits = 0,
-    .cb_mem = NULL,
-    .cb_size = 0,
-};
-osTimerId_t current_timer_id = osTimerNew((osThreadFunc_t)ReadCurrentThread, 
-                                            osTimerPeriodic, 
-                                            NULL, 
-                                            &current_periodic_timer_attr);
-
 static const uint32_t read_temperature_period = 1000;
 osTimerAttr_t temperature_periodic_timer_attr = {
     .name = "Read Temperature Periodic",
@@ -116,7 +95,7 @@ osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePer
                                             NULL, 
                                             &temperature_periodic_timer_attr);
 
-static const uint32_t broadcast_period = 100;
+static const uint32_t broadcast_period = 1000;
 osTimerAttr_t broadcast_periodic_timer_attr = {
     .name = "Broadcast Thread",
     .attr_bits = 0,
@@ -144,36 +123,6 @@ const osThreadAttr_t thermistor_thread_attributes = {
     .reserved = 0,
 };
 
-osThreadId_t broadcast_thread_id;
-uint32_t broadcast_thread_buffer[128];
-StaticTask_t broadcast_thread_control_block;
-const osThreadAttr_t broadcast_thread_attributes = {
-    .name = "Broadcast Thread",
-    .attr_bits = osThreadDetached,
-    .cb_mem = &broadcast_thread_control_block,
-    .cb_size = sizeof(broadcast_thread_control_block),
-    .stack_mem = &broadcast_thread_buffer[0],
-    .stack_size = sizeof(broadcast_thread_buffer),
-    .priority = (osPriority_t) osPriorityNormal,
-    .tz_module = 0,
-    .reserved = 0,
-};
-
-osThreadId_t error_thread_id;
-uint32_t error_thread_buffer[64];
-StaticTask_t error_thread_control_block;
-const osThreadAttr_t error_thread_attributes = {
-    .name = "Error Thread",
-    .attr_bits = osThreadDetached,
-    .cb_mem = &error_thread_control_block,
-    .cb_size = sizeof(error_thread_control_block),
-    .stack_mem = &error_thread_buffer[0],
-    .stack_size = sizeof(error_thread_buffer),
-    .priority = (osPriority_t) osPriorityHigh,
-    .tz_module = 0,
-    .reserved = 0,
-};
-
 /* Mutexes */
 StaticSemaphore_t adc_mutex_cb;
 const osMutexAttr_t adc_mutex_attr = {
@@ -193,15 +142,6 @@ const osMutexAttr_t logger_mutex_attr = {
 };
 osMutexId_t logger_mutex_id = osMutexNew(NULL);
 
-StaticSemaphore_t current_integral_mutex_cb;
-const osMutexAttr_t current_integral_mutex_attr = {
-    .name = "Current Integral Mutex",
-    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
-    .cb_mem = &current_integral_mutex_cb,
-    .cb_size = sizeof(current_integral_mutex_cb),
-};
-osMutexId_t current_integral_mutex_id = osMutexNew(NULL);
-
 /* Event flag to trigger read_thermistor_thread */
 osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
 
@@ -216,9 +156,6 @@ void ThreadsStart() {
     // Toggle read voltage thread every 25ms (40Hz)
     osTimerStart(voltage_timer_id, read_voltage_period);
 
-    // Toggle read current thread every 8ms (125Hz)
-    osTimerStart(current_timer_id, read_current_period);
-
     // Toggle read temperature thread every 1000ms (1Hz)
     osTimerStart(temperature_timer_id, read_temperature_period);
 
@@ -229,8 +166,6 @@ void ThreadsStart() {
 
     // Initialize regular threads
     thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
-    broadcast_thread_id = osThreadNew((osThreadFunc_t)BroadcastThread, NULL, &broadcast_thread_attributes);
-    error_thread_id = osThreadNew((osThreadFunc_t)ErrorThread, NULL, &error_thread_attributes);
 }
 
 /* 
@@ -239,44 +174,16 @@ void ThreadsStart() {
 void ReadVoltageThread(void *argument) {
     voltage_thread_counter++;
 
-    // Check for overvoltage and undervoltage conditions in secondary bms
-    if (BMSSecondaryFrame0::Instance().GetHighCellVoltage() != 0 &&
-        BMSSecondaryFrame0::Instance().GetHighCellVoltage() > bms_config.MAX_CELL_VOLTAGE) {
-        Logger::LogError("High cell voltage on cell %d: %dmV", 
-                            BMSSecondaryFrame1::Instance().GetHighCellVoltageID(), 
-                            BMSSecondaryFrame0::Instance().GetHighCellVoltage());
-
-        // Set high cell voltage error bit
-        // This error can only be cleared by a power cycle
-    }
-
-    if (BMSSecondaryFrame0::Instance().GetLowCellVoltage() != 0 &&
-        BMSSecondaryFrame0::Instance().GetLowCellVoltage() < bms_config.MIN_CELL_VOLTAGE) {
-        Logger::LogError("Low cell voltage on cell %d: %dmV", 
-                            BMSSecondaryFrame1::Instance().GetLowCellVoltageID(), 
-                            BMSSecondaryFrame0::Instance().GetLowCellVoltage());
-
-        // Set low cell voltage error bit
-        // This error can only be cleared by a power cycle
-    }
-
-    // Reset and update high and low cell voltages from secondary bms
-    // If cell voltage is not reported, use the configured min and max values
-    high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() == 0 ? 
-                            bms_config.MIN_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetHighCellVoltage();
-    high_cell_voltage_id = BMSSecondaryFrame1::Instance().GetHighCellVoltageID();
-    low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() == 0 ? 
-                            bms_config.MAX_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetLowCellVoltage();
-    low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID();
-
-    // Voltage sum for computing average
-    // Value is multiplied by 10 because subpack voltage is in 0.01V units, while everything else is in mV
-    uint32_t sum_cell_voltage = BMSSecondaryFrame0::Instance().GetSubpackVoltage() * 10;
+    high_cell_voltage = INT16_MIN;
+    low_cell_voltage = INT16_MAX;
+    high_cell_voltage_id = 0;
+    low_cell_voltage_id = 0;
+    uint32_t sum_cell_voltage = 0;
 
     // Update cell voltage values in bms
     bms.ReadVoltages();
 
-    for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY; i++) {
+    for (int i = 0; i < bms_config.NUM_CELLS_SECONDARY; i++) {
         // Populate cell_voltages array
         // Note: This step is unecessary, all the voltage values are stored in the bms
         // driver already. If getting values from secondary bms, putting everything in
@@ -300,7 +207,7 @@ void ReadVoltageThread(void *argument) {
     }
 
     // Compute average cell voltage
-    avg_cell_voltage = sum_cell_voltage / (bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY);
+    avg_cell_voltage = sum_cell_voltage / bms_config.NUM_CELLS_SECONDARY;
 
     // Check for overvoltage and undervoltage conditions on local bms
     if (high_cell_voltage > bms_config.MAX_CELL_VOLTAGE) {
@@ -317,6 +224,18 @@ void ReadVoltageThread(void *argument) {
         // This error can only be cleared by a power cycle
     }
 
+    // Populate voltage CANFrames
+    BMSSecondaryFrame0::Instance().SetSubpackVoltage(sum_cell_voltage / 10); // Units in 0.01V
+    BMSSecondaryFrame0::Instance().SetAverageVoltage(avg_cell_voltage);
+    BMSSecondaryFrame0::Instance().SetHighVoltage(high_cell_voltage);
+    BMSSecondaryFrame0::Instance().SetLowVoltage(low_cell_voltage);
+    BMSSecondaryFrame1::Instance().SetHighCellVoltageID(high_cell_voltage_id);
+    BMSSecondaryFrame1::Instance().SetLowCellVoltageID(low_cell_voltage_id);
+    BMSSecondaryFrame1::Instance().SetHighCellVoltageID(high_cell_voltage_id);
+    BMSSecondaryFrame1::Instance().SetLowCellVoltageID(low_cell_voltage_id);
+    CANController::Send(&BMSSecondaryFrame0::Instance());
+    CANController::Send(&BMSSecondaryFrame1::Instance());
+
     // If configured, log the voltages every 2.5 seconds
     if (bms_config.LOG_VOLTAGE) {
         static int counter = 0;
@@ -329,83 +248,6 @@ void ReadVoltageThread(void *argument) {
             Logger::LogInfo("Average Cell Voltage: %d", avg_cell_voltage);
             Logger::LogInfo("High Cell Voltage: %d on cell %d", high_cell_voltage, high_cell_voltage_id);
             Logger::LogInfo("Low Cell Voltage: %d on cell %d", low_cell_voltage, low_cell_voltage_id);
-        }
-    }
-}
-
-/* 
- * Periodic thread function to read the current of each cell in the battery
- */
-void ReadCurrentThread(void *argument) {
-    current_thread_counter++;
-
-    // Read current H and L from adc0
-    // Current_L in adc_vals[0] and Current_H in adc_vals[1]
-    static uint16_t adc_vals[2];
-
-    osMutexAcquire(adc_mutex_id, osWaitForever);
-    HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
-    SetAmplifierState(true);
-
-    osDelay(5); // TODO: Figure out minimum value to allow current value to settle
-
-    adcs[0].ConversionReadAutoSequence(&adc_vals[0], 2);
-
-    HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
-    osMutexRelease(adc_mutex_id);
-
-    // Convert ADC values to current
-    float current_l = ADCToCurrentL(adc_vals[0]);
-    float current_h = ADCToCurrentH(adc_vals[1]);
-
-    // If current is <50A, use current_l, else use current_h to update global current
-    pack_current = current_l < 50.0 ? current_l : current_h;
-
-    // Check if discharge current exceeded
-    if (pack_current > bms_config.MAX_DISCHARGE_CURRENT) {
-        // Set current error bit
-        // This error can only be cleared by a power cycle
-        // TODO:
-
-        etl::string<5> float_buf;
-        etl::to_string(pack_current, float_buf, format_float, false);
-        osMutexAcquire(logger_mutex_id, osWaitForever);
-        Logger::LogError("Discharge current limit exceeded: %sA", float_buf.c_str());
-        osMutexRelease(logger_mutex_id);
-    }
-
-    // Check if charge current exceeded
-    if (current_l < -bms_config.MAX_CHARGE_CURRENT) {
-        // Set current error bit
-        // This error can only be cleared by a power cycle
-        // TODO:
-
-        etl::string<5> float_buf;
-        etl::to_string(pack_current, float_buf, format_float, false);
-        osMutexAcquire(logger_mutex_id, osWaitForever);
-        Logger::LogError("Charge current limit exceeded: %sA", float_buf.c_str());
-        osMutexRelease(logger_mutex_id);
-    }
-
-    // Update running total current integral
-    // Convert current to μA, integrate for 0.08s
-    if (osMutexAcquire(current_integral_mutex_id, 4) == osOK) {
-        integral_current += static_cast<uint16_t>(pack_current * 0.45);
-        osMutexRelease(current_integral_mutex_id);
-    }
-
-    // If configured, log current every 2.5 seconds
-    if (bms_config.LOG_CURRENT) {
-        static int counter = 0;
-        static constexpr int log_interval = 2500 / read_current_period;
-        if (counter++ % log_interval == 0) {
-            etl::string<5> float_buf;
-            osMutexAcquire(logger_mutex_id, osWaitForever);
-            etl::to_string(current_l, float_buf, format_float, false);
-            Logger::LogInfo("Current L: %s A", float_buf.c_str());
-            etl::to_string(current_h, float_buf, format_float, false);
-            Logger::LogInfo("Current H: %s A", float_buf.c_str());
-            osMutexRelease(logger_mutex_id);
         }
     }
 }
@@ -465,20 +307,38 @@ void ReadTemperatureThread(void *argument) {
         osMutexRelease(adc_mutex_id);
 
         // Convert raw ADC values to temperature and find min and max temp
-        for (int i = 1; i <= 22; i++) {
+        for (int i = 1; i <= bms_config.NUM_THERMISTORS_SECONDARY; i++) {
             temps[i] = ADCToTemp(thermistor_vals[i]);
 
-            if (thermistor_vals[i] > thermistor_vals[max_index]) {
+            // Thermistor unpopulated (or its just really cold)
+            bool thermistor_unpopulated = false;
+            if (temps[i] < 16.5)
+                thermistor_unpopulated = true;
+            if (thermistor_unpopulated) {
+                Logger::LogWarning("Thermistor %d unpopulated", i);
+                uint8_t status = BMSSecondaryFrame3::Instance().GetStatusFlags();
+                status |= 0x1;
+                BMSSecondaryFrame3::Instance().SetStatusFlags(status);
+                CANController::Send(&BMSSecondaryFrame3::Instance());
+            }
+            // Thermistor is here
+            else {
+                if (thermistor_vals[i] > thermistor_vals[max_index])
                 max_index = i;
-            }
 
-            if (thermistor_vals[i] < thermistor_vals[min_index]) {
-                min_index = i;
+                if (thermistor_vals[i] < thermistor_vals[min_index])
+                    min_index = i;
             }
+           
         }
 
-        // Check for overtemperature conditions
-        // TODO: Implement this
+        // Capture temperature data
+        BMSSecondaryFrame2::Instance().SetHighTemp(high_temp);
+        BMSSecondaryFrame2::Instance().SetLowTemp(low_temp);
+        BMSSecondaryFrame2::Instance().SetHighTempCellID(high_temp_id);
+        BMSSecondaryFrame2::Instance().SetLowTempCellID(low_temp_id);
+        BMSSecondaryFrame2::Instance().SetInternalTemp(internal_temp);
+        CANController::Send(&BMSSecondaryFrame2::Instance());
 
         // Log the temperatures every 2.5 seconds if configured
         if (bms_config.LOG_TEMPERATURE) {
@@ -502,114 +362,7 @@ void ReadTemperatureThread(void *argument) {
 }
 
 void BroadcastPeriodic(void *argument) {
-    // Request to broadcast BMS frame
-    osEventFlagsSet(broadcast_event, 0x1);
-}
-
-void BroadcastThread(void* argument) {
-    static unsigned int broadcast_thread_counter = 0;
-
-    while (1) {
-        osEventFlagsWait(broadcast_event, 0x1, osFlagsWaitAny, osWaitForever);
-
-        broadcast_thread_counter++;
-
-        // Capture voltage data
-        BMSFrame0::Instance().SetPackVoltage(total_pack_voltage);
-        BMSFrame0::Instance().SetAvgCellVoltage(avg_cell_voltage);
-        BMSFrame0::Instance().SetHighCellVoltage(high_cell_voltage);
-        BMSFrame0::Instance().SetLowCellVoltage(low_cell_voltage);
-        BMSFrame1::Instance().SetHighCellVoltageID(high_cell_voltage_id);
-        BMSFrame1::Instance().SetLowCellVoltageID(low_cell_voltage_id);
-
-        // Capture current data
-        BMSFrame1::Instance().SetPackCurrent(pack_current);
-
-        // Capture then reset current integral
-        osMutexAcquire(current_integral_mutex_id, osWaitForever);
-        BMSFrame1::Instance().SetIntegralCurrent(integral_current);
-        integral_current = 0;
-        osMutexRelease(current_integral_mutex_id);
-
-        // Calculate power
-        uint16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 10;
-        BMSFrame1::Instance().SetAveragePower(avg_power);
-
-        // Capture temperature data
-        BMSFrame2::Instance().SetHighTemp(high_temp);
-        BMSFrame2::Instance().SetLowTemp(low_temp);
-        BMSFrame2::Instance().SetHighTempCellID(high_temp_id);
-        BMSFrame2::Instance().SetLowTempCellID(low_temp_id);
-        BMSFrame2::Instance().SetInternalTemp(internal_temp);
-
-        // Send BMSFrame0, BMSFrame1, BMSFrame2
-        CANController::Send(&BMSFrame0::Instance());
-        CANController::Send(&BMSFrame1::Instance());
-        CANController::Send(&BMSFrame2::Instance());
-
-        // Send BMSFrame3 at 1Hz (every 10th broadcast)
-        if (broadcast_thread_counter % 10 == 0) {
-            BMSFrame3::Instance().SetFaultFlags(fault_flags);
-            BMSFrame3::Instance().SetStatusFlags(status_flags);
-            BMSFrame3::Instance().SetPackSoC(0);  // TODO: Implement SoC
-            CANController::Send(&BMSFrame3::Instance());
-        }
-    }
-}
-
-void ErrorThread(void* argument) {
-    while (1) {
-        osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
-
-        SetContactorSource(ContactorSource_Type::MAIN);
-
-        // Any set bit in fault_flags indicates an error
-        if (fault_flags) {
-            // Open main contactors
-            SetContactorState(3, false);
-            SetContactorState(4, false);
-
-            // Update BMSFrame3 with errors
-            BMSFrame3::Instance().SetFaultFlags(fault_flags);
-            BMSFrame3::Instance().SetStatusFlags(status_flags);
-
-            // Send BMSFrame3
-            CANController::Send(&BMSFrame3::Instance());
-        }
-
-        // If no errors, close contactors
-        else if (fault_flags == 0) {
-            SetContactorState(4, true);
-            osDelay(500);
-            SetContactorState(3, true);
-        }
-    }
-}
-
-void SecondaryFrame0Callback(uint8_t *data) {
-    // Update total pack voltage
-    total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage();
-
-    // Update average cell voltage
-    // TODO: Fix this
-    uint32_t sum_cell_voltages = avg_cell_voltage * num_total_cells;
-
-    // Update high and low cell voltages
-    // Error checking is done in ReadVoltageThread
-    high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() > high_cell_voltage ? 
-                            BMSSecondaryFrame0::Instance().GetHighCellVoltage() : high_cell_voltage;
-    low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() < low_cell_voltage ? 
-                            BMSSecondaryFrame0::Instance().GetLowCellVoltage() : low_cell_voltage;
-}
-
-void VCUFrameCallback(uint8_t *data) {
-    // Update kill flag status
-    if (VCUFrame0::Instance().GetKillStatus() == 0) {
-        fault_flags &= ~(1 << 7);
-    } else {
-        fault_flags |= (1 << 7);
-    }
-
-    // Trigger error thread
-    osEventFlagsSet(error_event, 0x1);
+    // Broadcast status and number of cells
+    // Information in frame is updated elsewhere
+    CANController::Send(&BMSFrame3::Instance());
 }

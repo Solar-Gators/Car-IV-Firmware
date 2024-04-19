@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file      startup_stm32l476xx.s
+  * @file      startup_stm32l496xx.s
   * @author    MCD Application Team
-  * @brief     STM32L476xx devices vector table GCC toolchain.
+  * @brief     STM32L496xx devices vector table GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -229,6 +229,15 @@ g_pfnVectors:
 	.word 0
 	.word	RNG_IRQHandler
 	.word	FPU_IRQHandler
+	.word	CRS_IRQHandler
+	.word	I2C4_EV_IRQHandler
+	.word	I2C4_ER_IRQHandler
+	.word	DCMI_IRQHandler
+	.word	CAN2_TX_IRQHandler
+	.word	CAN2_RX0_IRQHandler
+	.word	CAN2_RX1_IRQHandler
+	.word	CAN2_SCE_IRQHandler
+	.word	DMA2D_IRQHandler  
 
 
 /*******************************************************************************
@@ -508,4 +517,31 @@ g_pfnVectors:
 	
 	.weak	FPU_IRQHandler
 	.thumb_set FPU_IRQHandler,Default_Handler
+	
+	.weak	CRS_IRQHandler
+	.thumb_set CRS_IRQHandler,Default_Handler	
+	
+	.weak	I2C4_EV_IRQHandler
+	.thumb_set I2C4_EV_IRQHandler,Default_Handler
+	
+	.weak	I2C4_ER_IRQHandler
+	.thumb_set I2C4_ER_IRQHandler,Default_Handler
+	
+	.weak	DCMI_IRQHandler
+	.thumb_set DCMI_IRQHandler,Default_Handler
+	
+	.weak	CAN2_TX_IRQHandler
+	.thumb_set CAN2_TX_IRQHandler,Default_Handler
+	
+	.weak	CAN2_RX0_IRQHandler
+	.thumb_set CAN2_RX0_IRQHandler,Default_Handler
+	
+	.weak	CAN2_RX1_IRQHandler
+	.thumb_set CAN2_RX1_IRQHandler,Default_Handler
+	
+	.weak	CAN2_SCE_IRQHandler
+	.thumb_set CAN2_SCE_IRQHandler,Default_Handler 
+	
+	.weak	DMA2D_IRQHandler
+	.thumb_set FPU_IRQHandler,Default_Handler    
 
