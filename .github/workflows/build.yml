@@ -17,16 +17,16 @@ jobs:
         with:
           release: '12.3.Rel1' # <-- The compiler release to use
 
-      - name: Build bms-prototype2
+      - name: Build bms-primary
         run: |
-          cd Firmware/bms-prototype2
+          cd Firmware/bms-primary
           cmake -S . -B build
           cmake --build build
           cd ../..
 
-      - name: Build bms-v2
+      - name: Build bms-secondary
         run: |
-          cd Firmware/bms-v2
+          cd Firmware/bms-secondary
           cmake -S . -B build
           cmake --build build
           cd ../..
