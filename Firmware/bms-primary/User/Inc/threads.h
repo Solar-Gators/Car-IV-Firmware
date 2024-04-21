@@ -42,6 +42,7 @@ extern osMutexId_t current_integral_mutex_id;
 
 /* Callbacks */
 //extern void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+void VCUFrameCallback(uint8_t *data);
 
 
 #endif  /* THREADS_H_ */

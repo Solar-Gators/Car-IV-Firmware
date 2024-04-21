@@ -263,11 +263,11 @@ void ReadVoltageThread(void *argument) {
     // Reset and update high and low cell voltages from secondary bms
     // If cell voltage is not reported, use the configured min and max values
     high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() == 0 ? 
-                            bms_config.MIN_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetHighCellVoltage();
-    high_cell_voltage_id = BMSSecondaryFrame1::Instance().GetHighCellVoltageID();
+                            INT16_MIN : BMSSecondaryFrame0::Instance().GetHighCellVoltage();
+    high_cell_voltage_id = BMSSecondaryFrame1::Instance().GetHighCellVoltageID() + 16;
     low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() == 0 ? 
-                            bms_config.MAX_CELL_VOLTAGE : BMSSecondaryFrame0::Instance().GetLowCellVoltage();
-    low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID();
+                            INT16_MAX : BMSSecondaryFrame0::Instance().GetLowCellVoltage();
+    low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID() + 16;
 
     // Voltage sum for computing average
     // Value is multiplied by 10 because subpack voltage is in 0.01V units, while everything else is in mV
@@ -498,6 +498,9 @@ void ReadTemperatureThread(void *argument) {
                 osMutexRelease(logger_mutex_id);
             }
         }
+
+        // LED heartbeat
+        HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
     }
 }
 

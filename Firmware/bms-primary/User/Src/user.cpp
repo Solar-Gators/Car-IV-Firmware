@@ -53,6 +53,7 @@ void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
+    CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback);
     CANController::AddRxMessage(&BMSSecondaryFrame0::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame1::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame2::Instance());

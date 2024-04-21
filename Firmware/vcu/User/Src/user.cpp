@@ -41,6 +41,7 @@ static void Default_Outputs() {
     // Turn off motor
     // TODO: For testing only, start motor on
     SetMotorState(true);
+    SetMotorDirection(false);
 
     // Set throttle and regen to 0
     SetThrottle(0x0);
@@ -146,6 +147,9 @@ bool SD_Init() {
         if (fres == FR_OK) {
             // File exists, search in higher half
             low = middle + 1;
+        } else if (middle == 0) {
+            found = true;
+            break;
         } else {
             // File does not exist, check if the previous file exists
             etl::to_string(middle-1, log_number_string, format_int, false);

@@ -282,7 +282,7 @@ void DriverControls0Callback(uint8_t *data) {
     // SetMotorMode(DriverControlsFrame0::GetDriveMode());
     // TODO: For testing, force motor on
     SetMotorState(true);
-		SetMotorDirection(true);
+    // SetMotorDirection(false);
     
     // SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
 
