@@ -288,6 +288,8 @@ HAL_StatusTypeDef BQ76952::ExitDeepSleep(){
     if (status != HAL_OK) 
         return status;
     current_mode_ = BQ_MODE_NORMAL;
+
+    return status;
 }
 
 HAL_StatusTypeDef BQ76952::ModifySleepCurrentBoundary(int16_t boundary){
@@ -631,7 +633,7 @@ HAL_StatusTypeDef BQ76952::UpdateMode(){
         return status;
     }
 
-    HAL_StatusTypeDef status = DirectReadU2(BQ769X2_CMD_CONTROL_STATUS, &buf);
+    status = DirectReadU2(BQ769X2_CMD_CONTROL_STATUS, &buf);
     if(status != HAL_OK)
         return HAL_ERROR;
 
