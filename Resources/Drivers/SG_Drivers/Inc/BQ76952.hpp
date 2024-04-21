@@ -17,6 +17,12 @@
 #define BQ_I2C_ADDR_WRITE 0x10
 #define BQ_I2C_ADDR_READ 0x11
 
+#define BQ_MODE_NORMAL 0
+#define BQ_MODE_SLEEP 1
+#define BQ_MODE_DEEPSLEEP 2
+#define BQ_MODE_SHUTDOWN 3
+#define BQ_MODE_CONFIGUPDATE 4
+
 static const uint8_t temp_registers[] = {BQ769X2_CMD_TEMP_TS1, BQ769X2_CMD_TEMP_TS2, BQ769X2_CMD_TEMP_TS3, BQ769X2_CMD_TEMP_ALERT, BQ769X2_CMD_TEMP_HDQ, BQ769X2_CMD_TEMP_CFETOFF, BQ769X2_CMD_TEMP_DFETOFF, BQ769X2_CMD_TEMP_DCHG, BQ769X2_CMD_TEMP_DDSG};
 
 class BQ76952 {
@@ -28,6 +34,26 @@ public:
     HAL_StatusTypeDef ReadSafetyFaults();
     HAL_StatusTypeDef ReadCurrent();
     HAL_StatusTypeDef ReadTemperatures();
+
+    // Balancing Related Functions
+    HAL_StatusTypeDef ChangeBalancingStatus(bool enableManualBal, bool enableBalWhileSleep, bool enableBalWhileRelax, bool enableBalWhileCharging); // 1 for enable, 0 for disable
+    HAL_StatusTypeDef DisableBalancing();
+    HAL_StatusTypeDef EnableManualBalancing(); // already enabled by default on startup
+    HAL_StatusTypeDef DisableManualBalancing();
+    HAL_StatusTypeDef EnableBalancingWhileSleeping();
+    HAL_StatusTypeDef DisableBalancingWhileSleeping();
+    HAL_StatusTypeDef EnableBalancingWhileRelaxing();
+    HAL_StatusTypeDef DisableBalancingWhileRelaxing();
+    HAL_StatusTypeDef EnableBalancingWhileCharging();
+    HAL_StatusTypeDef DisableBalancingWhileCharging();
+    HAL_StatusTypeDef StartBalancingOnCells(uint16_t cell_bitmask); // manual balancing, input a bitmask with a 1 in the cells you want to receive active balancing
+    HAL_StatusTypeDef ClearManualBalancing();
+    HAL_StatusTypeDef ModifyMaxBalancedCells(uint8_t amount); // 0-16, does not affect manual balancing, affects how many cells can be automatically balanced at once
+
+    //Sleep and Deep Sleep / Mode related functions
+    HAL_StatusTypeDef EnterDeepSleep();
+    HAL_StatusTypeDef ExitDeepSleep();
+    HAL_StatusTypeDef ModifySleepCurrentBoundary(int16_t boundary); // in mA, signed integer but minimum value is zero, max is 32767, startup is 20 mA
 
     HAL_StatusTypeDef Shutdown();
 
@@ -67,7 +93,7 @@ private:
     HAL_StatusTypeDef DatamemWriteI1(const uint16_t reg_addr, int8_t value);
     HAL_StatusTypeDef DatamemWriteI2(const uint16_t reg_addr, int16_t value);
     HAL_StatusTypeDef DatamemWriteF4(const uint16_t reg_addr, float value);
-    HAL_StatusTypeDef EnableThermistorPins();
+    HAL_StatusTypeDef UpdateMode();
 
     I2C_HandleTypeDef *hi2c_;
 
@@ -86,7 +112,12 @@ private:
     float low_temperature_; // low temperature of temp_registers in  C
     float chip_temperature_; // temperature of chip in C
 
-    bool config_update_enabled_; // whether config update mode is currently enabled
+    uint8_t current_mode_; // current mode BMS chip is in
+
+    bool manual_bal_enabled_;
+    bool auto_bal_charging_enabled_;
+    bool auto_bal_relax_enabled_;
+    bool auto_bal_sleep_enabled_;
 };
 
 #endif  /* BQ76952_HPP_ */
