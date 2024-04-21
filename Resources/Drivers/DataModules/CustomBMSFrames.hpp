@@ -219,6 +219,10 @@ DATAMODULE (
         return Data()[0] & 0b1000000;
     }
 
+    inline static bool GetKillSwitchPressedFault() {
+        return Data()[0] & 0b10000000;
+    }
+
     /*
      * Bit 0: Contactor 0 Status
      * Bit 1: Contactor 1 Status
@@ -320,6 +324,15 @@ DATAMODULE (
 
     inline static void SetCurrentSensorDisconnectedFault(bool status) {
         uint8_t flag = 0b1000000;
+        if (status) {
+            Data()[0] |= flag;
+        } else {
+            Data()[0] &= ~flag;
+        }
+    }
+
+    inline static void SetKillSwitchPressedFault(bool status) {
+        uint8_t flag = 0b10000000;
         if (status) {
             Data()[0] |= flag;
         } else {

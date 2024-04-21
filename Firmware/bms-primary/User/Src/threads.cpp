@@ -53,7 +53,6 @@
 /* Global variables */
 static const uint8_t num_total_cells = bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY;
 
-static uint8_t fault_flags = 0;
 static uint8_t status_flags = 0;
 
 static unsigned int voltage_thread_counter = 0;
@@ -365,7 +364,8 @@ void ReadCurrentThread(void *argument) {
     if (pack_current > bms_config.MAX_DISCHARGE_CURRENT) {
         // Set current error bit
         // This error can only be cleared by a power cycle
-        // TODO:
+        BMSFrame3::Instance().SetHighDischargeCurrentFault(true);
+        osEventFlagsSet(error_event, 0x1);
 
         etl::string<5> float_buf;
         etl::to_string(pack_current, float_buf, format_float, false);
@@ -376,9 +376,10 @@ void ReadCurrentThread(void *argument) {
 
     // Check if charge current exceeded
     if (current_l < -bms_config.MAX_CHARGE_CURRENT) {
-        // Set current error bit
+        // Set charge current error bit
         // This error can only be cleared by a power cycle
-        // TODO:
+        BMSFrame3::Instance().SetHighChargeCurrentFault(true);
+        osEventFlagsSet(error_event, 0x1);
 
         etl::string<5> float_buf;
         etl::to_string(pack_current, float_buf, format_float, false);
@@ -551,8 +552,8 @@ void BroadcastThread(void* argument) {
         CANController::Send(&BMSFrame2::Instance());
 
         // Send BMSFrame3 at 1Hz (every 10th broadcast)
+        // Faults are updated in the datamodule as they happen
         if (broadcast_thread_counter % 10 == 0) {
-            BMSFrame3::Instance().SetFaultFlags(fault_flags);
             BMSFrame3::Instance().SetStatusFlags(status_flags);
             BMSFrame3::Instance().SetPackSoC(0);  // TODO: Implement SoC
             CANController::Send(&BMSFrame3::Instance());
@@ -567,13 +568,12 @@ void ErrorThread(void* argument) {
         SetContactorSource(ContactorSource_Type::MAIN);
 
         // Any set bit in fault_flags indicates an error
-        if (fault_flags) {
+        if (BMSFrame3::Instance().GetFaultFlags() != 0) {
             // Open main contactors
             SetContactorState(3, false);
             SetContactorState(4, false);
 
             // Update BMSFrame3 with errors
-            BMSFrame3::Instance().SetFaultFlags(fault_flags);
             BMSFrame3::Instance().SetStatusFlags(status_flags);
 
             // Send BMSFrame3
@@ -581,7 +581,7 @@ void ErrorThread(void* argument) {
         }
 
         // If no errors, close contactors
-        else if (fault_flags == 0) {
+        else {
             SetContactorState(4, true);
             osDelay(500);
             SetContactorState(3, true);
@@ -608,9 +608,9 @@ void SecondaryFrame0Callback(uint8_t *data) {
 void VCUFrameCallback(uint8_t *data) {
     // Update kill flag status
     if (VCUFrame0::Instance().GetKillStatus() == 0) {
-        fault_flags &= ~(1 << 7);
+        BMSFrame3::Instance().SetKillSwitchPressedFault(true);
     } else {
-        fault_flags |= (1 << 7);
+        BMSFrame3::Instance().SetKillSwitchPressedFault(false);
     }
 
     // Trigger error thread

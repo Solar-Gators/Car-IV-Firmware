@@ -141,11 +141,11 @@ void LogData() {
         // Get data from CAN frames
         int time = osKernelGetTickCount();
         
-        int battery_soc = BMSFrame4::Instance().GetPackSOC();
+        int battery_soc = BMSFrame3::Instance().GetPackSoC();
         float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0f;
-        float battery_current = BMSFrame2::Instance().GetPackCurrent() / 10.0f;
-        int battery_avg_temp = BMSFrame1::Instance().GetAverageTemp();
-        int battery_high_temp = BMSFrame1::Instance().GetHighTemp();
+        float battery_current = BMSFrame1::Instance().GetPackCurrent() / 10.0f;
+        int battery_avg_temp = BMSFrame2::Instance().GetLowTemp();
+        int battery_high_temp = BMSFrame2::Instance().GetHighTemp();
 
         int motor_rpm = MitsubaFrame0::Instance().GetMotorRPM();
         int motor_temp = MitsubaFrame0::Instance().GetFETTemp() * 5;
@@ -161,9 +161,7 @@ void LogData() {
         int regen = DriverControlsFrame0::Instance().GetRegenVal() / 655;
         int brake = DriverControlsFrame0::Instance().GetBrakeEnable();
 
-        uint32_t bms_faults = BMSFrame4::Instance().GetFaultFlags0() |
-                                (BMSFrame4::Instance().GetFaultFlags1() << 8) |
-                                (BMSFrame4::Instance().GetFaultFlags2() << 16);
+        uint32_t bms_faults = BMSFrame3::Instance().GetFaultFlags();
         uint32_t mitsuba_faults = MitsubaFrame2::Instance().GetAllFlags();
 
         // etl format specifier
@@ -336,8 +334,7 @@ void DriverControls1Callback(uint8_t *data) {
 /* Callback executed when BMSFrame4 is received 
     Checks to see if any fault flags are set */
 void BMSFaultCallback(uint8_t *data) {
-    uint32_t fault_flags;
-    memcpy(&fault_flags, BMSFrame4::Instance().Data(), 3);
+    uint32_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
 
     fault_flags &= ~(0x1 << 2);     // Ignore weak cell fault
 

@@ -70,8 +70,6 @@ static void CAN_Modules_Init() {
     CANController::AddRxMessage(&BMSFrame1::Instance());
     CANController::AddRxMessage(&BMSFrame2::Instance());
     CANController::AddRxMessage(&BMSFrame3::Instance());
-    CANController::AddRxMessage(&BMSFrame4::Instance());
-    CANController::AddRxMessage(&BMSFrame5::Instance());
 
     // Add motor controller frames
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
@@ -194,7 +192,7 @@ bool SD_Init() {
                                 "SoC,"\
                                 "Battery Voltage,"\
                                 "Battery Current,"\
-                                "Battery Avg Temp,"\
+                                "Battery Low Temp,"\
                                 "Battery High T,"\
                                 "Motor RPM,"\
                                 "Motor Temp,"\
