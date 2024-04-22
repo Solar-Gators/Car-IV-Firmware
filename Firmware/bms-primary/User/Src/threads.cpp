@@ -224,7 +224,7 @@ void ThreadsStart() {
     // Broadcast BMS frames every 2500ms (0.4Hz)
     osTimerStart(broadcast_timer_id, broadcast_period);
 
-    // osEventFlagsSet(error_event, 0x1); // Trigger contactors once, wait for frame from VCU instead
+    osEventFlagsSet(error_event, 0x1); // Trigger contactors once, wait for frame from VCU instead
 
     // Initialize regular threads
     thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
@@ -573,6 +573,9 @@ void ErrorThread(void* argument) {
             SetContactorState(3, false);
             SetContactorState(4, false);
 
+            // Open MPPT contactor
+            SetContactorState(1, false);
+
             // Update BMSFrame3 with errors
             BMSFrame3::Instance().SetStatusFlags(status_flags);
 
@@ -582,9 +585,18 @@ void ErrorThread(void* argument) {
 
         // If no errors, close contactors
         else {
+            // Close negative side contactor
             SetContactorState(4, true);
+            osDelay(250);
+            // Close precharge contactor
+            SetContactorState(2, true);
             osDelay(500);
+            // Close positive side contactor
             SetContactorState(3, true);
+            osDelay(100);
+            // Open precharge contactor
+            SetContactorState(2, false);
+            osDelay(100);
         }
     }
 }

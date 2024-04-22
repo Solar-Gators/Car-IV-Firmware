@@ -1,28 +1,31 @@
 
 
-OpenDocument="threads.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp", Line=167
-OpenDocument="tasks.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3640
+OpenDocument="startup_stm32l496xx.s", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/startup_stm32l496xx.s", Line=52
+OpenDocument="map.h", FilePath="c:/dev/car-iv-firmware/resources/middlewares/third_party/etl/include/etl/map.h", Line=1560
+OpenDocument="sg_can.cpp", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/SG_Drivers/Src/sg_can.cpp", Line=122
+OpenDocument="threads.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp", Line=140
+OpenDocument="tasks.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3394
 OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/Core/Src/main.c", Line=81
 OpenDocument="fatfs_sd.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/fatfs_sd.c", Line=47
 OpenDocument="user_diskio.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/user_diskio.c", Line=78
 OpenDocument="diskio.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FatFs/src/diskio.c", Line=82
 OpenDocument="ff.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FatFs/src/ff.c", Line=3017
-OpenDocument="startup_stm32l496xx.s", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/startup_stm32l496xx.s", Line=52
+OpenDocument="functional.h", FilePath="c:/dev/car-iv-firmware/resources/middlewares/third_party/etl/include/etl/functional.h", Line=127
 OpenDocument="stm32l4xx_hal.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c", Line=330
 OpenDocument="stm32l4xx_it.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/vcu/Core/Src/stm32l4xx_it.c", Line=86
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=476, h=206, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=476, h=187, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Registers 1", DockArea=BOTTOM, x=3, y=0, w=634, h=401, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
-OpenWindow="Disassembly", DockArea=LEFT, x=0, y=2, w=476, h=94, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=526, h=286, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=526, h=286, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=526, h=286, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=476, h=255, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Call Graph", DockArea=LEFT, x=0, y=2, w=476, h=94, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=2, w=476, h=91, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=526, h=260, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=526, h=260, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=526, h=260, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=476, h=229, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Graph", DockArea=LEFT, x=0, y=2, w=476, h=91, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory Usage", DockArea=BOTTOM, x=3, y=0, w=634, h=401, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=2, y=0, w=514, h=417, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=433, h=417, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=526, h=270, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
+OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=526, h=248, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
 OpenWindow="Memory 1", DockArea=BOTTOM, x=0, y=0, w=336, h=417, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x1999A1C0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
 TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[214;100;100;100;100;27;100]

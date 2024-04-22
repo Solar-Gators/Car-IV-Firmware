@@ -19,7 +19,10 @@ extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
 extern "C" I2C_HandleTypeDef hi2c3;
 extern "C" I2C_HandleTypeDef hi2c4;
+extern "C" TIM_HandleTypeDef htim1;
+extern "C" TIM_HandleTypeDef htim2;
 extern "C" TIM_HandleTypeDef htim3;
+extern "C" TIM_HandleTypeDef htim16;
 
 /* Global data */
 
@@ -112,8 +115,6 @@ void CPP_UserSetup(void) {
 
     // Start fan PWM
     // HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-
-    
 
     ThreadsStart();
 }
