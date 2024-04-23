@@ -97,15 +97,15 @@ const osTimerAttr_t carTimer_attr = {
 
 void CPP_UserSetup() {
 	Logger::LogInfo("Entered user setup\n");
-	ui.Init();
+	//ui.Init();
 	osKernelInitialize();
-	ui_queueHandle = osMessageQueueNew(8, sizeof(UIQueue_Msg), &ui_queue_attr);
-	ui_threadHandle = osThreadNew(UI_task, NULL, &ui_thread_attr);
+	//ui_queueHandle = osMessageQueueNew(8, sizeof(UIQueue_Msg), &ui_queue_attr);
+	//ui_threadHandle = osThreadNew(UI_task, NULL, &ui_thread_attr);
 	//can_threadhandle = osThreadNew(CAN_task, NULL, &can_thread_attr);
-	CAN_Init();
-	carTimer = osTimerNew(UTime, osTimerPeriodic, NULL, &carTimer_attr);
-	osTimerStart(carTimer, 1000);
-	Button_Init();
+	//CAN_Init();
+	//carTimer = osTimerNew(UTime, osTimerPeriodic, NULL, &carTimer_attr);
+	//osTimerStart(carTimer, 1000);
+	//Button_Init();
 }
 
 void UTime(void *argument){

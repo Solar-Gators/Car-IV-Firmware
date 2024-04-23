@@ -29,7 +29,7 @@ void UBMSRx3(uint8_t data[]);
 void UMPPTs(uint8_t data[]);
 void UPowerBoard(uint8_t data[]);
 void Button0();
-void Button1();
+void Button8();
 void Button2();
 void Button3();
 void Button4();
@@ -60,7 +60,7 @@ enum UIMsg{
 	MPPTs        = 15,
 	BMSRx2       = 16,
 	PowerBoard   = 17,
-	
+
 };
 
 /**Type for UI messages*/
