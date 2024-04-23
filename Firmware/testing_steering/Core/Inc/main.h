@@ -106,13 +106,11 @@ void Error_Handler(void);
 #define BTN5_Pin GPIO_PIN_7
 #define BTN5_GPIO_Port GPIOC
 #define BTN5_EXTI_IRQn EXTI9_5_IRQn
-#define BTN6_Pin GPIO_PIN_8
-#define BTN6_GPIO_Port GPIOC
-#define BTN6_EXTI_IRQn EXTI9_5_IRQn
 #define BTN7_Pin GPIO_PIN_9
 #define BTN7_GPIO_Port GPIOC
 #define BTN8_Pin GPIO_PIN_8
 #define BTN8_GPIO_Port GPIOA
+#define BTN8_EXTI_IRQn EXTI9_5_IRQn
 #define BTN9_Pin GPIO_PIN_9
 #define BTN9_GPIO_Port GPIOA
 #define BTN9_EXTI_IRQn EXTI9_5_IRQn

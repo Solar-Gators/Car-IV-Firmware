@@ -112,6 +112,8 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* hcan)
     /* CAN1 interrupt Init */
     HAL_NVIC_SetPriority(CAN1_RX0_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);
+    HAL_NVIC_SetPriority(CAN1_RX1_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(CAN1_RX1_IRQn);
   /* USER CODE BEGIN CAN1_MspInit 1 */
 
   /* USER CODE END CAN1_MspInit 1 */
@@ -143,6 +145,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* hcan)
 
     /* CAN1 interrupt DeInit */
     HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
+    HAL_NVIC_DisableIRQ(CAN1_RX1_IRQn);
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
   /* USER CODE END CAN1_MspDeInit 1 */

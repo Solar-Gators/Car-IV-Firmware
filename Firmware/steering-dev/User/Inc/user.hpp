@@ -11,16 +11,23 @@
 #include "main.h"
 #include "logger.hpp"
 #include "UI.hpp"
+#include "button.hpp"
+#include "longpressbutton.hpp"
 
 void UI_task(void* argument);
 void CAN_Init();
 void Button_Init();
 float Efficiency();
+uint32_t SolarPower();
 float Speed(uint8_t data[]);
-void UMotors(uint8_t data[]);
+void UMotorRx0(uint8_t data[]);
+void UMotorRx1(uint8_t data[]);
 void UBMSRx0(uint8_t data[]);
+void UBMSRx1(uint8_t data[]);
 void UBMSRx2(uint8_t data[]);
-void UBMSRx4(uint8_t data[]);
+void UBMSRx3(uint8_t data[]);
+void UMPPTs(uint8_t data[]);
+void UPowerBoard(uint8_t data[]);
 void Button0();
 void Button1();
 void Button2();
@@ -36,7 +43,7 @@ void PushToTalkReleased();
 
 enum UIMsg{
 	BMSRx0       = 0,
-	BMSRx2       = 1,
+	BMSRx1       = 1,
 	MotorRx0     = 2,
 	LeftTurn     = 3,
 	RightTurn    = 4,
@@ -47,7 +54,13 @@ enum UIMsg{
 	HeadLights   = 9,
 	Horn         = 10,
 	PushToTalk   = 11,
-	BMSRx4       = 12
+	BMSRx3       = 12,
+	Timer        = 13,
+	MotorRx1     = 14,
+	MPPTs        = 15,
+	BMSRx2       = 16,
+	PowerBoard   = 17,
+	
 };
 
 /**Type for UI messages*/

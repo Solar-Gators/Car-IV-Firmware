@@ -54,7 +54,12 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 /* Definitions for defaultTask */
-
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -69,7 +74,7 @@ static void MX_TIM2_Init(void);
 static void MX_DAC_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_IWDG_Init(void);
-
+void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 void CPP_UserSetup(void);
@@ -117,8 +122,9 @@ int main(void)
   MX_TIM2_Init();
   MX_DAC_Init();
   MX_TIM3_Init();
-  //MX_IWDG_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+  CPP_UserSetup();
 //  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 //  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, sine_vals, 100, DAC_ALIGN_12B_R);
 
@@ -126,8 +132,6 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
- 
-  CPP_UserSetup();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -147,7 +151,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -159,6 +163,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -240,7 +245,7 @@ static void MX_CAN1_Init(void)
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
   hcan1.Init.Prescaler = 5;
-  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan1.Init.TimeSeg1 = CAN_BS1_15TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
@@ -532,20 +537,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN0_Pin BTN2_Pin BTN3_Pin */
-  GPIO_InitStruct.Pin = BTN0_Pin|BTN2_Pin|BTN3_Pin;
+  /*Configure GPIO pins : BTN0_Pin BTN1_Pin BTN2_Pin BTN3_Pin */
+  GPIO_InitStruct.Pin = BTN0_Pin|BTN1_Pin|BTN2_Pin|BTN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN1_Pin */
-  GPIO_InitStruct.Pin = BTN1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : BTN4_Pin BTN5_Pin BTN6_Pin */
-  GPIO_InitStruct.Pin = BTN4_Pin|BTN5_Pin|BTN6_Pin;
+  /*Configure GPIO pins : BTN4_Pin BTN5_Pin */
+  GPIO_InitStruct.Pin = BTN4_Pin|BTN5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -556,17 +555,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BTN7_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN8_Pin */
-  GPIO_InitStruct.Pin = BTN8_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN8_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BTN9_Pin */
-  GPIO_InitStruct.Pin = BTN9_Pin;
+  /*Configure GPIO pins : BTN8_Pin BTN9_Pin */
+  GPIO_InitStruct.Pin = BTN8_Pin|BTN9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN9_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : D_C_Pin */
   GPIO_InitStruct.Pin = D_C_Pin;
@@ -610,9 +603,9 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-// void StartDefaultTask(void *argument)
-// {
-//   /* USER CODE BEGIN 5 */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
 //   /* Infinite loop */
 //   for(;;)
 //   {
@@ -620,8 +613,8 @@ static void MX_GPIO_Init(void)
 // 	// HAL_GPIO_TogglePin(DAC_OUT1_GPIO_Port, DAC_OUT1_Pin);
 // 	osDelay(500);
 //   }
-//   /* USER CODE END 5 */
-// }
+  /* USER CODE END 5 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
