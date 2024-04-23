@@ -24,8 +24,10 @@
 
 /* Externs */
 extern FIL fil;         // Log file
+extern Button kill_sw;  // Kill switch
 extern bool kill_state; // Kill switch state
 extern bool bms_trip;   // BMS trip state
+extern bool sd_present; // SD card is inserted
 
 void SetMotorState(bool state);
 void SetMotorMode(bool mode);

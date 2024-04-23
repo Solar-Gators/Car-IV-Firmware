@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -116,11 +115,10 @@ int main(void)
   MX_DMA_Init();
   MX_CAN1_Init();
   MX_SPI1_Init();
-  MX_FATFS_Init();
   MX_TIM2_Init();
   MX_DAC_Init();
   MX_TIM3_Init();
-  //MX_IWDG_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 //  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 //  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, sine_vals, 100, DAC_ALIGN_12B_R);
@@ -160,6 +158,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -545,29 +544,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN4_Pin BTN5_Pin BTN6_Pin */
-  GPIO_InitStruct.Pin = BTN4_Pin|BTN5_Pin|BTN6_Pin;
+  /*Configure GPIO pins : BTN4_Pin PTT_Btn_Pin Cminus_Btn_Pin */
+  GPIO_InitStruct.Pin = BTN4_Pin|PTT_Btn_Pin|Cminus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN7_Pin */
-  GPIO_InitStruct.Pin = BTN7_Pin;
+  /*Configure GPIO pin : Cplus_Btn_Pin */
+  GPIO_InitStruct.Pin = Cplus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN7_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Cplus_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN8_Pin */
-  GPIO_InitStruct.Pin = BTN8_Pin;
+  /*Configure GPIO pin : RT_Btn_Pin */
+  GPIO_InitStruct.Pin = RT_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN8_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(RT_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN9_Pin */
-  GPIO_InitStruct.Pin = BTN9_Pin;
+  /*Configure GPIO pin : PV_Btn_Pin */
+  GPIO_InitStruct.Pin = PV_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN9_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(PV_Btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : D_C_Pin */
   GPIO_InitStruct.Pin = D_C_Pin;

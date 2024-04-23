@@ -36,7 +36,7 @@ osTimerAttr_t periodic10_timer_attr = {
 	.cb_size = 0,
 };
 
-
+Button right_turn_btn = Button(RT_Btn_GPIO_Port, RT_Btn_Pin, 50, GPIO_PIN_SET, false);
 
 void CPP_UserSetup() {
 	Logger::LogInfo("Entered user setup\n");
@@ -53,26 +53,26 @@ void CPP_UserSetup() {
 	float speed = 1.5;
 
 	while (1) {
-		Logger::LogInfo("while\n");
-		ui.UpdateSpeed(speed++);
-		ui.UpdateMode(MODE_ECO);
-		//ui.IncrementTime();
-		ui.ToggleLeftTurn();
-		ui.ToggleRightTurn();
-		ui.UpdatePVStatus(RGB565_RED);
-		ui.UpdateBMSStatus(RGB565_RED);
-		ui.UpdateMCStatus(RGB565_RED);
-		ui.UpdateLaps(232);
-		ui.UpdateSOC(101.134);
-		ui.UpdateBattV(109.3122);
-		ui.UpdateAuxV(10.1234);
-		ui.UpdateTemp(23);
-		ui.UpdateEfficiency(123);
-		ui.UpdateNetPower(1234);
-		ui.UpdateSolarPower(1234);
-		ui.UpdateMotorPower(1);
-		ui.DisplayError1(AUX_HIGH_CURRENT_FAULT);
-		ui.DisplayError2(WEAK_CELL_FAULT);
-		HAL_Delay(1000);
+		// Logger::LogInfo("while\n");
+		// ui.UpdateSpeed(speed++);
+		// ui.UpdateMode(MODE_ECO);
+		// //ui.IncrementTime();
+		// ui.ToggleLeftTurn();
+		// ui.ToggleRightTurn();
+		// ui.UpdatePVStatus(RGB565_RED);
+		// ui.UpdateBMSStatus(RGB565_RED);
+		// ui.UpdateMCStatus(RGB565_RED);
+		// ui.UpdateLaps(232);
+		// ui.UpdateSOC(101.134);
+		// ui.UpdateBattV(109.3122);
+		// ui.UpdateAuxV(10.1234);
+		// ui.UpdateTemp(23);
+		// ui.UpdateEfficiency(123);
+		// ui.UpdateNetPower(1234);
+		// ui.UpdateSolarPower(1234);
+		// ui.UpdateMotorPower(1);
+		// ui.DisplayError1(AUX_HIGH_CURRENT_FAULT);
+		// ui.DisplayError2(WEAK_CELL_FAULT);
+		// HAL_Delay(1000);
 	}
 }

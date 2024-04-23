@@ -22,6 +22,7 @@ DWORD fre_clust;
 /* Global states */
 bool kill_state = true;
 bool bms_trip = false;
+bool sd_present = false;
 
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
@@ -106,6 +107,13 @@ static void CAN_Modules_Init() {
 bool SD_Init() {
     FILINFO fno;
     DIR dir;
+
+    // Check if SD card is inserted
+    if (HAL_GPIO_ReadPin(SD_DETECT_GPIO_Port, SD_DETECT_Pin) == GPIO_PIN_SET) {
+        Logger::LogError("SD card not inserted\n");
+        HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+        return false;
+    }
 
     // Mount the filesystem
     fres = f_mount(&fs, "", 1);
@@ -232,18 +240,17 @@ void CPP_UserSetup(void) {
     // Initialize CAN things
     CAN_Modules_Init();
 
-    // Read initial kill switch state
-    if (kill_sw.ReadPin() == GPIO_PIN_SET)
-        kill_state = false;
-    VCUFrame0::Instance().SetKillStatus(kill_state);
-    CANController::Send(&VCUFrame0::Instance());
-
     // Setup kill switch callbacks
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);
 
     // Initialize SD card
-    // TODO: Do not setup SD thread if SD_Init() fails
-    SD_Init();
+    sd_present = SD_Init();
+
+    // Read initial kill switch state and send status over CAN
+    KillSwitchCallback();   
+
+    // Delay 3 seconds before starting the motor controller
+    HAL_Delay(3000); 
 
     // Start periodic tasks
     ThreadsStart();

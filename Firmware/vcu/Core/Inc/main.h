@@ -102,6 +102,8 @@ void Error_Handler(void);
 #define MPPT_CONTACTOR_EN_GPIO_Port GPIOA
 #define SD_CS_Pin GPIO_PIN_15
 #define SD_CS_GPIO_Port GPIOA
+#define SD_DETECT_Pin GPIO_PIN_2
+#define SD_DETECT_GPIO_Port GPIOD
 #define PTT_Pin GPIO_PIN_7
 #define PTT_GPIO_Port GPIOB
 

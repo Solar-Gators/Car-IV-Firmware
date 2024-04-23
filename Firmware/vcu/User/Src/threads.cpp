@@ -33,7 +33,7 @@ osTimerId_t toggle_lights_periodic_timer_id = osTimerNew((osThreadFunc_t)ToggleL
                                                             &toggle_lights_periodic_timer_attr);
 
 osTimerAttr_t logger_periodic_timer_attr = {
-    .name = "Toggle Lights Thread",
+    .name = "SD Logger Thread",
     .attr_bits = 0,
     .cb_mem = NULL,
     .cb_size = 0,
@@ -67,8 +67,9 @@ void ThreadsStart() {
     // Toggle lights (hazards & turn signals) every 500ms
     osTimerStart(toggle_lights_periodic_timer_id, 500);
 
-    // Toggle logger thread every 100ms
-    osTimerStart(logger_periodic_timer_id, 100);
+    // Toggle logger thread every 100ms if SD card is present
+    if (sd_present)
+        osTimerStart(logger_periodic_timer_id, 100);
 }
 
 /* Periodic thread function to send CAN message request for frames to Mitsuba 
@@ -268,21 +269,14 @@ void IoMsgCallback(uint8_t *data) {
     Handle Mitsuba GPIO, throttle, and regen */
 void DriverControls0Callback(uint8_t *data) {
     // If not in kill state or BMS trip, set motor state based on driver controls
-    // TODO: For testing, do nothing here
-    // if (!kill_state && !bms_trip)
-    //     SetMotorState(DriverControlsFrame0::GetMotorEnable());
-    // else
-    //     SetMotorState(false);
+    if (!kill_state && !bms_trip)
+        SetMotorState(DriverControlsFrame0::GetMotorEnable());
+    else
+        SetMotorState(false);
 
     // Drive mode and direction based on driver controls
-
-
-    // SetMotorMode(DriverControlsFrame0::GetDriveMode());
-    // TODO: For testing, force motor on
-    SetMotorState(true);
-    // SetMotorDirection(false);
-    
-    // SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
+    SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
+    SetMotorMode(DriverControlsFrame0::GetDriveMode());
 
     // If regen or brake is active, set throttle to 0 and regen to value
     if (DriverControlsFrame0::GetRegenVal() > 0 || DriverControlsFrame0::GetBrakeEnable()) {
@@ -359,17 +353,28 @@ void MitsubaCallback(uint8_t *data) {
 }
 
 /* Callback executed when kill switch is pressed */
-// TODO: handle kill switch unpress logic
 void KillSwitchCallback(void) {
-    // Disable the motor
-    SetMotorState(false);
+    if (kill_sw.ReadPin() == GPIO_PIN_RESET) {
+        // If kill switch is pressed, set kill state to true
+        kill_state = true;
+        Logger::LogError("Kill switch pressed\n");
 
-    // Turn on strobe light
-    HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
+        // Turn on strobe light
+        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
 
-    // TODO: Store the kill status in EEPROM
+        // Send kill switch status over CAN
+        VCUFrame0::Instance().SetKillStatus(true);
+        CANController::Send(&VCUFrame0::Instance());
+    } else {
+        // If kill switch is unpressed, set kill state to false
+        kill_state = false;
+        Logger::LogInfo("Kill switch unpressed\n");
 
-    // Send kill switch status over CAN
-    VCUFrame0::Instance().SetKillStatus(true);
-    CANController::Send(&VCUFrame0::Instance());
+        // Turn off strobe light
+        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_RESET);
+
+        // Send kill switch status over CAN
+        VCUFrame0::Instance().SetKillStatus(false);
+        CANController::Send(&VCUFrame0::Instance());
+    }
 }

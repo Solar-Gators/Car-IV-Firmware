@@ -11,5 +11,6 @@
 #include "main.h"
 #include "logger.hpp"
 #include "UI.hpp"
+#include "button.hpp"
 
 #endif
