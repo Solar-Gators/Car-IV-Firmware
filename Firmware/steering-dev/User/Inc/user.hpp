@@ -13,4 +13,11 @@
 #include "UI.hpp"
 #include "button.hpp"
 
+/* Externs */
+extern UI ui;
+extern Button right_turn_btn;
+extern Button cruise_plus_btn;
+extern Button cruise_minus_btn;
+extern Button ptt_btn;
+
 #endif

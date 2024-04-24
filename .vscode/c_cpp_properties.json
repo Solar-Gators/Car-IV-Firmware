@@ -339,6 +339,7 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [
+                "STM32F4xx",
                 "STM32F446xx",
                 "USE_HAL_DRIVER"
             ],

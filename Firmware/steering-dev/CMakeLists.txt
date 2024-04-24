@@ -1,9 +1,10 @@
+cmake_minimum_required(VERSION 3.5)
 ########################################################################
 # Toolchain file must go at the top
 ########################################################################
-cmake_minimum_required(VERSION 3.12)
-set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../Resources)
-set(CMAKE_TOOLCHAIN_FILE ${RESOURCES_DIR}/CMake/arm-none-eabi.cmake)
+set(RESOURCES_DIR ./../../Resources)
+set(CMAKE_TOOLCHAIN_FILE ${RESOURCES_DIR}/CMake/arm-cm4.cmake)
+# Choose between Debug and Release builds
 set(CMAKE_BUILD_TYPE Debug)
 
 ########################################################################
@@ -12,74 +13,56 @@ set(CMAKE_BUILD_TYPE Debug)
 ########################################################################
 set(MCU_FAMILY STM32F4xx)
 set(MCU_MODEL STM32F446xx)
-set(MCU_PART STM32L476RCTX)
-
-set(CPU_PARAMETERS
-    -mcpu=cortex-m4
-    -mthumb
-    -mfpu=fpv4-sp-d16
-    -mfloat-abi=hard)
+set(MCU_PART STM32F446RCTx)
+string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
+string(TOLOWER ${MCU_MODEL} MCU_MODEL_LOWER)
 
 ########################################################################
 # Includes
-# Edit this section based on desired include files
 ########################################################################
-set(STM_HAL_INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc
-    ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc
-    ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc/Legacy
+include_directories(
+    Core/Inc
+    User/Inc
     ${RESOURCES_DIR}/Drivers/CMSIS/Include
-    ${RESOURCES_DIR}/Drivers/CMSIS/Device/ST/${MCU_FAMILY}/Include)
-set(THIRD_PARTY_INCLUDES
+    ${RESOURCES_DIR}/Drivers/CMSIS/Device/ST/${MCU_FAMILY}/Include
+    ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/Config
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc
+    ${RESOURCES_DIR}/Drivers/DataModules
     ${RESOURCES_DIR}/Middlewares/Third_Party/etl/include
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
-set(USER_INCLUDES
-    ${CMAKE_CURRENT_SOURCE_DIR}/User/Inc
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc)
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+)
 
 ########################################################################
 # Sources
-# Edit this section based on drivers used
 ########################################################################
 file(GLOB_RECURSE RECURSE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.s
     ${CMAKE_CURRENT_SOURCE_DIR}/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
     ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Src/*.c
-    ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT/*.c)
+    ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT/*.c
+)
 file(GLOB GLOB_SOURCES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/*.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c)
-file(GLOB DRIVER_SOURCES
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/*.c
-    ${RESOURCES_DIR}/Middlewares/Third_Party/FatFs/src/option/*.c 
+    ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+)
+file(GLOB SG_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/button.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ILI9341.cpp
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/UI.cpp)
-    
-    
-######### You shouldn't have to edit anything below this line ##########
-    
-########################################################################
-# Set project and executable name to match top-level project folder
-########################################################################
-get_filename_component(SOURCE_DIR_NAME ${CMAKE_SOURCE_DIR} NAME)
-project(${SOURCE_DIR_NAME})
-set(EXECUTABLE ${CMAKE_PROJECT_NAME})
-add_executable(${EXECUTABLE} ${GLOB_SOURCES} ${RECURSE_SOURCES} ${DRIVER_SOURCES})
-
-########################################################################
-# Define startup ASM file and linker script
-########################################################################
-string(TOLOWER ${MCU_MODEL} MCU_MODEL_L)
-set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/STM32F446RCTX_FLASH.ld)
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/UI.cpp
+)
+list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_msp_template.c)
+list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_timebase_tim_template.c)
+list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_timebase_rtc_wakeup_template.c)
+list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_timebase_rtc_alarm_template.c)
 
 ########################################################################
 # Language settings
@@ -93,57 +76,37 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 ########################################################################
-# Defines (after add_executable!)
+# Executable build instructions
 ########################################################################
-target_compile_definitions(${EXECUTABLE} PRIVATE
+get_filename_component(SOURCE_DIR_NAME ${CMAKE_SOURCE_DIR} NAME)
+project(${SOURCE_DIR_NAME})
+
+# Add executable
+add_executable(${PROJECT_NAME} ${RECURSE_SOURCES} ${GLOB_SOURCES} ${SG_SOURCES})
+target_compile_definitions(${PROJECT_NAME} PRIVATE
     ${MCU_MODEL}
-    USE_HAL_DRIVER)
+    USE_HAL_DRIVER
+)
 
 ########################################################################
-# Includes (after add_executable!)
+# Linker options
 ########################################################################
-target_include_directories(${EXECUTABLE} PRIVATE
-    ${STM_HAL_INCLUDES}
-    ${USER_INCLUDES}
-    ${THIRD_PARTY_INCLUDES})
-
-########################################################################
-# Compiler and linker options (after add_executable!)
-########################################################################
-target_compile_options(${EXECUTABLE} PRIVATE
-    ${CPU_PARAMETERS}
-    -Wall
-    -Wextra
-    -Wno-unused-parameter
-    $<$<COMPILE_LANGUAGE:CXX>:
-        -Wno-volatile
-        -Wsuggest-override>
-    $<$<CONFIG:Debug>:-Og -g3 -ggdb>
-    $<$<CONFIG:Release>:-O3 -g0>)
-
-target_link_options(${EXECUTABLE} PRIVATE
-    ${CPU_PARAMETERS}
-    -T${LINKER_SCRIPT}
-    -Wl,-Map=${CMAKE_PROJECT_NAME}.map,--cref
-    --specs=nosys.specs
-    -Wl,--undefined,_printf_float
-    -Wl,--no-warn-rwx-segment
-    -Wl,--start-group
-    -lc
-    -lm
-    -lnosys
-    -Wl,--end-group
-    -Wl,--gc-sections,--print-memory-usage)
+set(CMAKE_EXE_LINKER_FLAGS
+    "-specs=nosys.specs \
+    -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld \
+    -Wl,--gc-sections \
+    -Wl,-Map=${PROJECT_NAME}.map,--cref \
+    -Wl,--print-memory-usage"
+)
+target_link_libraries(${PROJECT_NAME} c m nosys)
 
 ########################################################################
 # Post build commands
 # Get section sizes, convert executable to .hex and .bin
 ######################################################################## 
-add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${EXECUTABLE}>)
-
-add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.hex
-    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.bin)
-
-    
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${PROJECT_NAME}>)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary -S $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
+)

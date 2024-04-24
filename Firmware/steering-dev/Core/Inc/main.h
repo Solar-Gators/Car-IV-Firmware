@@ -111,11 +111,9 @@ void Error_Handler(void);
 #define Cminus_Btn_EXTI_IRQn EXTI9_5_IRQn
 #define Cplus_Btn_Pin GPIO_PIN_9
 #define Cplus_Btn_GPIO_Port GPIOC
+#define Cplus_Btn_EXTI_IRQn EXTI9_5_IRQn
 #define RT_Btn_Pin GPIO_PIN_8
 #define RT_Btn_GPIO_Port GPIOA
-#define PV_Btn_Pin GPIO_PIN_9
-#define PV_Btn_GPIO_Port GPIOA
-#define PV_Btn_EXTI_IRQn EXTI9_5_IRQn
 #define D_C_Pin GPIO_PIN_10
 #define D_C_GPIO_Port GPIOA
 #define TRIP_Pin GPIO_PIN_15
