@@ -108,7 +108,7 @@ DATAMODULE(
     }
 
     inline static uint8_t GetFlags1() {
-        Data()[1] = flags;
+        return static_cast<uint8_t>(Data()[1]);
     }
 
     inline static bool GetMotorEnable() {
@@ -116,11 +116,11 @@ DATAMODULE(
     }
 
     inline static bool GetDriveMode() {
-        return static_cast<bool>(Data()[1] & MotorMode::MASK);
+        return static_cast<bool>(Data()[1] & static_cast<uint8_t>(MotorMode::MASK));
     }
 
     inline static bool GetDriveDirection() {
-        return static_cast<bool>(Data()[1] & MotorDirection::MASK);
+        return static_cast<bool>(Data()[1] & static_cast<uint8_t>(MotorDirection::MASK));
     }
 
     inline static bool GetRegenEnable() {
@@ -200,12 +200,12 @@ DATAMODULE(
     }
 
     inline static void SetDriveMode(MotorMode mode) {
-        Data()[1] &= ~MotorMode::MASK;
+        Data()[1] &= ~(static_cast<uint8_t>(MotorMode::MASK));
         Data()[1] |= static_cast<uint8_t>(mode);
     }
 
     inline static void SetDriveDirection(MotorDirection direction) {
-        Data()[1] &= ~MotorDirection::MASK;
+        Data()[1] &= ~(static_cast<uint8_t>(MotorDirection::MASK));
         Data()[1] |= static_cast<uint8_t>(direction);
     }
 

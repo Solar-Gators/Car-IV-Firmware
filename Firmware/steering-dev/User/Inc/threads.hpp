@@ -7,6 +7,7 @@
 
 /* Periodic threads */
 void ReadButtonsPeriodic();
+void UpdateUIPeriodic();
 
 /* Regular threads */
 void TurnSignalToggle(void);
@@ -15,12 +16,20 @@ void TurnSignalToggle(void);
 extern osEventFlagsId_t turn_signal_event;
 
 /* Mutexes */
+extern osMutexId_t ui_mutex;
 
 /* Callbacks */
+void LeftTurnCallback(void);
+void ModeCallback(void);
+void ModeLongCallback(void);
+void RegenCallback(void);
+void HornCallback(void);
+void MCCallback(void);
 void RightTurnCallback(void);
 void CruisePlusCallback(void);
 void CruiseMinusCallback(void);
 void PTTCallback(void);
+void PVCallback(void);
 
 void ThreadsStart(void);
 

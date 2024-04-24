@@ -38,7 +38,7 @@ ADS7138 adcs[3] = {ADS7138(&hi2c4, 0x10),
                     ADS7138(&hi2c4, 0x13), 
                     ADS7138(&hi2c4, 0x14)};
 
-void DefaultOutputs() {
+bool DefaultOutputs() {
     // Turn off thermistor amplifiers
     SetAmplifierState(false);
 
@@ -50,9 +50,13 @@ void DefaultOutputs() {
     // HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, GPIO_PIN_SET);
     // HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, GPIO_PIN_SET);
     // HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, GPIO_PIN_SET);
+
+    return true;
 }
 
-void CAN_Modules_Init() {
+bool CAN_Modules_Init() {
+
+
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
@@ -110,6 +114,10 @@ void CPP_UserSetup(void) {
         Logger::LogError("BMS init failed");
     else
         Logger::LogInfo("BMS init success");
+
+    // Set BMS to always auto balance
+    if (bms.ChangeBalancingStatus(false, true, true, true) != HAL_OK)
+        Logger::LogError("BMS set balance all failed");
 
     // Configure REG1 voltage to 3.3v
 

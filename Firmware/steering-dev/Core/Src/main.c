@@ -504,29 +504,41 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN0_Pin BTN2_Pin BTN3_Pin */
-  GPIO_InitStruct.Pin = BTN0_Pin|BTN2_Pin|BTN3_Pin;
+  /*Configure GPIO pins : MC_Btn_Pin RGN_Btn_Pin Mode_Btn_Pin */
+  GPIO_InitStruct.Pin = MC_Btn_Pin|RGN_Btn_Pin|Mode_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN1_Pin */
-  GPIO_InitStruct.Pin = BTN1_Pin;
+  /*Configure GPIO pin : Horn_Btn_Pin */
+  GPIO_InitStruct.Pin = Horn_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Horn_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN4_Pin PTT_Btn_Pin Cminus_Btn_Pin Cplus_Btn_Pin */
-  GPIO_InitStruct.Pin = BTN4_Pin|PTT_Btn_Pin|Cminus_Btn_Pin|Cplus_Btn_Pin;
+  /*Configure GPIO pins : LT_Btn_Pin PTT_Btn_Pin Cplus_Btn_Pin */
+  GPIO_InitStruct.Pin = LT_Btn_Pin|PTT_Btn_Pin|Cplus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : RT_Btn_Pin */
-  GPIO_InitStruct.Pin = RT_Btn_Pin;
+  /*Configure GPIO pin : Cminus_Btn_Pin */
+  GPIO_InitStruct.Pin = Cminus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(Cminus_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : RT_Btn_Pin */
+  GPIO_InitStruct.Pin = RT_Btn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(RT_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PV_Btn_Pin */
+  GPIO_InitStruct.Pin = PV_Btn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(PV_Btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : D_C_Pin */
   GPIO_InitStruct.Pin = D_C_Pin;

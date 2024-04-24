@@ -103,6 +103,10 @@ void CPP_UserSetup(void) {
     else
         Logger::LogInfo("BMS init success");
 
+    // Set BMS to always auto balance
+    if (bms.ChangeBalancingStatus(false, true, true, true) != HAL_OK)
+        Logger::LogError("BMS set balance all failed");
+
     // Configure REG1 voltage to 3.3v
 
     // Start fan PWM

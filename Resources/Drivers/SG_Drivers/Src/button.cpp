@@ -61,8 +61,16 @@ bool Button::GetToggleState() {
     return toggle_state_;
 }
 
+void Button::SetToggleState(bool state) {
+    toggle_state_ = state;
+}
+
 bool Button::GetLongToggleState() {
     return long_toggle_state_;
+}
+
+void Button::SetLongToggleState(bool state) {
+    long_toggle_state_ = state;
 }
 
 bool Button::GetDoubleToggleState() {

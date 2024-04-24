@@ -42,7 +42,9 @@ public:
     uint32_t GetPin();
     GPIO_PinState ReadPin();
     bool GetToggleState();
+    void SetToggleState(bool state);
     bool GetLongToggleState();
+    void SetLongToggleState(bool state);
     bool GetDoubleToggleState();
     GPIO_PinState GetDefaultState();
 
