@@ -32,6 +32,9 @@ osThreadId_t logger_thread_id = osThreadNew((osThreadFunc_t)TurnSignalToggle,
                                             NULL, 
                                             &turn_signal_thread_attributes);
 
+/* Event flags */
+osEventFlagsId_t turn_signal_event = osEventFlagsNew(NULL);
+
 static GPIO_PinState right_turn_last_state = GPIO_PIN_SET;
 
 void ReadButtonsPeriodic() {
@@ -47,17 +50,18 @@ void TurnSignalToggle() {
     while (1) {
         if (right_turn_btn.GetToggleState() == true) {
             ui.ToggleRightTurn();
-        } else {
-            ui.DeactivateRightTurn();
+            osDelay(500);
         }
-
-        osDelay(500);
+        else {
+            ui.DeactivateRightTurn();
+            osEventFlagsWait(turn_signal_event, 0x1, osFlagsWaitAny, osWaitForever);
+        }
     }
 }
 
 void RightTurnCallback() {
     Logger::LogInfo("Right turn pressed");
-    ui.ToggleRightTurn();
+    osEventFlagsSet(turn_signal_event, 0x1);
 }
 
 void CruisePlusCallback() {

@@ -12,6 +12,7 @@ void ReadButtonsPeriodic();
 void TurnSignalToggle(void);
 
 /* Event flags */
+extern osEventFlagsId_t turn_signal_event;
 
 /* Mutexes */
 
