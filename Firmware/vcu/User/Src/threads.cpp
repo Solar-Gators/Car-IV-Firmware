@@ -159,7 +159,7 @@ void LogData() {
         int battery_soc = BMSFrame3::Instance().GetPackSoC();
         float battery_voltage = BMSFrame0::Instance().GetPackVoltage() / 10000.0f;
         float battery_current = BMSFrame1::Instance().GetPackCurrent() / 10.0f;
-        int battery_avg_temp = BMSFrame2::Instance().GetLowTemp();
+        int battery_low_temp = BMSFrame2::Instance().GetLowTemp();
         int battery_high_temp = BMSFrame2::Instance().GetHighTemp();
 
         int motor_rpm = MitsubaFrame0::Instance().GetMotorRPM();
@@ -173,8 +173,8 @@ void LogData() {
         float mppt3_input_current = MPPTInputMeasurementsFrame3::Instance().GetInputCurrent();
 
         int throttle = DriverControlsFrame0::Instance().GetThrottleVal() / 655;
-        int regen = 0;
-        int brake = 0;
+        int regen = static_cast<int>(DriverControlsFrame1::Instance().GetRegenEnable());
+        int brake = static_cast<int>(DriverControlsFrame0::Instance().GetBrake());
 
         uint32_t bms_faults = BMSFrame3::Instance().GetFaultFlags();
         uint32_t mitsuba_faults = MitsubaFrame2::Instance().GetAllFlags();
@@ -203,7 +203,7 @@ void LogData() {
         f_puts(float_buf.c_str(), &fil);
         f_putc(',', &fil);
 
-        etl::to_string(battery_avg_temp, int_buf, format_int, false);
+        etl::to_string(battery_low_temp, int_buf, format_int, false);
         f_puts(int_buf.c_str(), &fil);
         f_putc(',', &fil);
 
@@ -264,10 +264,10 @@ void LogData() {
         f_putc('\n', &fil);  // New line at the end of each data set
 
         // Sync the SD card every 10 log cycles (1s) to waste less time on f_sync()
-        if (log_counter % 10) {
-            if (f_sync(&fil) != FR_OK)
-                Logger::LogError("Error syncing SD card\n");
-        }
+        // if (log_counter % 10) {
+        //     if (f_sync(&fil) != FR_OK)
+        //         Logger::LogError("Error syncing SD card\n");
+        // }
     }
 }
 
@@ -303,6 +303,14 @@ void IoMsgCallback(uint8_t *data) {
 /* Callback executed when DriverControlsFrame0 received 
     Handle Mitsuba GPIO, throttle, and regen */
 void DriverControls0Callback(uint8_t *data) {
+    // If shutdown is asserted, sync filesystem, send kill status
+    if (DriverControlsFrame0::GetShutdownStatus()) {
+        if (f_sync(&fil) != FR_OK)
+            Logger::LogError("Error syncing SD card\n");
+        VCUFrame0::Instance().SetKillStatus(true);
+        CANController::Send(&VCUFrame0::Instance());
+    }
+
     // If not in kill state or BMS trip, set motor state based on driver controls
     if (!kill_state && !bms_trip)
         SetMotorState(DriverControlsFrame1::GetMotorEnable());

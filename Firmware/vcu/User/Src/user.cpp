@@ -200,7 +200,7 @@ bool SD_Init() {
                                 "Battery Voltage,"\
                                 "Battery Current,"\
                                 "Battery Low Temp,"\
-                                "Battery High T,"\
+                                "Battery High Temp,"\
                                 "Motor RPM,"\
                                 "Motor Temp,"\
                                 "MPPT1 Voltage,"\
