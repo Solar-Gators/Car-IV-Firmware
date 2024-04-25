@@ -1,10 +1,10 @@
 #include "user.hpp"
 #include "IMU.h"
-#include "usbd_cdc_if.h"
+// #include "usbd_cdc_if.h"
 #include <string>
 #include "IoTestFrame.hpp"
 #include "MotorControlFrame.hpp"
-#include "M24C02.hpp"
+#include "ADS7138.hpp"
 
 using namespace std;
 
@@ -18,12 +18,15 @@ using namespace std;
 */
 extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
-
+extern "C" I2C_HandleTypeDef hi2c2;
 
 /* Initialize CAN frames and devices */
 
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
+
+
+ADS7138 adcs[1] = {ADS7138(&hi2c2, 0x10)};
 
 
 extern "C" void CPP_UserSetup(void);
@@ -60,22 +63,50 @@ const osThreadAttr_t regular_task_attributes = {
 /* Event flag to trigger regular task */
 osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
-IMU imu;
-uint8_t txBuffer[3];
-string text;
-float z_accel;
-uint16_t raw;
+
+uint16_t rawData;
 uint8_t high;
 uint8_t low;
+uint8_t ignitionState = false;
+void CAN_Modules_Init() {
+    // Add CAN devices and CAN frames
+    CANController::AddDevice(&candev1);
+    CANController::AddDevice(&candev2);
+    CANController::AddFilterAll();
+    CANController::Start();
+}
+void ADC_Modules_Init() {
+   
+    
+    if (adcs[0].Init() != HAL_OK || adcs[0].TestI2C() != HAL_OK)
+        Logger::LogError("ADC %d init failed", 0);
+    else
+        Logger::LogInfo("ADC %d init success", 0);
 
+    // Set all ADCs to initiate conversion on request
+    if (adcs[0].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
+        Logger::LogError("ADC %d configure opmode failed", 0);
+
+    // For all ADCs, append channel ID to data
+    if (adcs[0].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
+        Logger::LogError("ADC %d configure data failed", 0);
+
+
+    // For adc0, sequence channels 5, 7 for current sense
+    if (adcs[0].AutoSelectChannels((0x1 << 0)) != HAL_OK)
+       Logger::LogError("ADC 0 auto select channels failed");
+
+    
+}
 
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
-
-    
-    IMU_INIT(&imu, &hi2c2);
-
     HAL_Delay(10);
+    
+    CAN_Modules_Init();
+
+    ADC_Modules_Init();
+ 
 
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
     osTimerStart(periodic_timer_id, 1000);
@@ -85,6 +116,8 @@ void CPP_UserSetup(void) {
     //CANController::AddRxMessage(&io_test_frame, IoMsgCallback);
     CANController::AddFilterAll();
     CANController::Start();
+
+    ADC_Modules_Init();
 }
 
 void PeriodicTask1(void *argument) {
@@ -92,25 +125,22 @@ void PeriodicTask1(void *argument) {
     //Logger::LogInfo("Periodic timer fired\n");
     HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
 
+   
+
     //IMU_ReadAccel(&imu);
     volatile HAL_StatusTypeDef status = HAL_OK;
-    status = HAL_ADC_Start(&hadc2);
-	status = HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
-	raw = HAL_ADC_GetValue(&hadc2);
+    status = adcs[0].ReadChannel(0, &rawData);
+    
 
-    high = (uint8_t)((raw & 0xFF00) >> 8);
-    low = (uint8_t)(raw & 0x00FF);
-    txBuffer[0] = high;
-    txBuffer[1] = low; 
-    txBuffer[2] = '\n'; 
-	Logger::LogInfo("raw value: %x\n", raw);
-
-    motor_control_frame.SetThrottleVal(raw<<4);
-    motor_control_frame.data[2] = 123;
-    CANController::Send(&motor_control_frame);
+    DriverControlsFrame0::SetThrottleVal((uint16_t)(rawData) << 4);
+    
+    CANController::Send(&DriverControlsFrame0::Instance());
 
     osEventFlagsSet(regular_event, 0x1);
-
+    
+    if(HAL_GPIO_ReadPin(GPIOC, 6) == true){
+       DriverControlsFrame0::SetShutdownStatus((true));
+    }
 
 
 }

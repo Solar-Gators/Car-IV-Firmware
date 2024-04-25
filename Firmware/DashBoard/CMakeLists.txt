@@ -30,10 +30,8 @@ set(STM_HAL_INCLUDES
     ${RESOURCES_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc/Legacy
     ${RESOURCES_DIR}/Drivers/CMSIS/Include
     ${RESOURCES_DIR}/Drivers/CMSIS/Device/ST/${MCU_FAMILY}/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/USB_DEVICE/App
-    ${CMAKE_CURRENT_SOURCE_DIR}/USB_DEVICE/Target
-    ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Core/Inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc)
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc)
+
 set(THIRD_PARTY_INCLUDES
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/RTT
     ${RESOURCES_DIR}/Drivers/segger-rtt-master/Config
@@ -43,7 +41,7 @@ set(THIRD_PARTY_INCLUDES
     ${RESOURCES_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
 set(USER_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/User/Inc
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inc
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Inckw
     ${RESOURCES_DIR}/Drivers/DataModules)
 
 ########################################################################
@@ -66,7 +64,7 @@ file(GLOB GLOB_SOURCES
 file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
-    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/M24C02.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ADS7138.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/IMU.c)
     
     

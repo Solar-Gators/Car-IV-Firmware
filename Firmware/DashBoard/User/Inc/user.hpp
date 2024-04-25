@@ -7,15 +7,17 @@
 
 #include "cmsis_os.h"
 #include "logger.hpp"
-#include "usbd_cdc_if.h"
+// #include "usbd_cdc_if.h"
 
 #include "sg_can.hpp"
-#include "IMU.h"
+#include "ADS7138.hpp"
+
+/* Datamodules */
+#include "DriverControls.hpp"
+#include "MotorControlFrame.hpp"
 
 extern "C" I2C_HandleTypeDef hi2c2;
 extern "C" ADC_HandleTypeDef hadc2;
-
-
 
 
 

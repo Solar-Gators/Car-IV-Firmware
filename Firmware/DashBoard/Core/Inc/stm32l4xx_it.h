@@ -55,7 +55,6 @@ void DebugMon_Handler(void);
 void CAN1_RX0_IRQHandler(void);
 void CAN1_RX1_IRQHandler(void);
 void TIM1_TRG_COM_TIM17_IRQHandler(void);
-void OTG_FS_IRQHandler(void);
 void CAN2_RX0_IRQHandler(void);
 void CAN2_RX1_IRQHandler(void);
 /* USER CODE BEGIN EFP */
