@@ -103,13 +103,10 @@ void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
     
-    CAN_Modules_Init();
+    // CAN_Modules_Init();
 
-    ADC_Modules_Init();
- 
 
-    regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
-    osTimerStart(periodic_timer_id, 1000);
+    
 
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
@@ -118,6 +115,9 @@ void CPP_UserSetup(void) {
     CANController::Start();
 
     ADC_Modules_Init();
+
+		regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
+    osTimerStart(periodic_timer_id, 1000);
 }
 
 void PeriodicTask1(void *argument) {
@@ -129,8 +129,7 @@ void PeriodicTask1(void *argument) {
 
     //IMU_ReadAccel(&imu);
     volatile HAL_StatusTypeDef status = HAL_OK;
-    status = adcs[0].ReadChannel(0, &rawData);
-    
+    adcs[0].ConversionReadAutoSequence(&rawData, 1);
 
     DriverControlsFrame0::SetThrottleVal((uint16_t)(rawData) << 4);
     
