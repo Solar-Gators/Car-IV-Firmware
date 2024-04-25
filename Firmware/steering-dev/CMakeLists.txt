@@ -13,7 +13,7 @@ set(CMAKE_BUILD_TYPE Debug)
 ########################################################################
 set(MCU_FAMILY STM32F4xx)
 set(MCU_MODEL STM32F446xx)
-set(MCU_PART STM32F446RCTx)
+set(MCU_PART STM32F446RCTX)
 string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_LOWER)
 
