@@ -66,11 +66,10 @@ static void CAN_Modules_Init() {
     CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
 
     // Add BMS frames
-    // BMSFrame4 contains fault flags
     CANController::AddRxMessage(&BMSFrame0::Instance());
     CANController::AddRxMessage(&BMSFrame1::Instance());
     CANController::AddRxMessage(&BMSFrame2::Instance());
-    CANController::AddRxMessage(&BMSFrame3::Instance());
+    CANController::AddRxMessage(&BMSFrame3::Instance(), BMSFaultCallback);
 
     // Add motor controller frames
     CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);

@@ -8,6 +8,7 @@
 
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
+osEventFlagsId_t strobe_event = osEventFlagsNew(NULL);
 
 /* Setup periodic threads */
 osTimerAttr_t mitsuba_req_periodic_timer_attr = {
@@ -59,6 +60,21 @@ const osThreadAttr_t logger_thread_attributes = {
 };
 osThreadId_t logger_thread_id = osThreadNew((osThreadFunc_t)LogData, NULL, &logger_thread_attributes);
 
+uint32_t strobe_thread_buffer[2048];
+StaticTask_t strobe_thread_control_block;
+const osThreadAttr_t strobe_thread_attributes = {
+    .name = "Strobe Thread",
+    .attr_bits = osThreadDetached,
+    .cb_mem = &strobe_thread_control_block,
+    .cb_size = sizeof(strobe_thread_control_block),
+    .stack_mem = &strobe_thread_buffer[0],
+    .stack_size = sizeof(strobe_thread_buffer),
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .tz_module = 0,
+    .reserved = 0,
+};
+osThreadId_t strobe_thread_id = osThreadNew((osThreadFunc_t)StrobeThread, NULL, &strobe_thread_attributes);
+
 /* Start periodic threads */
 void ThreadsStart() {
     // Request to receive Mitsuba frames every 500ms
@@ -93,7 +109,7 @@ void ToggleLights() {
     else {
         HAL_GPIO_WritePin(FL_LIGHT_EN_GPIO_Port, FL_LIGHT_EN_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, 
-                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrakeEnable()));
+                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrake()));
     }
     // If hazards or right turn on, toggle right lights
     if (DriverControlsFrame1::GetHazards() || DriverControlsFrame1::GetRightTurn()) {
@@ -104,19 +120,17 @@ void ToggleLights() {
     else {
         HAL_GPIO_WritePin(FR_LIGHT_EN_GPIO_Port, FR_LIGHT_EN_Pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, 
-                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrakeEnable()));
+                            static_cast<GPIO_PinState>(DriverControlsFrame0::GetBrake()));
     }
 
     // If brake lights are not on, center light turns off
-    if (!DriverControlsFrame0::GetBrakeEnable()) {
+    if (!DriverControlsFrame0::GetBrake()) {
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_RESET);
     }
 
     // If in kill state or BMS trip, turn on strobe light, otherwise off
     if (kill_state || bms_trip)
-        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
-    else
-        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_RESET);
+        osEventFlagsSet(strobe_event, 0x1);
 }
 
 /* 
@@ -159,8 +173,8 @@ void LogData() {
         float mppt3_input_current = MPPTInputMeasurementsFrame3::Instance().GetInputCurrent();
 
         int throttle = DriverControlsFrame0::Instance().GetThrottleVal() / 655;
-        int regen = DriverControlsFrame0::Instance().GetRegenVal() / 655;
-        int brake = DriverControlsFrame0::Instance().GetBrakeEnable();
+        int regen = 0;
+        int brake = 0;
 
         uint32_t bms_faults = BMSFrame3::Instance().GetFaultFlags();
         uint32_t mitsuba_faults = MitsubaFrame2::Instance().GetAllFlags();
@@ -257,6 +271,27 @@ void LogData() {
     }
 }
 
+/* Thread runs when strobe light is turned on */
+void StrobeThread() {
+    while (1) {
+        if (kill_state || bms_trip) {
+            for (int i = 0; i < 6; i++) {
+                HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
+                osDelay(100);
+            }
+            for (int i = 0; i < 6; i++) {
+                HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
+                osDelay(200);
+            }
+            if (kill_sw.ReadPin() == GPIO_PIN_SET)
+                KillSwitchCallback();
+        } else {
+            HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_RESET);
+            osEventFlagsWait(strobe_event, 0x1, osFlagsWaitAny, osWaitForever);
+        }
+    }
+}
+
 /* Callback executed when IoTestFrame received
     This function is just for debugging CAN */
 void IoMsgCallback(uint8_t *data) {
@@ -270,18 +305,20 @@ void IoMsgCallback(uint8_t *data) {
 void DriverControls0Callback(uint8_t *data) {
     // If not in kill state or BMS trip, set motor state based on driver controls
     if (!kill_state && !bms_trip)
-        SetMotorState(DriverControlsFrame0::GetMotorEnable());
+        SetMotorState(DriverControlsFrame1::GetMotorEnable());
     else
         SetMotorState(false);
 
     // Drive mode and direction based on driver controls
-    SetMotorDirection(DriverControlsFrame0::GetDriveDirection());
-    SetMotorMode(DriverControlsFrame0::GetDriveMode());
+    SetMotorDirection(DriverControlsFrame1::GetDriveDirection());
+    SetMotorMode(DriverControlsFrame1::GetDriveMode());
 
     // If regen or brake is active, set throttle to 0 and regen to value
-    if (DriverControlsFrame0::GetRegenVal() > 0 || DriverControlsFrame0::GetBrakeEnable()) {
+    if (DriverControlsFrame1::GetRegenEnable() || DriverControlsFrame0::GetBrake()) {
         SetThrottle(0);
-        SetRegen(DriverControlsFrame0::GetRegenVal());
+        if (DriverControlsFrame1::GetRegenEnable())
+            // TODO: Calculate max regen value
+            SetRegen(10000);
     }
     // If no regen or brake, set throttle to value and regen to 0
     else {
@@ -295,14 +332,14 @@ void DriverControls0Callback(uint8_t *data) {
     }
 
     // Set brake light
-    if (DriverControlsFrame0::GetBrakeEnable()) {
+    if (DriverControlsFrame0::GetBrake()) {
         HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_SET);
     } 
 
     // Set MPPT enable
-    SetMPPTState(DriverControlsFrame0::GetSolarEnable());
+    SetMPPTState(DriverControlsFrame1::GetPVEnable());
 }
 
 /* Callback executed when DriverControlsFrame1 received
@@ -323,20 +360,25 @@ void DriverControls1Callback(uint8_t *data) {
     HAL_GPIO_WritePin(HORN_EN_GPIO_Port,
                         HORN_EN_Pin,
                         static_cast<GPIO_PinState>(DriverControlsFrame1::GetHorn()));
+
+    // Motor mode and direction
+    // Motor enable handled in DriverControlsFrame0 callback
+    SetMotorMode(DriverControlsFrame1::GetDriveMode());
+    SetMotorDirection(DriverControlsFrame1::GetDriveDirection());
 }
 
-/* Callback executed when BMSFrame4 is received 
+/* Callback executed when BMSFrame3 is received 
     Checks to see if any fault flags are set */
 void BMSFaultCallback(uint8_t *data) {
     uint32_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
 
-    fault_flags &= ~(0x1 << 2);     // Ignore weak cell fault
+    fault_flags &= ~(0x1 << 7);     // Ignore kill switch fault, generated here
 
     if (fault_flags) {
         Logger::LogError("BMS Fault: %lu\n", fault_flags);
         bms_trip = true;
         // Turn on strobe light
-        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
+        osEventFlagsSet(strobe_event, 0x1);
 
         // Disable motor
         SetMotorState(false);
@@ -357,10 +399,10 @@ void KillSwitchCallback(void) {
     if (kill_sw.ReadPin() == GPIO_PIN_RESET) {
         // If kill switch is pressed, set kill state to true
         kill_state = true;
-        Logger::LogError("Kill switch pressed\n");
+        Logger::LogError("Kill switch pressed");
 
         // Turn on strobe light
-        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_SET);
+        osEventFlagsSet(strobe_event, 0x1);
 
         // Send kill switch status over CAN
         VCUFrame0::Instance().SetKillStatus(true);
@@ -368,7 +410,7 @@ void KillSwitchCallback(void) {
     } else {
         // If kill switch is unpressed, set kill state to false
         kill_state = false;
-        Logger::LogInfo("Kill switch unpressed\n");
+        Logger::LogInfo("Kill switch unpressed");
 
         // Turn off strobe light
         HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin, GPIO_PIN_RESET);

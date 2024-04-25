@@ -14,8 +14,11 @@ void LogDataPeriodic(void);
 
 /* Regular threads */
 void LogData(void);
+void StrobeThread(void);
 
 /* Event flags */
+extern osEventFlagsId_t log_event;
+extern osEventFlagsId_t strobe_event;
 
 /* Mutexes */
 
