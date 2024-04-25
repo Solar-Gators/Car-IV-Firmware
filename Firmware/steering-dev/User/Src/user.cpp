@@ -94,6 +94,9 @@ void CPP_UserSetup() {
 	// ui.UpdateNetPower(0);
 	ui.UpdateSolarPower(0);
 	ui.UpdateMotorPower(0);
+	ui.UpdateMCStatus(RGB565_RED);
+	ui.UpdatePVStatus(RGB565_RED);
+	ui.UpdateBMSStatus(RGB565_RED);
 
 	ThreadsStart();
 

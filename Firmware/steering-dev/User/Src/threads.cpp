@@ -48,6 +48,8 @@ osEventFlagsId_t turn_signal_event = osEventFlagsNew(NULL);
 
 static GPIO_PinState cruise_minus_last_state = GPIO_PIN_SET;
 static GPIO_PinState pv_last_state = GPIO_PIN_SET;
+static GPIO_PinState horn_last_state = GPIO_PIN_SET;
+static GPIO_PinState ptt_last_state = GPIO_PIN_SET;
 void ReadButtonsPeriodic() {
     // Check if cruise minus is pressed
     if (cruise_minus_btn.ReadPin() != cruise_minus_last_state) {
@@ -59,6 +61,17 @@ void ReadButtonsPeriodic() {
     if (pv_btn.ReadPin() != pv_last_state) {
         Button::triggered_button_ = &pv_btn;
         osSemaphoreRelease(Button::button_semaphore_id_);
+    }
+
+    // Check held buttons (horn, PTT)
+    if (horn_btn.ReadPin() != horn_last_state) {
+        DriverControlsFrame1::Instance().SetHorn(static_cast<bool>(horn_btn.ReadPin()));
+        CANController::Send(&DriverControlsFrame1::Instance());        
+    }
+
+    if (ptt_btn.ReadPin() != ptt_last_state) {
+        DriverControlsFrame1::Instance().SetPTT(static_cast<bool>(ptt_btn.ReadPin()));
+        CANController::Send(&DriverControlsFrame1::Instance());
     }
 }
 
@@ -163,6 +176,13 @@ void HornCallback() {
 
 void MCCallback() {
     Logger::LogInfo("MC pressed");
+    DriverControlsFrame1::Instance().SetMotorEnable(mc_btn.GetToggleState());
+    osMutexAcquire(ui_mutex, osWaitForever);
+    if (mc_btn.GetToggleState() == false)
+        ui.UpdateMCStatus(RGB565_RED);
+    else
+        ui.UpdateMCStatus(RGB565_GREEN);
+    osMutexRelease(ui_mutex);
 }
 
 void RightTurnCallback() {
@@ -188,6 +208,16 @@ void PTTCallback() {
 
 void PVCallback() {
     Logger::LogInfo("PV pressed");
+}
+
+void BMSFrame3Callback(uint8_t *data) {
+    uint8_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
+    osMutexAcquire(ui_mutex, osWaitForever);
+    if (fault_flags)
+        ui.UpdateBMSStatus(RGB565_RED);
+    else
+        ui.UpdateBMSStatus(RGB565_GREEN);
+    osMutexRelease(ui_mutex);
 }
 
 void ThreadsStart() {

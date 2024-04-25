@@ -31,6 +31,8 @@ void CruiseMinusCallback(void);
 void PTTCallback(void);
 void PVCallback(void);
 
+void BMSFrame3Callback(uint8_t *data);
+
 void ThreadsStart(void);
 
 
