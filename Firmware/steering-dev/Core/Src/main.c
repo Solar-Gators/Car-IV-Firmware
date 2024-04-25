@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -46,8 +45,6 @@ CAN_HandleTypeDef hcan1;
 DAC_HandleTypeDef hdac;
 DMA_HandleTypeDef hdma_dac1;
 
-IWDG_HandleTypeDef hiwdg;
-
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
@@ -73,7 +70,6 @@ static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_DAC_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_IWDG_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -108,7 +104,9 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  HAL_NVIC_SetPriority(TIM8_TRG_COM_TIM14_IRQn, 1U, 0U);
+  __enable_irq();
+  __set_BASEPRI(6);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -116,15 +114,16 @@ int main(void)
   MX_DMA_Init();
   MX_CAN1_Init();
   MX_SPI1_Init();
-  MX_FATFS_Init();
   MX_TIM2_Init();
   MX_DAC_Init();
   MX_TIM3_Init();
-  //MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 //  HAL_DAC_Start(&hdac, DAC_CHANNEL_1);
 //  HAL_DAC_Start_DMA(&hdac, DAC_CHANNEL_1, sine_vals, 100, DAC_ALIGN_12B_R);
   CPP_UserSetup();
+
+  // Change timebase priority back to normal
+  HAL_NVIC_SetPriority(TIM8_TRG_COM_TIM14_IRQn, 15U, 0U);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -160,6 +159,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
+
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -193,10 +193,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
@@ -297,34 +296,6 @@ static void MX_DAC_Init(void)
   /* USER CODE BEGIN DAC_Init 2 */
 
   /* USER CODE END DAC_Init 2 */
-
-}
-
-/**
-  * @brief IWDG Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_IWDG_Init(void)
-{
-
-  /* USER CODE BEGIN IWDG_Init 0 */
-
-  /* USER CODE END IWDG_Init 0 */
-
-  /* USER CODE BEGIN IWDG_Init 1 */
-
-  /* USER CODE END IWDG_Init 1 */
-  hiwdg.Instance = IWDG;
-  hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
-  hiwdg.Init.Reload = 1023;
-  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN IWDG_Init 2 */
-
-  /* USER CODE END IWDG_Init 2 */
 
 }
 
@@ -533,41 +504,41 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN0_Pin BTN2_Pin BTN3_Pin */
-  GPIO_InitStruct.Pin = BTN0_Pin|BTN2_Pin|BTN3_Pin;
+  /*Configure GPIO pins : MC_Btn_Pin RGN_Btn_Pin Mode_Btn_Pin */
+  GPIO_InitStruct.Pin = MC_Btn_Pin|RGN_Btn_Pin|Mode_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN1_Pin */
-  GPIO_InitStruct.Pin = BTN1_Pin;
+  /*Configure GPIO pin : Horn_Btn_Pin */
+  GPIO_InitStruct.Pin = Horn_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Horn_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN4_Pin BTN5_Pin BTN6_Pin */
-  GPIO_InitStruct.Pin = BTN4_Pin|BTN5_Pin|BTN6_Pin;
+  /*Configure GPIO pins : LT_Btn_Pin PTT_Btn_Pin Cplus_Btn_Pin */
+  GPIO_InitStruct.Pin = LT_Btn_Pin|PTT_Btn_Pin|Cplus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN7_Pin */
-  GPIO_InitStruct.Pin = BTN7_Pin;
+  /*Configure GPIO pin : Cminus_Btn_Pin */
+  GPIO_InitStruct.Pin = Cminus_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN7_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Cminus_Btn_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : BTN8_Pin */
-  GPIO_InitStruct.Pin = BTN8_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN8_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BTN9_Pin */
-  GPIO_InitStruct.Pin = BTN9_Pin;
+  /*Configure GPIO pin : RT_Btn_Pin */
+  GPIO_InitStruct.Pin = RT_Btn_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(BTN9_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(RT_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PV_Btn_Pin */
+  GPIO_InitStruct.Pin = PV_Btn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(PV_Btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : D_C_Pin */
   GPIO_InitStruct.Pin = D_C_Pin;
@@ -601,12 +572,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  // Call into C++ Domain
-  // CPP_HandleGPIOInterrupt(GPIO_Pin);
-}
 
 /* USER CODE END 4 */
 

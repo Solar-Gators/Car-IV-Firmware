@@ -22,17 +22,29 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
+<<<<<<< HEAD
   Project.SetTraceSource ("SWO");
   Project.SetDevice ("STM32L496RG");
   Project.SetHostIF ("USB", "801042722");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
+=======
+  Project.SetDevice ("STM32L496RG");
+  Project.SetHostIF ("USB", "801046072");
+  Project.SetTargetIF ("SWD");
+  Project.SetTIFSpeed ("4 MHz");
+  Project.SetTraceSource ("SWO");
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
   Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/testboard-base", "$(ProjectDir)");
   Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/testboard-base", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
   //
+<<<<<<< HEAD
+=======
+  Edit.SysVar (VAR_RTT_ENABLED, 1);
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
   Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
   File.Open ("$(ProjectDir)/build/testboard-base.elf");
 }

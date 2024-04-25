@@ -1,10 +1,5 @@
 #include "sg_can.hpp"
 
-/* Only STM32L4 supported for now */
-#ifndef STM32L496xx
-#error This driver is only compatible with STM32L496xx devices
-#endif
-
 /* Must be running FreeRTOS */
 #if (USE_FREERTOS != 1)
 #error This driver requires FreeRTOS
@@ -119,23 +114,28 @@ void CANDevice::HandleRx(void* argument) {
                 Error_Handler();
             }
 
-            // Find message in map and populate data
-            rx_msg = (*rx_messages_)[rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId];
+            #ifdef USE_LOGGING
+            Logger::LogDebug("Rx ID: %x", rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
+            Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
+            #endif
+
+            // Find message in map
+            // If it exists, set rx_msg to point to the CANFrame object
+            auto messages_it = rx_messages_->find(rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
+            rx_msg = messages_it == rx_messages_->end() ? nullptr : (*messages_it).second;
+
             if (rx_msg != nullptr) {
                 osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+                memcpy(rx_msg->data, rxData, rx_msg->len);
                 for (uint32_t i = 0; i < rx_msg->len; i++)
                     rx_msg->data[i] = rxData[i];
                 osMutexRelease(rx_msg->mutex_id_);
 
                 // Call Rx callback
                 if (rx_msg->rxCallback)
-                rx_msg->rxCallback(rxData);
+                    rx_msg->rxCallback(rxData);
             }
         }
-
-        #ifdef USE_LOGGING
-        Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
-        #endif
 
         // Re-enable Rx interrupt
         HAL_CAN_ActivateNotification(hcan_, CAN_IT_RX_FIFO0_MSG_PENDING);

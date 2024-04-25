@@ -22,11 +22,11 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
-  Project.SetTraceSource ("SWO");
   Project.SetDevice ("STM32L496RG");
-  Project.SetHostIF ("USB", "801042722");
+  Project.SetHostIF ("USB", "801046072");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
+  Project.SetTraceSource ("SWO");
   Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/testboard-base", "$(ProjectDir)");
   Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/testboard-base", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");

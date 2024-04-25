@@ -17,9 +17,16 @@ jobs:
         with:
           release: '12.3.Rel1' # <-- The compiler release to use
 
-      - name: Build bms-prototype2
+      - name: Build bms-primary
         run: |
-          cd Firmware/bms-prototype2
+          cd Firmware/bms-primary
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
+
+      - name: Build bms-secondary
+        run: |
+          cd Firmware/bms-secondary
           cmake -S . -B build
           cmake --build build
           cd ../..
@@ -54,5 +61,11 @@ jobs:
       - name: Build testboard-CAN-dev
         run: |
           cd Firmware/testboard-CAN-dev
+          cmake -S . -B build
+          cmake --build build
+
+      - name: Build vcu
+        run: |
+          cd Firmware/vcu
           cmake -S . -B build
           cmake --build build

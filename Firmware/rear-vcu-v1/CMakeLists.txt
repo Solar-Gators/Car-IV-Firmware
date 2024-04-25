@@ -90,8 +90,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 # Linker options
 ########################################################################
 set(CMAKE_EXE_LINKER_FLAGS
-    "${CMAKE_EXE_LINKER_FLAGS} \
-    -specs=nosys.specs \
+    "-specs=nosys.specs \
     -T${CMAKE_CURRENT_SOURCE_DIR}/${MCU_PART}_FLASH.ld \
     -Wl,--gc-sections \
     -Wl,-Map=${PROJECT_NAME}.map,--cref \

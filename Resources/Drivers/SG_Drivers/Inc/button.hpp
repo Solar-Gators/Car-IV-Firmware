@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "user.hpp"
+// #include "user.hpp"
 #include "logger.hpp"
 #include "etl/vector.h"
 
@@ -42,8 +42,11 @@ public:
     uint32_t GetPin();
     GPIO_PinState ReadPin();
     bool GetToggleState();
+    void SetToggleState(bool state);
     bool GetLongToggleState();
+    void SetLongToggleState(bool state);
     bool GetDoubleToggleState();
+    GPIO_PinState GetDefaultState();
 
     // Current triggered button
     static inline Button *triggered_button_;
@@ -60,7 +63,7 @@ private:
     static inline uint32_t handle_press_task_buffer_[BUTTON_THREAD_STACK_SIZE];
     static inline StaticTask_t handle_press_task_tcb_;
     static constexpr const osThreadAttr_t handle_press_task_attributes_ = {
-        .name = "handle_press_task",
+        .name = "Button Event Thread",
         .attr_bits = osThreadDetached,
         .cb_mem = &handle_press_task_tcb_,
         .cb_size = sizeof(handle_press_task_tcb_),

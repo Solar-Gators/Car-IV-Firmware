@@ -9,41 +9,41 @@
 
 #include <stdint.h>
 #include <sg_can.hpp>
+#include "DataModule.hpp"
 
-#define MOTOR_MAIN_EN_FLAG (0x01 << 0)
-#define MOTOR_ECO_FLAG (0x01 << 1)
-#define MOTOR_REVERSE_FLAG (0x01 << 2)
-#define BRAKE_EN_FLAG (0x01 << 3)
 
-class MotorControlFrame : public CANFrame {
-public:
-    MotorControlFrame() : CANFrame(0x234, CAN_ID_STD, CAN_RTR_DATA, 8) {}
+DATAMODULE(
 
-    inline uint16_t GetThrottleVal() {
-        return static_cast<uint16_t>((this->data[1] << 8) | this->data[0]);
+    /* CAN definitions */
+    MotorControlFrame,
+    0x234,
+    CAN_ID_STD,
+    CAN_RTR_DATA,
+    8,
+
+    inline static uint16_t GetThrottleVal() {
+        return static_cast<uint16_t>((Data()[1] << 8) | Data()[0]);
     }
 
-    inline uint16_t GetRegenVal() {
-        return static_cast<uint16_t>((this->data[3] << 8) | this->data[2]);
+    inline static uint16_t GetRegenVal() {
+        return static_cast<uint16_t>((Data()[3] << 8) | Data()[2]);
     }
 
-    inline uint8_t StatusFlags() {
-        return this->data[4];
+    inline static uint8_t StatusFlags() {
+        return Data()[4];
     }
 
-    inline void SetThrottleVal(uint16_t val) {
-        this->data[1] = (val >> 8) & 0xFF;
-        this->data[0] = val & 0xFF;
+    inline static void SetThrottleVal(uint16_t val) {
+        Data()[1] = (val >> 8) & 0xFF;
+        Data()[0] = val & 0xFF;
     }
 
-    inline void SetRegenVal(uint16_t val) {
-        this->data[3] = (val >> 8) & 0xFF;
-        this->data[2] = val & 0xFF;
+    inline static void SetRegenVal(uint16_t val) {
+        Data()[3] = (val >> 8) & 0xFF;
+        Data()[2] = val & 0xFF;
     }
 
-    inline void SetStatusFlags(uint8_t flags) {
-        this->data[4] = flags;
+    inline static void SetStatusFlags(uint8_t flags) {
+        Data()[4] = flags;
     }
-};
-
-inline MotorControlFrame motor_control_frame = MotorControlFrame();
+)

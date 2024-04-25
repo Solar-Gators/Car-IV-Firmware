@@ -1,0 +1,29 @@
+
+
+
+OpenDocument="usbd_conf.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/USB_DEVICE/Target/usbd_conf.c", Line=275
+OpenDocument="user.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/User/Src/user.cpp", Line=65
+OpenDocument="map.h", FilePath="c:/dev/car-iv-firmware/resources/middlewares/third_party/etl/include/etl/map.h", Line=1178
+OpenDocument="startup_stm32l496xx.s", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/startup_stm32l496xx.s", Line=34
+OpenDocument="stm32l4xx_it.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/Core/Src/stm32l4xx_it.c", Line=87
+OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/Core/Src/main.c", Line=84
+OpenDocument="vcom.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/User/Src/vcom.cpp", Line=0
+OpenDocument="threads.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/testboard-commander/User/Src/threads.cpp", Line=53
+OpenDocument="string.h", FilePath="c:/dev/car-iv-firmware/resources/middlewares/third_party/etl/include/etl/string.h", Line=57
+OpenToolbar="Debug", Floating=0, x=0, y=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=0, w=300, h=638, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=800, h=321, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x7FFFFD0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=300, h=638, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=483, h=321, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
+TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[217;105;100;100;100;1034]
+TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
+TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
+TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[100;144;100]
+TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;762]
+WatchedExpression="button_list.size()", Window=Watched Data 1
+WatchedExpression="command_buf", Window=Watched Data 1
+WatchedExpression="pbuf", Window=Watched Data 1
+WatchedExpression="token", Window=Watched Data 1
+WatchedExpression="command_map", Window=Watched Data 1

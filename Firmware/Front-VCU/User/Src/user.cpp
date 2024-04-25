@@ -4,7 +4,10 @@
 #include <string>
 #include "IoTestFrame.hpp"
 #include "MotorControlFrame.hpp"
+<<<<<<< HEAD
 #include "M24C02.hpp"
+=======
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
 
 using namespace std;
 
@@ -78,7 +81,11 @@ void CPP_UserSetup(void) {
     HAL_Delay(10);
 
     regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
+<<<<<<< HEAD
     osTimerStart(periodic_timer_id, 1000);
+=======
+    osTimerStart(periodic_timer_id, 20);
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
 
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
@@ -105,6 +112,7 @@ void PeriodicTask1(void *argument) {
     txBuffer[2] = '\n'; 
 	Logger::LogInfo("raw value: %x\n", raw);
 
+<<<<<<< HEAD
     motor_control_frame.SetThrottleVal(raw<<4);
     motor_control_frame.data[2] = 123;
     CANController::Send(&motor_control_frame);
@@ -113,6 +121,12 @@ void PeriodicTask1(void *argument) {
 
 
 
+=======
+    DriverControlsFrame0::SetThrottleVal((uint16_t)(raw) << 4);
+    CANController::Send(&DriverControlsFrame0::Instance());
+
+    osEventFlagsSet(regular_event, 0x1);
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
 }
 
 void RegularTask1(void *argument) {

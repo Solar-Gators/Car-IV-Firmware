@@ -66,7 +66,10 @@ file(GLOB GLOB_SOURCES
 file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
+<<<<<<< HEAD
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/M24C02.cpp
+=======
+>>>>>>> 4a2916e62eae5d6d47929eb6c92c6da6e60a658e
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/IMU.c)
     
     

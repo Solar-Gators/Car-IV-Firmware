@@ -1,17 +1,9 @@
 #include "logger.hpp"
 
 #if (USE_LOGGING == 1)
-void Logger::LogInfo(const char * sFormat, ...) {
-    PrintHeader("INFO");
-    PrintThread();
-    va_list ParamList;
-    va_start(ParamList, sFormat);
-    SEGGER_RTT_vprintf(0, sFormat, &ParamList);
-    va_end(ParamList);
-    SEGGER_RTT_printf(0, "\n");
-}
 
 void Logger::LogDebug(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_DEBUG)
     PrintHeader("DEBUG");
     PrintThread();
     va_list ParamList;
@@ -19,9 +11,23 @@ void Logger::LogDebug(const char * sFormat, ...) {
     SEGGER_RTT_vprintf(0, sFormat, &ParamList);
     va_end(ParamList);
     SEGGER_RTT_printf(0, "\n");
+    #endif
+}
+
+void Logger::LogInfo(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_INFO)
+    PrintHeader("INFO");
+    PrintThread();
+    va_list ParamList;
+    va_start(ParamList, sFormat);
+    SEGGER_RTT_vprintf(0, sFormat, &ParamList);
+    va_end(ParamList);
+    SEGGER_RTT_printf(0, "\n");
+    #endif
 }
 
 void Logger::LogWarning(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_WARNING)
     PrintHeader("WARNING");
     PrintThread();
     va_list ParamList;
@@ -29,9 +35,11 @@ void Logger::LogWarning(const char * sFormat, ...) {
     SEGGER_RTT_vprintf(0, sFormat, &ParamList);
     va_end(ParamList);
     SEGGER_RTT_printf(0, "\n");
+    #endif
 }
 
 void Logger::LogError(const char * sFormat, ...) {
+    #if (LOG_LEVEL <= LOG_LEVEL_ERROR)
     PrintHeader("ERROR");
     PrintThread();
     va_list ParamList;
@@ -39,6 +47,7 @@ void Logger::LogError(const char * sFormat, ...) {
     SEGGER_RTT_vprintf(0, sFormat, &ParamList);
     va_end(ParamList);
     SEGGER_RTT_printf(0, "\n");
+    #endif
 }
 #else
 void Logger::LogInfo(const char * sFormat, ...) {}

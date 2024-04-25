@@ -10,7 +10,6 @@ extern "C" CAN_HandleTypeDef hcan2;
 extern "C" SPI_HandleTypeDef hspi1;
 
 /* Initialize CAN frames and devices */
-
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
 
@@ -18,30 +17,39 @@ CANDevice candev2 = CANDevice(&hcan2);
 DACx311 throttle_dac = DACx311(&hspi1, THROTTLE_CS_GPIO_Port, THROTTLE_CS_Pin);
 DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 
-
+/* Setup function, called from main before kernel initialization */
 void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
+
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
-    CANController::AddRxMessage(&io_test_frame, IoMsgCallback);
-    CANController::AddRxMessage(&motor_control_frame, MotorUpdateCallback);
+    CANController::AddRxMessage(&IoTestFrame::Instance(), IoMsgCallback);
+    CANController::AddRxMessage(&DriverControlsFrame0::Instance(), MotorUpdateCallback);
+    CANController::AddRxMessage(&MitsubaFrame0::Instance(), MitsubaCallback);
+    //CANController::AddRxMessage(&MitsubaFrame1::Instance(), MitsubaCallback);
+    //CANController::AddRxMessage(&MitsubaFrame2::Instance(), MitsubaCallback);
     CANController::AddFilterAll();
     CANController::Start();
 
-    // Test DAC
-    while (1) {
-        throttle_dac.SetValue(0x0FFF);
-        regen_dac.SetValue(0x0FFF);
-        HAL_Delay(1000);
-        throttle_dac.SetValue(0x0000);
-        regen_dac.SetValue(0x0000);
-        HAL_Delay(1000);
-    }
+    // Permanently request all Mitsuba frames
+    MitsubaRequestFrame::Instance().Data()[0] |= 0x7;
+    //MitsubaRequestFrame::Instance().SetRequestAll();
+
+    // Enable the motor
+    SetMotorState(true);
+    // Set the motor mode to eco
+    SetMotorMode(true);
+    // Set the motor direction to forward
+    SetMotorDirection(false);
+
+    // Start periodic tasks
+    Start();
 }
 
+/* Helper Functions */
 void SetMotorState(bool state) {
     HAL_GPIO_WritePin(MC_MAIN_CTRL_GPIO_Port, MC_MAIN_CTRL_Pin, (GPIO_PinState)state);
 }
@@ -51,7 +59,9 @@ void SetMotorMode(bool mode) {
 }
 
 void SetMotorDirection(bool direction) {
-    HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, (GPIO_PinState)direction);
+    volatile GPIO_PinState state = (GPIO_PinState)direction;
+
+    HAL_GPIO_WritePin(MC_FR_CTRL_GPIO_Port, MC_FR_CTRL_Pin, state);
 }
 
 void SetThrottle(uint16_t value) {

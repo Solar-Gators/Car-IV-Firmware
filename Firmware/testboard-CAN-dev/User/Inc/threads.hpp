@@ -12,3 +12,4 @@ extern osTimerId_t periodic_thread_id;
 void ButtonSingleCallback(void);
 void ButtonLongCallback(void);
 void IoMsgCallback(uint8_t *data);
+void MitsubaMsgCallback(uint8_t *data);

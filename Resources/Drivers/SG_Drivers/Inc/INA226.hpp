@@ -33,6 +33,7 @@ public:
     HAL_StatusTypeDef GetShuntVoltage();
     HAL_StatusTypeDef GetCurrent();
     HAL_StatusTypeDef GetBusVoltage();
+    HAL_StatusTypeDef GetPower();
     HAL_StatusTypeDef SetCalibrationReg(float ohms, float maxExpectedCurrent);
     HAL_StatusTypeDef Reset();
     HAL_StatusTypeDef SetConfig();
@@ -50,6 +51,7 @@ private:
     float current_; // amps
     float bus_voltage_; // volts
     float shunt_voltage_; // volts
+    float power_; // watts
     float current_LSB_; // Multiply by current register to get current in A
     float power_LSB_; // Multiply by power register to get power in W (always 25x current)
 };

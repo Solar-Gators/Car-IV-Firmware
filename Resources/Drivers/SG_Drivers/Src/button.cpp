@@ -10,12 +10,13 @@ Button::Button(GPIO_TypeDef *port, uint16_t pin,
     default_state_(default_state), toggle_state_(initial_toggle_state) {
 
     // Make sure button pin is not already in use
-    for (auto button : button_list_) {
-        if (button->GetPin() == pin_) {
-            Logger::LogError("Duplicate button pin");
-            Error_Handler();
-        }
-    }
+    // TODO: Implement duplicate button functionality
+    // for (auto button : button_list_) {
+    //     if (button->GetPin() == pin_) {
+    //         Logger::LogError("Duplicate button pin");
+    //         Error_Handler();
+    //     }
+    // }
     
     // Add button to button list
     button_list_.push_back(this);
@@ -28,6 +29,9 @@ Button::Button(GPIO_TypeDef *port, uint16_t pin,
     // Default toggle state
     long_toggle_state_ = initial_toggle_state;
     double_toggle_state_ = initial_toggle_state;
+
+    // Enable pin interrupt
+    EnableInterrupt();
 };
 
 void Button::RegisterNormalPressCallback(void (*callback)(void)) {
@@ -57,12 +61,24 @@ bool Button::GetToggleState() {
     return toggle_state_;
 }
 
+void Button::SetToggleState(bool state) {
+    toggle_state_ = state;
+}
+
 bool Button::GetLongToggleState() {
     return long_toggle_state_;
 }
 
+void Button::SetLongToggleState(bool state) {
+    long_toggle_state_ = state;
+}
+
 bool Button::GetDoubleToggleState() {
     return double_toggle_state_;
+}
+
+GPIO_PinState Button::GetDefaultState() {
+    return default_state_;
 }
 
 GPIO_PinState Button::ReadPin() {
@@ -178,18 +194,23 @@ void Button::EnableInterrupt() {
     switch (pin_) {
         case GPIO_PIN_0:
             HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+            HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
             break;
         case GPIO_PIN_1:
             HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+            HAL_NVIC_SetPriority(EXTI1_IRQn, 5, 0);
             break;
         case GPIO_PIN_2:
             HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+            HAL_NVIC_SetPriority(EXTI2_IRQn, 5, 0);
             break;
         case GPIO_PIN_3:
             HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+            HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
             break;
         case GPIO_PIN_4:
             HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+            HAL_NVIC_SetPriority(EXTI4_IRQn, 5, 0);      
             break;
         case GPIO_PIN_5:
         case GPIO_PIN_6:
@@ -197,6 +218,7 @@ void Button::EnableInterrupt() {
         case GPIO_PIN_8:
         case GPIO_PIN_9:
             HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+            HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
             break;
         case GPIO_PIN_10:
         case GPIO_PIN_11:
@@ -205,6 +227,7 @@ void Button::EnableInterrupt() {
         case GPIO_PIN_14:
         case GPIO_PIN_15:
             HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+            HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
             break;
         default:
             break;
@@ -218,7 +241,8 @@ void Button::ClearInterrupt() {
 // Global interrupt callback
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     for (auto button : Button::button_list_) {
-        if (button->GetPin() == GPIO_Pin) {
+        // Check that pin is the same and button is pressed
+        if (button->GetPin() == GPIO_Pin && button->ReadPin() == !button->GetDefaultState()) {
             Button::triggered_button_ = button;
             osSemaphoreRelease(Button::button_semaphore_id_);
         }
