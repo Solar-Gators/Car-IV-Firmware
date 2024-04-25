@@ -275,6 +275,7 @@ void ReadVoltageThread(void *argument) {
     // Update cell voltage values in bms
     bms.ReadVoltages();
 
+    local_pack_voltage = 0;
     for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY; i++) {
         // Populate cell_voltages array
         // Note: This step is unecessary, all the voltage values are stored in the bms
@@ -295,11 +296,11 @@ void ReadVoltageThread(void *argument) {
         }
 
         // Update sum of cell voltages for computing average
-        sum_cell_voltage += cell_voltages[i];
+        local_pack_voltage += cell_voltages[i];
     }
 
     // Compute average cell voltage
-    avg_cell_voltage = sum_cell_voltage / (bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY);
+    avg_cell_voltage = local_pack_voltage / (bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY);
 
     // Check for overvoltage and undervoltage conditions on local bms
     if (high_cell_voltage > bms_config.MAX_CELL_VOLTAGE) {
@@ -462,19 +463,22 @@ void ReadTemperatureThread(void *argument) {
             thermistor_vals[MapADCChannelToThermistor(2, i)] = temp_thermistor_vals[i];
 
         // Disable thermistor amplifiers
-        SetAmplifierState(false);
+        // SetAmplifierState(false);
         osMutexRelease(adc_mutex_id);
 
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= 22; i++) {
             temps[i] = ADCToTemp(thermistor_vals[i]);
 
-            if (thermistor_vals[i] > thermistor_vals[max_index]) {
-                max_index = i;
-            }
+            // Ignore board thermistor and dummy thermistor
+            if (i <= 20) {
+                if (thermistor_vals[i] > thermistor_vals[max_index]) {
+                    max_index = i;
+                }
 
-            if (thermistor_vals[i] < thermistor_vals[min_index]) {
-                min_index = i;
+                if (thermistor_vals[i] < thermistor_vals[min_index]) {
+                    min_index = i;
+                }
             }
         }
 
@@ -519,7 +523,7 @@ void BroadcastThread(void* argument) {
         broadcast_thread_counter++;
 
         // Capture voltage data
-        BMSFrame0::Instance().SetPackVoltage(total_pack_voltage);
+        BMSFrame0::Instance().SetPackVoltage(total_pack_voltage / 10);
         BMSFrame0::Instance().SetAvgCellVoltage(avg_cell_voltage);
         BMSFrame0::Instance().SetHighCellVoltage(high_cell_voltage);
         BMSFrame0::Instance().SetLowCellVoltage(low_cell_voltage);
@@ -562,6 +566,9 @@ void BroadcastThread(void* argument) {
 }
 
 void ErrorThread(void* argument) {
+    // Delay to allow errors to show up
+    osDelay(500);
+
     while (1) {
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
@@ -587,27 +594,25 @@ void ErrorThread(void* argument) {
         else {
             // Close negative side contactor
             SetContactorState(4, true);
-            osDelay(250);
-            // Close precharge contactor
-            SetContactorState(2, true);
             osDelay(500);
+            // Close precharge contactor
+            // SetContactorState(2, true);
+            // osDelay(1000);
             // Close positive side contactor
             SetContactorState(3, true);
-            osDelay(100);
+            osDelay(50);
             // Open precharge contactor
             SetContactorState(2, false);
-            osDelay(100);
         }
     }
 }
 
 void SecondaryFrame0Callback(uint8_t *data) {
-    // Update total pack voltage
-    total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage();
+    // Update total pack
+    total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage() * 10;
 
     // Update average cell voltage
-    // TODO: Fix this
-    uint32_t sum_cell_voltages = avg_cell_voltage * num_total_cells;
+    avg_cell_voltage = total_pack_voltage / num_total_cells;
 
     // Update high and low cell voltages
     // Error checking is done in ReadVoltageThread

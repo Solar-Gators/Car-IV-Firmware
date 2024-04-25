@@ -12,7 +12,7 @@
 #include "ILI9341.hpp"
 
 #define SOC_THRESHOLD                   20.0f
-#define BATT_VOLTAGE_THRESHOLD          100.0f
+#define BATT_VOLTAGE_THRESHOLD          80.0f
 #define AUX_VOLTAGE_THRESHOLD           11.2f
 #define TEMP_THRESHOLD                  42u
 

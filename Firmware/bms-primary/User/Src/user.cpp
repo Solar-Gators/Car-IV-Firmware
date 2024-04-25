@@ -61,12 +61,14 @@ bool CAN_Modules_Init() {
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback);
-    CANController::AddRxMessage(&BMSSecondaryFrame0::Instance());
+    CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback);
     CANController::AddRxMessage(&BMSSecondaryFrame1::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame2::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame3::Instance());
     CANController::AddFilterAll();
     CANController::Start();
+
+    return true;
 }
 
 void ADC_Modules_Init() {

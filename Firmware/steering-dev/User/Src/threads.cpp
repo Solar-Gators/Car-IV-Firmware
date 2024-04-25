@@ -91,7 +91,7 @@ void UpdateUIPeriodic() {
     ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
 
     // Update battery voltage
-    ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) * 100.0);
+    ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0);
 
     // Update battery temperature
     ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() * 100);
