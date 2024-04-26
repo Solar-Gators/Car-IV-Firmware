@@ -14,6 +14,7 @@
 /* Datamodules */
 #include "CustomBMSFrames.hpp"
 #include "VCUFrame.hpp"
+#include "DriverControls.hpp"
 
 /* User configuration values */
 // TODO: Store configuration in EEPROM

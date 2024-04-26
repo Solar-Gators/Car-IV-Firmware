@@ -482,6 +482,11 @@ void ReadTemperatureThread(void *argument) {
             }
         }
 
+        high_temp = temps[max_index] * 100;
+        low_temp = temps[min_index] * 100;
+
+        // TODO: Get secondary BMS temperature data
+
         // Check for overtemperature conditions
         // TODO: Implement this
 
@@ -572,8 +577,6 @@ void ErrorThread(void* argument) {
     while (1) {
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
-        SetContactorSource(ContactorSource_Type::MAIN);
-
         // Any set bit in fault_flags indicates an error
         if (BMSFrame3::Instance().GetFaultFlags() != 0) {
             // Open main contactors
@@ -596,13 +599,15 @@ void ErrorThread(void* argument) {
             SetContactorState(4, true);
             osDelay(500);
             // Close precharge contactor
-            // SetContactorState(2, true);
-            // osDelay(1000);
+            SetContactorState(2, true);
+            osDelay(1000);
+            // Open precharge contactor and close positive side contactor
+            // Open precharge first to reduce max current draw
+            SetContactorState(2, false);
+            osDelay(200);
             // Close positive side contactor
             SetContactorState(3, true);
-            osDelay(50);
-            // Open precharge contactor
-            SetContactorState(2, false);
+            osDelay(500);
         }
     }
 }
@@ -632,4 +637,28 @@ void VCUFrameCallback(uint8_t *data) {
 
     // Trigger error thread
     osEventFlagsSet(error_event, 0x1);
+}
+
+/* Callback runs when DriverControlsFrame1 received 
+The only purpose of this is to control the MPPT contactors */
+// TODO: Check pack voltage to make sure safe to turn on MPPTs
+void DriverControls1Callback(uint8_t *data) {
+    // If solar enabled and contactors not currently closed, close contactors
+    if (DriverControlsFrame1::Instance().GetPVEnable() && !BMSFrame3::Instance().GetContactorStatus(1)) {
+        // Close precharge contactor
+        SetContactorState(2, true);
+        osDelay(500);
+        // Close MPPT contactor
+        SetContactorState(1, true);
+        osDelay(250);
+        // Open precharge contactor
+        SetContactorState(2, false);
+        osDelay(250);
+        BMSFrame3::Instance().SetContactorStatus(1, true);
+    }
+    // If solar disabled and contactors currently closed, open contactors
+    else if (!DriverControlsFrame1::Instance().GetPVEnable() && BMSFrame3::Instance().GetContactorStatus(1)) {
+        SetContactorState(4, false);
+        BMSFrame3::Instance().SetContactorStatus(1, false);
+    }
 }

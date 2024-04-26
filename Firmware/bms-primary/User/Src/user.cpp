@@ -43,7 +43,7 @@ bool DefaultOutputs() {
     SetAmplifierState(false);
 
     // Set contactors power source to supplemental battery
-    SetContactorSource(ContactorSource_Type::MAIN);
+    SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
 
     // TODO: Debug only
     // HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, GPIO_PIN_SET);
@@ -62,6 +62,7 @@ bool CAN_Modules_Init() {
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback);
     CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback);
+    CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
     CANController::AddRxMessage(&BMSSecondaryFrame1::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame2::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame3::Instance());

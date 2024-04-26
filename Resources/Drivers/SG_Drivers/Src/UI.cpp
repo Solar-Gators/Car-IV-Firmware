@@ -222,9 +222,9 @@ HAL_StatusTypeDef UI::UpdateAuxV(float value) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef UI::UpdateTemp(uint32_t value) {
-    etl::string<2> str_value;
-    etl::to_string(value, str_value, etl::format_spec().width(2).fill(' '), false);
+HAL_StatusTypeDef UI::UpdateTemp(float value) {
+    etl::string<4> str_value;
+    etl::to_string(value, str_value, etl::format_spec().precision(1).width(2).fill(' '), false);
 
     uint16_t color = RGB565_WHITE;
     if (value > TEMP_THRESHOLD)

@@ -60,6 +60,10 @@ HAL_StatusTypeDef Buttons_Init() {
 	regen_btn.RegisterNormalPressCallback(RegenCallback);
 	horn_btn.RegisterNormalPressCallback(HornCallback);
 	mc_btn.RegisterNormalPressCallback(MCCallback);
+
+	// TODO: Get rid of this once PV button is working
+	mc_btn.RegisterLongPressCallback(PVCallback, 800, false);
+	
 	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
 	cruise_plus_btn.RegisterNormalPressCallback(CruisePlusCallback);
 	cruise_minus_btn.RegisterNormalPressCallback(CruiseMinusCallback);

@@ -87,6 +87,12 @@ void UpdateUIPeriodic() {
     // Update speed
     ui.UpdateSpeed(MitsubaFrame0::Instance().GetMotorRPM() * WHEEL_DIAM_MI * 60.0F);
 
+    // Update contactor status
+    if (BMSFrame3::Instance().GetContactorStatus(3) && BMSFrame3::Instance().GetContactorStatus(4))
+        ui.UpdateBMSStatus(RGB565_GREEN);
+    else
+        ui.UpdateBMSStatus(RGB565_RED);
+
     // Update SoC
     ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
 
@@ -94,7 +100,7 @@ void UpdateUIPeriodic() {
     ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0);
 
     // Update battery temperature
-    ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() * 100);
+    ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() / 100.0);
 
     // Update net power
     ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower());
@@ -206,8 +212,34 @@ void PTTCallback() {
     Logger::LogInfo("PTT pressed");
 }
 
+// TODO: Switch to PV button
 void PVCallback() {
     Logger::LogInfo("PV pressed");
+    DriverControlsFrame1::Instance().SetPVEnable(mc_btn.GetLongToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
+
+    // Wait for contactor response from BMS if turning contactors on
+    // if (pv_btn.GetToggleState() == true) {
+    //     for (int i = 0; i < 3; i++) {
+    //         osDelay(30);
+    //         if (BMSFrame3::Instance().GetContactorStatus(0)) {
+    //             osMutexAcquire(ui_mutex, osWaitForever);
+    //             ui.UpdatePVStatus(RGB565_GREEN);
+    //             osMutexRelease(ui_mutex);
+    //             break;
+    //         }
+    //         else {
+    //             osMutexAcquire(ui_mutex, osWaitForever);
+    //             ui.UpdatePVStatus(RGB565_RED);
+    //             osMutexRelease(ui_mutex);
+            
+    //         }
+    //     }
+    // }
+
+    osMutexAcquire(ui_mutex, osWaitForever);
+    ui.UpdatePVStatus(mc_btn.GetLongToggleState() ? RGB565_GREEN : RGB565_RED);
+    osMutexRelease(ui_mutex);
 }
 
 void BMSFrame3Callback(uint8_t *data) {

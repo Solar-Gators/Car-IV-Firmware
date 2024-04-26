@@ -46,7 +46,7 @@ public:
     HAL_StatusTypeDef UpdateSOC(float value);
     HAL_StatusTypeDef UpdateBattV(float value);
     HAL_StatusTypeDef UpdateAuxV(float value);
-    HAL_StatusTypeDef UpdateTemp(uint32_t value);
+    HAL_StatusTypeDef UpdateTemp(float value);
     HAL_StatusTypeDef UpdateEfficiency(uint32_t value);
     HAL_StatusTypeDef UpdateNetPower(uint32_t value);
     HAL_StatusTypeDef UpdateSolarPower(uint32_t value);
