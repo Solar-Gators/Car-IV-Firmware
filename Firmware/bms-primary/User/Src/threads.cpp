@@ -201,6 +201,15 @@ const osMutexAttr_t current_integral_mutex_attr = {
 };
 osMutexId_t current_integral_mutex_id = osMutexNew(NULL);
 
+StaticSemaphore_t contactor_mutex_cb;
+const osMutexAttr_t contactor_mutex_attr = {
+    .name = "Contactor Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &contactor_mutex_cb,
+    .cb_size = sizeof(contactor_mutex_cb),
+};
+osMutexId_t contactor_mutex_id = osMutexNew(NULL);
+
 /* Event flag to trigger read_thermistor_thread */
 osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
 
@@ -563,8 +572,7 @@ void BroadcastThread(void* argument) {
         // Send BMSFrame3 at 1Hz (every 10th broadcast)
         // Faults are updated in the datamodule as they happen
         if (broadcast_thread_counter % 10 == 0) {
-            BMSFrame3::Instance().SetStatusFlags(status_flags);
-            BMSFrame3::Instance().SetPackSoC(0);  // TODO: Implement SoC
+            BMSFrame3::Instance().SetPackSoC(37);  // TODO: Implement SoC
             CANController::Send(&BMSFrame3::Instance());
         }
     }
@@ -579,12 +587,19 @@ void ErrorThread(void* argument) {
 
         // Any set bit in fault_flags indicates an error
         if (BMSFrame3::Instance().GetFaultFlags() != 0) {
+            osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Open main contactors
             SetContactorState(3, false);
             SetContactorState(4, false);
 
             // Open MPPT contactor
             SetContactorState(1, false);
+
+            BMSFrame3::Instance().SetContactorStatus(3, false);
+            BMSFrame3::Instance().SetContactorStatus(4, false);
+            BMSFrame3::Instance().SetContactorStatus(1, false);
+
+            osMutexRelease(contactor_mutex_id);
 
             // Update BMSFrame3 with errors
             BMSFrame3::Instance().SetStatusFlags(status_flags);
@@ -595,6 +610,7 @@ void ErrorThread(void* argument) {
 
         // If no errors, close contactors
         else {
+            osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Close negative side contactor
             SetContactorState(4, true);
             osDelay(500);
@@ -608,6 +624,11 @@ void ErrorThread(void* argument) {
             // Close positive side contactor
             SetContactorState(3, true);
             osDelay(500);
+
+            BMSFrame3::Instance().SetContactorStatus(3, true);
+            BMSFrame3::Instance().SetContactorStatus(4, true);
+
+            osMutexRelease(contactor_mutex_id);
         }
     }
 }
@@ -645,6 +666,7 @@ The only purpose of this is to control the MPPT contactors */
 void DriverControls1Callback(uint8_t *data) {
     // If solar enabled and contactors not currently closed, close contactors
     if (DriverControlsFrame1::Instance().GetPVEnable() && !BMSFrame3::Instance().GetContactorStatus(1)) {
+        osMutexAcquire(contactor_mutex_id, osWaitForever);
         // Close precharge contactor
         SetContactorState(2, true);
         osDelay(500);
@@ -655,10 +677,13 @@ void DriverControls1Callback(uint8_t *data) {
         SetContactorState(2, false);
         osDelay(250);
         BMSFrame3::Instance().SetContactorStatus(1, true);
+        osMutexRelease(contactor_mutex_id);
     }
     // If solar disabled and contactors currently closed, open contactors
-    else if (!DriverControlsFrame1::Instance().GetPVEnable() && BMSFrame3::Instance().GetContactorStatus(1)) {
-        SetContactorState(4, false);
+    else if (!DriverControlsFrame1::Instance().GetPVEnable()) {
+        osMutexAcquire(contactor_mutex_id, osWaitForever);
+        SetContactorState(1, false);
         BMSFrame3::Instance().SetContactorStatus(1, false);
+        osMutexRelease(contactor_mutex_id);
     }
 }

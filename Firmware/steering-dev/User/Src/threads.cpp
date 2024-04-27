@@ -77,7 +77,7 @@ void ReadButtonsPeriodic() {
 
 /* Mutexes */
 osMutexId_t ui_mutex = osMutexNew(NULL);
-
+static uint32_t solar_power = 0;
 void UpdateUIPeriodic() {
     // Wheel diameter in miles/rotation
     static constexpr float WHEEL_DIAM_MI = (0.0010867658F);
@@ -87,15 +87,6 @@ void UpdateUIPeriodic() {
     // Update speed
     ui.UpdateSpeed(MitsubaFrame0::Instance().GetMotorRPM() * WHEEL_DIAM_MI * 60.0F);
 
-    // Update contactor status
-    if (BMSFrame3::Instance().GetContactorStatus(3) && BMSFrame3::Instance().GetContactorStatus(4))
-        ui.UpdateBMSStatus(RGB565_GREEN);
-    else
-        ui.UpdateBMSStatus(RGB565_RED);
-
-    // Update SoC
-    ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
-
     // Update battery voltage
     ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0);
 
@@ -104,6 +95,13 @@ void UpdateUIPeriodic() {
 
     // Update net power
     ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower());
+
+    // Update solar power
+    uint32_t solar_power_old = solar_power;
+    solar_power = static_cast<uint32_t>(MPPTInputMeasurementsFrame1::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame1::Instance().GetInputVoltage());
+    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame2::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame2::GetInputVoltage());
+    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame3::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame3::GetInputVoltage());
+    ui.UpdateSolarPower(solar_power);
 
     osMutexRelease(ui_mutex);
 }
@@ -215,41 +213,34 @@ void PTTCallback() {
 // TODO: Switch to PV button
 void PVCallback() {
     Logger::LogInfo("PV pressed");
-    DriverControlsFrame1::Instance().SetPVEnable(mc_btn.GetLongToggleState());
+    bool pv_state = pv_btn.GetToggleState();
+    DriverControlsFrame1::Instance().SetPVEnable(pv_state);
     CANController::Send(&DriverControlsFrame1::Instance());
-
-    // Wait for contactor response from BMS if turning contactors on
-    // if (pv_btn.GetToggleState() == true) {
-    //     for (int i = 0; i < 3; i++) {
-    //         osDelay(30);
-    //         if (BMSFrame3::Instance().GetContactorStatus(0)) {
-    //             osMutexAcquire(ui_mutex, osWaitForever);
-    //             ui.UpdatePVStatus(RGB565_GREEN);
-    //             osMutexRelease(ui_mutex);
-    //             break;
-    //         }
-    //         else {
-    //             osMutexAcquire(ui_mutex, osWaitForever);
-    //             ui.UpdatePVStatus(RGB565_RED);
-    //             osMutexRelease(ui_mutex);
-            
-    //         }
-    //     }
-    // }
-
-    osMutexAcquire(ui_mutex, osWaitForever);
-    ui.UpdatePVStatus(mc_btn.GetLongToggleState() ? RGB565_GREEN : RGB565_RED);
-    osMutexRelease(ui_mutex);
 }
 
 void BMSFrame3Callback(uint8_t *data) {
+    // For some reason, frame will be all 0s sometimes
+    // TODO: Figure out why this is the case
+    if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 0)
+        return;
+
     uint8_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
     osMutexAcquire(ui_mutex, osWaitForever);
     if (fault_flags)
         ui.UpdateBMSStatus(RGB565_RED);
     else
         ui.UpdateBMSStatus(RGB565_GREEN);
+
+    // Update SoC
+    ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
+
+    // Update PV status
+    if (BMSFrame3::Instance().GetContactorStatus(1))
+        ui.UpdatePVStatus(RGB565_GREEN);
+    else
+        ui.UpdatePVStatus(RGB565_RED);
     osMutexRelease(ui_mutex);
+
 }
 
 void ThreadsStart() {

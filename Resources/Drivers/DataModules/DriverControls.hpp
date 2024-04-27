@@ -77,7 +77,7 @@ DATAMODULE(
     0x012,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    1,
+    2,
 
     inline static uint8_t GetFlags0() {
         return static_cast<uint8_t>(Data()[0]);
