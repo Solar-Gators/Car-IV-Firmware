@@ -5,6 +5,7 @@
 #include "IoTestFrame.hpp"
 #include "MotorControlFrame.hpp"
 #include "ADS7138.hpp"
+#include "threads.h"
 
 using namespace std;
 
@@ -20,6 +21,8 @@ extern "C" CAN_HandleTypeDef hcan1;
 extern "C" CAN_HandleTypeDef hcan2;
 extern "C" I2C_HandleTypeDef hi2c2;
 
+extern void ThreadsStart();
+
 /* Initialize CAN frames and devices */
 
 CANDevice candev1 = CANDevice(&hcan1);
@@ -31,43 +34,11 @@ ADS7138 adcs[1] = {ADS7138(&hi2c2, 0x10)};
 
 extern "C" void CPP_UserSetup(void);
 
-/* Task function prototypes */
-void PeriodicTask1(void *argument);
-void RegularTask1(void *argument);
-
-/* Periodic timer definitions */
-osTimerAttr_t periodic_timer_attr = {
-    .name = "Periodic Task 1",
-    .attr_bits = 0,
-    .cb_mem = NULL,
-    .cb_size = 0,
-};
-osTimerId_t periodic_timer_id = osTimerNew((osThreadFunc_t)PeriodicTask1, osTimerPeriodic, NULL, &periodic_timer_attr);
-
-/* Regular task definitions */
-osThreadId_t regular_task_id;
-uint32_t regular_task_buffer[128];
-StaticTask_t regular_task_control_block;
-const osThreadAttr_t regular_task_attributes = {
-    .name = "Regular Task 1",
-    .attr_bits = osThreadDetached,
-    .cb_mem = &regular_task_control_block,
-    .cb_size = sizeof(regular_task_control_block),
-    .stack_mem = &regular_task_buffer[0],
-    .stack_size = sizeof(regular_task_buffer),
-    .priority = (osPriority_t) osPriorityAboveNormal,
-    .tz_module = 0,
-    .reserved = 0,
-};
-
-/* Event flag to trigger regular task */
-osEventFlagsId_t regular_event = osEventFlagsNew(NULL);
 
 
-uint16_t rawData;
-uint8_t high;
-uint8_t low;
-uint8_t ignitionState = false;
+
+
+
 void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
@@ -116,42 +87,20 @@ void CPP_UserSetup(void) {
 
     ADC_Modules_Init();
 
-		regular_task_id = osThreadNew((osThreadFunc_t)RegularTask1, NULL, &regular_task_attributes);
-    osTimerStart(periodic_timer_id, 1000);
+    ThreadsStart();    
 }
 
-void PeriodicTask1(void *argument) {
+uint16_t readThrottleValue() {
     //heart beat
     //Logger::LogInfo("Periodic timer fired\n");
     HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
 
    
-
+    uint16_t rawData;
     //IMU_ReadAccel(&imu);
-    volatile HAL_StatusTypeDef status = HAL_OK;
     adcs[0].ConversionReadAutoSequence(&rawData, 1);
 
-    DriverControlsFrame0::SetThrottleVal((uint16_t)(rawData) << 4);
-    
-    CANController::Send(&DriverControlsFrame0::Instance());
-
-    osEventFlagsSet(regular_event, 0x1);
-    
-    if(HAL_GPIO_ReadPin(GPIOC, 6) == true){
-       DriverControlsFrame0::SetShutdownStatus((true));
-    }
+    return(rawData);
 
 
 }
-
-void RegularTask1(void *argument) {
-    while (1) {
-        osEventFlagsWait(regular_event, 0x1, osFlagsWaitAny, osWaitForever);
-
-       // Logger::LogInfo("Hello World!\n");
-        
-        
-    }
-}
-
-
