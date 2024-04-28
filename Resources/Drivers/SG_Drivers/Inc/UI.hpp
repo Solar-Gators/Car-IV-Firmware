@@ -48,9 +48,9 @@ public:
     HAL_StatusTypeDef UpdateAuxV(float value);
     HAL_StatusTypeDef UpdateTemp(float value);
     HAL_StatusTypeDef UpdateEfficiency(uint32_t value);
-    HAL_StatusTypeDef UpdateNetPower(uint32_t value);
-    HAL_StatusTypeDef UpdateSolarPower(uint32_t value);
-    HAL_StatusTypeDef UpdateMotorPower(uint32_t value);
+    HAL_StatusTypeDef UpdateNetPower(int32_t value);
+    HAL_StatusTypeDef UpdateSolarPower(int32_t value);
+    HAL_StatusTypeDef UpdateMotorPower(int32_t value);
     HAL_StatusTypeDef DisplayError1(const char* str);
     HAL_StatusTypeDef DisplayError2(const char* str);
 protected:

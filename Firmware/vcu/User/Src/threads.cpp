@@ -75,9 +75,13 @@ const osThreadAttr_t strobe_thread_attributes = {
 };
 osThreadId_t strobe_thread_id = osThreadNew((osThreadFunc_t)StrobeThread, NULL, &strobe_thread_attributes);
 
+/* Setup timers */
+osTimerId_t throttle_timer = osTimerNew((osThreadFunc_t)ThrottleTimeoutCallback, osTimerOnce, NULL, NULL);
+
 /* Start periodic threads */
 void ThreadsStart() {
     // Request to receive Mitsuba frames every 500ms
+    // This thread is also used for throttle watchdog
     osTimerStart(mitsuba_req_periodic_timer_id, 500);
 
     // Toggle lights (hazards & turn signals) every 500ms
@@ -264,10 +268,10 @@ void LogData() {
         f_putc('\n', &fil);  // New line at the end of each data set
 
         // Sync the SD card every 10 log cycles (1s) to waste less time on f_sync()
-        // if (log_counter % 10) {
-        //     if (f_sync(&fil) != FR_OK)
-        //         Logger::LogError("Error syncing SD card\n");
-        // }
+        if (log_counter % 10) {
+            if (f_sync(&fil) != FR_OK)
+                Logger::LogError("Error syncing SD card\n");
+        }
     }
 }
 
@@ -339,6 +343,9 @@ void DriverControls0Callback(uint8_t *data) {
         SetRegen(0);
     }
 
+    // Start throttle timeout
+    osTimerStart(throttle_timer, 250);
+
     // Set brake light
     if (DriverControlsFrame0::GetBrake()) {
         HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_SET);
@@ -399,7 +406,7 @@ void BMSFaultCallback(uint8_t *data) {
 // TODO: Debug only, remove this in the future
 void MitsubaCallback(uint8_t *data) {
     // Update the Mitsuba motor controller state
-    // Logger::LogInfo("Mitsuba callback called\n");
+    Logger::LogInfo("Mitsuba callback called\n");
 }
 
 /* Callback executed when kill switch is pressed */
@@ -427,4 +434,11 @@ void KillSwitchCallback(void) {
         VCUFrame0::Instance().SetKillStatus(false);
         CANController::Send(&VCUFrame0::Instance());
     }
+}
+
+/* Callback executed when throttle update has not been received */
+void ThrottleTimeoutCallback(void) {
+    Logger::LogError("Throttle timeout");
+    // If throttle update has not been received in 100ms, set throttle to 0
+    SetThrottle(0);
 }

@@ -1,42 +1,46 @@
 
 
+OpenDocument="ozone.jdebug", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/ozone.jdebug", Line=0
 OpenDocument="stm32l4xx_hal_i2c.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c", Line=6664
 OpenDocument="tasks.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3422
-OpenDocument="ozone.jdebug", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/ozone.jdebug", Line=0
-OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/Core/Src/main.c", Line=110
+OpenDocument="main.c", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/Core/Src/main.c", Line=80
 OpenDocument="sg_can.cpp", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/SG_Drivers/Src/sg_can.cpp", Line=374
-OpenDocument="threads.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/User/Src/threads.cpp", Line=314
+OpenDocument="threads.cpp", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/User/Src/threads.cpp", Line=336
 OpenDocument="startup_stm32l496xx.s", FilePath="C:/Dev/Car-IV-Firmware/Firmware/bms-secondary/startup_stm32l496xx.s", Line=51
 OpenDocument="stm32l4xx_hal.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c", Line=329
 OpenDocument="stm32l4xx_hal_can.c", FilePath="C:/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c", Line=1365
 OpenDocument="pvoidvector.h", FilePath="c:/dev/car-iv-firmware/resources/middlewares/third_party/etl/include/etl/private/pvoidvector.h", Line=67
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=372, h=200, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=372, h=202, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Registers 1", DockArea=BOTTOM, x=3, y=0, w=227, h=315, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
-OpenWindow="Disassembly", DockArea=LEFT, x=0, y=2, w=372, h=200, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=526, h=300, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=526, h=300, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=526, h=300, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=2, w=372, h=198, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=526, h=299, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=526, h=299, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=526, h=299, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=372, h=193, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Call Graph", DockArea=LEFT, x=0, y=2, w=372, h=200, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Graph", DockArea=LEFT, x=0, y=2, w=372, h=198, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory Usage", DockArea=BOTTOM, x=3, y=0, w=227, h=315, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=2, y=0, w=514, h=331, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=1, y=0, w=433, h=331, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=526, h=294, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
+OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=526, h=295, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
 OpenWindow="Memory 1", DockArea=BOTTOM, x=0, y=0, w=743, h=331, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x1999A1C0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
-TableHeader="Local Data", SortCol="Name", SortOrder="DESCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[192;151;134;100;144;27;482]
+TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[138;100;100;100;100;27;386]
+TableHeader="Local Data", SortCol="Name", SortOrder="DESCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[192;151;134;100;144;27;218]
 TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[233;100;100;100;100]
 TableHeader="Call Graph", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Stack Total";"Stack Local";"Code Total";"Code Local";"Depth";"Called From"], ColWidths=[321;114;116;113;115;100;100]
-TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[133;100;85;78;89;100]
 TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[217;105;100;100;100;962]
+TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[133;100;85;78;89;100]
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
 TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;637]
-TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[138;100;100;100;100;27;386]
 TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[100;144;224]
 WatchedExpression="low_cell_voltage", Window=Watched Data 1
-WatchedExpression="cell_voltages", Window=Watched Data 1
-WatchedExpression="adc_vals", Window=Watched Data 1
-WatchedExpression="BMSSecondaryFrame0::instance", Window=Watched Data 1
+WatchedExpression="high_cell_voltage", Window=Watched Data 1
+WatchedExpression="high_temp", Window=Watched Data 1
+WatchedExpression="low_temp", Window=Watched Data 1
+WatchedExpression="high_temp_id", Window=Watched Data 1
+WatchedExpression="low_temp_id", Window=Watched Data 1
+WatchedExpression="internal_temp", Window=Watched Data 1
+WatchedExpression="thermistor_vals", Window=Watched Data 1

@@ -87,6 +87,10 @@ void ADC_Modules_Init() {
         // For all ADCs, append channel ID to data
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
+
+        // For all ADCs, configure oversampling to 16
+        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_NONE) != HAL_OK)
+            Logger::LogError("ADC %d configure oversampling failed", i);
     }
 
     // For adc0, sequence channels 5, 7 for current sense

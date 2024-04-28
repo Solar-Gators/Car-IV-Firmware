@@ -475,11 +475,17 @@ void ReadTemperatureThread(void *argument) {
         // SetAmplifierState(false);
         osMutexRelease(adc_mutex_id);
 
+        // Get secondary BMS temperature data
+        high_temp = BMSSecondaryFrame2::Instance().GetHighTemp();
+        low_temp = BMSSecondaryFrame2::Instance().GetLowTemp();
+        high_temp_id = BMSSecondaryFrame2::Instance().GetHighTempCellID();
+        low_temp_id = BMSSecondaryFrame2::Instance().GetLowTempCellID();
+
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= 22; i++) {
             temps[i] = ADCToTemp(thermistor_vals[i]);
 
-            // Ignore board thermistor and dummy thermistor
+            // Ignore board thermistor and dummy thermistor when finding max and min index
             if (i <= 20) {
                 if (thermistor_vals[i] > thermistor_vals[max_index]) {
                     max_index = i;
@@ -491,13 +497,34 @@ void ReadTemperatureThread(void *argument) {
             }
         }
 
-        high_temp = temps[max_index] * 100;
-        low_temp = temps[min_index] * 100;
-
-        // TODO: Get secondary BMS temperature data
+        // Set high and low temp values
+        // Current high and low temp values are from the secondary BMS
+        high_temp = temps[max_index] * 100 > high_temp ? temps[max_index] * 100 : high_temp;
+        low_temp = temps[min_index] * 100 < low_temp ? temps[min_index] * 100 : low_temp;
+        high_temp_id = temps[max_index] * 100 > high_temp ? max_index : high_temp_id;
+        low_temp_id = temps[min_index] * 100 < low_temp ? min_index : low_temp_id;
 
         // Check for overtemperature conditions
-        // TODO: Implement this
+        if (BMSFrame1::Instance().GetPackCurrent() > 0 && high_temp > bms_config.MAX_DISCHARGE_TEMP) {
+            BMSFrame3::Instance().SetHighTempFault(true);
+            osEventFlagsSet(error_event, 0x1);
+
+            etl::string<5> float_buf;
+            etl::to_string(high_temp / 100.0, float_buf, format_float, false);
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("High temperature on thermistor %d: %sC", high_temp_id, float_buf.c_str());
+            osMutexRelease(logger_mutex_id);
+        }
+        else if (BMSFrame1::Instance().GetPackCurrent() < 0 && low_temp < bms_config.MAX_CHARGE_TEMP) {
+            BMSFrame3::Instance().SetHighTempFault(true);
+            osEventFlagsSet(error_event, 0x1);
+
+            etl::string<5> float_buf;
+            etl::to_string(low_temp / 100.0, float_buf, format_float, false);
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("Low temperature on thermistor %d: %sC", low_temp_id, float_buf.c_str());
+            osMutexRelease(logger_mutex_id);
+        }
 
         // Log the temperatures every 2.5 seconds if configured
         if (bms_config.LOG_TEMPERATURE) {
@@ -554,7 +581,7 @@ void BroadcastThread(void* argument) {
         osMutexRelease(current_integral_mutex_id);
 
         // Calculate power
-        uint16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 10;
+        int16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 100;
         BMSFrame1::Instance().SetAveragePower(avg_power);
 
         // Capture temperature data
@@ -587,6 +614,8 @@ void ErrorThread(void* argument) {
 
         // Any set bit in fault_flags indicates an error
         if (BMSFrame3::Instance().GetFaultFlags() != 0) {
+            HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+
             osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Open main contactors
             SetContactorState(3, false);
@@ -610,25 +639,23 @@ void ErrorThread(void* argument) {
 
         // If no errors, close contactors
         else {
+            HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
+
             osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Close negative side contactor
             SetContactorState(4, true);
-            osDelay(500);
-            // Close precharge contactor
-            SetContactorState(2, true);
-            osDelay(1000);
-            // Open precharge contactor and close positive side contactor
-            // Open precharge first to reduce max current draw
-            SetContactorState(2, false);
-            osDelay(200);
+            osDelay(800);
             // Close positive side contactor
             SetContactorState(3, true);
-            osDelay(500);
+            osDelay(250);
 
             BMSFrame3::Instance().SetContactorStatus(3, true);
             BMSFrame3::Instance().SetContactorStatus(4, true);
 
             osMutexRelease(contactor_mutex_id);
+
+            // Send BMSFrame3 immediately to indicate contactors are closed
+            CANController::Send(&BMSFrame3::Instance());
         }
     }
 }
@@ -650,7 +677,7 @@ void SecondaryFrame0Callback(uint8_t *data) {
 
 void VCUFrameCallback(uint8_t *data) {
     // Update kill flag status
-    if (VCUFrame0::Instance().GetKillStatus() == 0) {
+    if (VCUFrame0::Instance().GetKillStatus()) {
         BMSFrame3::Instance().SetKillSwitchPressedFault(true);
     } else {
         BMSFrame3::Instance().SetKillSwitchPressedFault(false);
