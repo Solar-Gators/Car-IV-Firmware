@@ -66,6 +66,8 @@ public:
     uint8_t             data[8];            /* payload data array, maximum of 8 bytes */
     void (*rxCallback)(uint8_t data[]);     /* pointer to rx callback function */
     osMutexId_t         mutex_id_;          /* mutex id for message */
+    uint32_t            count_;             /* number of times message has been received */
+    uint32_t            timestamp_;         /* timestamp of last message received */
 
 private:
     StaticSemaphore_t   mutex_control_block_;
