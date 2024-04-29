@@ -62,7 +62,7 @@ HAL_StatusTypeDef Buttons_Init() {
 	mc_btn.RegisterNormalPressCallback(MCCallback);
 
 	// TODO: Get rid of this once PV button is working
-	mc_btn.RegisterLongPressCallback(PVCallback, 800, false);
+	mc_btn.RegisterLongPressCallback(BMSResetCallback, 800, false);
 	
 	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
 	cruise_plus_btn.RegisterNormalPressCallback(CruisePlusCallback);

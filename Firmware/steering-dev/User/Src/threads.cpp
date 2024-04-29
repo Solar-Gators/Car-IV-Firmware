@@ -189,6 +189,14 @@ void MCCallback() {
     osMutexRelease(ui_mutex);
 }
 
+void BMSResetCallback() {
+    Logger::LogInfo("BMS reset pressed");
+    DriverControlsFrame1::Instance().SetBMSReset(true);
+    CANController::Send(&DriverControlsFrame1::Instance());
+    osDelay(10); // Delay to allow message to send
+    DriverControlsFrame1::Instance().SetBMSReset(false);
+}
+
 void RightTurnCallback() {
     Logger::LogInfo("Right turn pressed");
     left_turn_btn.SetToggleState(false);
@@ -224,12 +232,28 @@ void BMSFrame3Callback(uint8_t *data) {
     if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 0)
         return;
 
+    // Update BMS status
     uint8_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
     osMutexAcquire(ui_mutex, osWaitForever);
     if (fault_flags)
         ui.UpdateBMSStatus(RGB565_RED);
     else
         ui.UpdateBMSStatus(RGB565_GREEN);
+
+    // Display error text
+    // If multiple errors are present, only the first one will be displayed
+    if (BMSFrame3::Instance().GetHighDischargeCurrentFault())
+        ui.DisplayError1("High Discharge Current");
+    else if (BMSFrame3::Instance().GetHighChargeCurrentFault())
+        ui.DisplayError1("High Charge Current");
+    else if (BMSFrame3::Instance().GetHighCellVoltageFault())
+        ui.DisplayError1("High Cell Voltage");
+    else if (BMSFrame3::Instance().GetLowCellVoltageFault())
+        ui.DisplayError1("Low Cell Voltage");
+    else if (BMSFrame3::Instance().GetHighTempFault())
+        ui.DisplayError1("High Cell Temp");
+    else
+        ui.DisplayError1("");
 
     // Update SoC
     ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
@@ -240,7 +264,6 @@ void BMSFrame3Callback(uint8_t *data) {
     else
         ui.UpdatePVStatus(RGB565_RED);
     osMutexRelease(ui_mutex);
-
 }
 
 void ThreadsStart() {

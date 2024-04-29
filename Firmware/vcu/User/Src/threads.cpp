@@ -344,7 +344,7 @@ void DriverControls0Callback(uint8_t *data) {
     }
 
     // Start throttle timeout
-    osTimerStart(throttle_timer, 250);
+    //osTimerStart(throttle_timer, 250);
 
     // Set brake light
     if (DriverControlsFrame0::GetBrake()) {
@@ -440,5 +440,5 @@ void KillSwitchCallback(void) {
 void ThrottleTimeoutCallback(void) {
     Logger::LogError("Throttle timeout");
     // If throttle update has not been received in 100ms, set throttle to 0
-    SetThrottle(0);
+    // SetThrottle(0);
 }

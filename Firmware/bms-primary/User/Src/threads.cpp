@@ -691,6 +691,10 @@ void VCUFrameCallback(uint8_t *data) {
 The only purpose of this is to control the MPPT contactors */
 // TODO: Check pack voltage to make sure safe to turn on MPPTs
 void DriverControls1Callback(uint8_t *data) {
+    // If reset requested, reset BMS
+    if (DriverControlsFrame1::Instance().GetBMSReset())
+        NVIC_SystemReset();
+
     // If solar enabled and contactors not currently closed, close contactors
     if (DriverControlsFrame1::Instance().GetPVEnable() && !BMSFrame3::Instance().GetContactorStatus(1)) {
         osMutexAcquire(contactor_mutex_id, osWaitForever);
