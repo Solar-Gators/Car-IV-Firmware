@@ -282,25 +282,44 @@ void ReadTemperatureThread(void *argument) {
         uint8_t adc0_thermistor_channels[6] = {0, 1, 2, 3, 4, 6};
         for (auto channel : adc0_thermistor_channels) {
             osMutexAcquire(adc_mutex_id, osWaitForever);
-            adcs[0].ManualSelectChannel(channel);
-            adcs[0].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(0, channel)], 
-                                        channel);
+
+            if (adcs[0].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(0, channel)], channel)
+                != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC0 channel %d read failed", channel);
+                osMutexRelease(logger_mutex_id);
+            }
+
             osMutexRelease(adc_mutex_id);
         }
 
-        // For adc1, read auto-sequence all channels
-        uint16_t temp_thermistor_vals[8];
-        osMutexAcquire(adc_mutex_id, osWaitForever);
-        adcs[1].ConversionReadAutoSequence(temp_thermistor_vals, 8);
-        osMutexRelease(adc_mutex_id);
-        for (int i = 0; i < 8; i++)
-            thermistor_vals[MapADCChannelToThermistor(1, i)] = temp_thermistor_vals[i];
+        // For adc1, manually read all channels
+        for (int channel = 0; channel < 8; channel++) {
+            osMutexAcquire(adc_mutex_id, osWaitForever);
 
-        // For adc2, read auto-sequence all channels
-        osMutexAcquire(adc_mutex_id, osWaitForever);
-        adcs[2].ConversionReadAutoSequence(temp_thermistor_vals, 8);
-        for (int i = 0; i < 8; i++)
-            thermistor_vals[MapADCChannelToThermistor(2, i)] = temp_thermistor_vals[i];
+            if (adcs[1].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(1, channel)], channel)
+                != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC1 channel %d read failed", channel);
+                osMutexRelease(logger_mutex_id);
+            }
+
+            osMutexRelease(adc_mutex_id);
+        }
+
+        // For adc2, manually read all channels
+        for (int channel = 0; channel < 8; channel++) {
+            osMutexAcquire(adc_mutex_id, osWaitForever);
+
+            if (adcs[2].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(2, channel)], channel)
+                != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC1 channel %d read failed", channel);
+                osMutexRelease(logger_mutex_id);
+            }
+
+            osMutexRelease(adc_mutex_id);
+        }
 
         // Disable thermistor amplifiers
         SetAmplifierState(false);

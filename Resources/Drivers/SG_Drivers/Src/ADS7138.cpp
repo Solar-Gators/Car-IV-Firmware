@@ -220,22 +220,21 @@ HAL_StatusTypeDef ADS7138::ConversionReadManual(uint16_t *buf, uint8_t channel) 
     // Select channel
     ManualSelectChannel(channel);
 
-    // Read conversion data
-    HAL_I2C_Master_Receive(_phi2c, 
-                            _address << 1, 
-                            reinterpret_cast<uint8_t*>(buf),
-                            2, 
-                            HAL_MAX_DELAY);
+    int num_attempts = 0;
+    do {
+        // Read conversion data
+        HAL_I2C_Master_Receive(_phi2c, 
+                                _address << 1, 
+                                reinterpret_cast<uint8_t*>(buf),
+                                2, 
+                                HAL_MAX_DELAY);
+        // Swap endianness of each item in buffer
+        buf[0] = (buf[0] << 8) | (buf[0] >> 8);
 
-    // Swap endianness of each item in buffer
-    buf[0] = (buf[0] << 8) | (buf[0] >> 8);
+    } while (_append_type != DataCfg_AppendType::ID || ((buf[0] & 0xF) != channel && num_attempts++ < 100));
 
-    // If channel ID append type is enabled, check that the channel ID matches
-    if (_append_type == DataCfg_AppendType::ID) {
-        uint8_t channel_id = buf[0] & 0xF;
-        if (channel_id != channel)
-            return HAL_ERROR;
-    }
+    if (num_attempts >= 100)
+        return HAL_ERROR;
 
     return HAL_OK;
 }
