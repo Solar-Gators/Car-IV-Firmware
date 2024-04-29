@@ -201,6 +201,15 @@ const osMutexAttr_t current_integral_mutex_attr = {
 };
 osMutexId_t current_integral_mutex_id = osMutexNew(NULL);
 
+StaticSemaphore_t contactor_mutex_cb;
+const osMutexAttr_t contactor_mutex_attr = {
+    .name = "Contactor Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &contactor_mutex_cb,
+    .cb_size = sizeof(contactor_mutex_cb),
+};
+osMutexId_t contactor_mutex_id = osMutexNew(NULL);
+
 /* Event flag to trigger read_thermistor_thread */
 osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
 
@@ -275,6 +284,7 @@ void ReadVoltageThread(void *argument) {
     // Update cell voltage values in bms
     bms.ReadVoltages();
 
+    local_pack_voltage = 0;
     for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY; i++) {
         // Populate cell_voltages array
         // Note: This step is unecessary, all the voltage values are stored in the bms
@@ -295,11 +305,11 @@ void ReadVoltageThread(void *argument) {
         }
 
         // Update sum of cell voltages for computing average
-        sum_cell_voltage += cell_voltages[i];
+        local_pack_voltage += cell_voltages[i];
     }
 
     // Compute average cell voltage
-    avg_cell_voltage = sum_cell_voltage / (bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY);
+    avg_cell_voltage = local_pack_voltage / (bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY);
 
     // Check for overvoltage and undervoltage conditions on local bms
     if (high_cell_voltage > bms_config.MAX_CELL_VOLTAGE) {
@@ -462,24 +472,59 @@ void ReadTemperatureThread(void *argument) {
             thermistor_vals[MapADCChannelToThermistor(2, i)] = temp_thermistor_vals[i];
 
         // Disable thermistor amplifiers
-        SetAmplifierState(false);
+        // SetAmplifierState(false);
         osMutexRelease(adc_mutex_id);
+
+        // Get secondary BMS temperature data
+        high_temp = BMSSecondaryFrame2::Instance().GetHighTemp();
+        low_temp = BMSSecondaryFrame2::Instance().GetLowTemp();
+        high_temp_id = BMSSecondaryFrame2::Instance().GetHighTempCellID();
+        low_temp_id = BMSSecondaryFrame2::Instance().GetLowTempCellID();
 
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= 22; i++) {
             temps[i] = ADCToTemp(thermistor_vals[i]);
 
-            if (thermistor_vals[i] > thermistor_vals[max_index]) {
-                max_index = i;
-            }
+            // Ignore board thermistor and dummy thermistor when finding max and min index
+            if (i <= 20) {
+                if (thermistor_vals[i] > thermistor_vals[max_index]) {
+                    max_index = i;
+                }
 
-            if (thermistor_vals[i] < thermistor_vals[min_index]) {
-                min_index = i;
+                if (thermistor_vals[i] < thermistor_vals[min_index]) {
+                    min_index = i;
+                }
             }
         }
 
+        // Set high and low temp values
+        // Current high and low temp values are from the secondary BMS
+        high_temp = temps[max_index] * 100 > high_temp ? temps[max_index] * 100 : high_temp;
+        low_temp = temps[min_index] * 100 < low_temp ? temps[min_index] * 100 : low_temp;
+        high_temp_id = temps[max_index] * 100 > high_temp ? max_index : high_temp_id;
+        low_temp_id = temps[min_index] * 100 < low_temp ? min_index : low_temp_id;
+
         // Check for overtemperature conditions
-        // TODO: Implement this
+        if (BMSFrame1::Instance().GetPackCurrent() > 0 && high_temp > bms_config.MAX_DISCHARGE_TEMP) {
+            BMSFrame3::Instance().SetHighTempFault(true);
+            osEventFlagsSet(error_event, 0x1);
+
+            etl::string<5> float_buf;
+            etl::to_string(high_temp / 100.0, float_buf, format_float, false);
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("High temperature on thermistor %d: %sC", high_temp_id, float_buf.c_str());
+            osMutexRelease(logger_mutex_id);
+        }
+        else if (BMSFrame1::Instance().GetPackCurrent() < 0 && low_temp < bms_config.MAX_CHARGE_TEMP) {
+            BMSFrame3::Instance().SetHighTempFault(true);
+            osEventFlagsSet(error_event, 0x1);
+
+            etl::string<5> float_buf;
+            etl::to_string(low_temp / 100.0, float_buf, format_float, false);
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("Low temperature on thermistor %d: %sC", low_temp_id, float_buf.c_str());
+            osMutexRelease(logger_mutex_id);
+        }
 
         // Log the temperatures every 2.5 seconds if configured
         if (bms_config.LOG_TEMPERATURE) {
@@ -519,7 +564,7 @@ void BroadcastThread(void* argument) {
         broadcast_thread_counter++;
 
         // Capture voltage data
-        BMSFrame0::Instance().SetPackVoltage(total_pack_voltage);
+        BMSFrame0::Instance().SetPackVoltage(total_pack_voltage / 10);
         BMSFrame0::Instance().SetAvgCellVoltage(avg_cell_voltage);
         BMSFrame0::Instance().SetHighCellVoltage(high_cell_voltage);
         BMSFrame0::Instance().SetLowCellVoltage(low_cell_voltage);
@@ -536,7 +581,7 @@ void BroadcastThread(void* argument) {
         osMutexRelease(current_integral_mutex_id);
 
         // Calculate power
-        uint16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 10;
+        int16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 100;
         BMSFrame1::Instance().SetAveragePower(avg_power);
 
         // Capture temperature data
@@ -554,27 +599,36 @@ void BroadcastThread(void* argument) {
         // Send BMSFrame3 at 1Hz (every 10th broadcast)
         // Faults are updated in the datamodule as they happen
         if (broadcast_thread_counter % 10 == 0) {
-            BMSFrame3::Instance().SetStatusFlags(status_flags);
-            BMSFrame3::Instance().SetPackSoC(0);  // TODO: Implement SoC
+            BMSFrame3::Instance().SetPackSoC(37);  // TODO: Implement SoC
             CANController::Send(&BMSFrame3::Instance());
         }
     }
 }
 
 void ErrorThread(void* argument) {
+    // Delay to allow errors to show up
+    osDelay(500);
+
     while (1) {
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
-        SetContactorSource(ContactorSource_Type::MAIN);
-
         // Any set bit in fault_flags indicates an error
         if (BMSFrame3::Instance().GetFaultFlags() != 0) {
+            HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+
+            osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Open main contactors
             SetContactorState(3, false);
             SetContactorState(4, false);
 
             // Open MPPT contactor
             SetContactorState(1, false);
+
+            BMSFrame3::Instance().SetContactorStatus(3, false);
+            BMSFrame3::Instance().SetContactorStatus(4, false);
+            BMSFrame3::Instance().SetContactorStatus(1, false);
+
+            osMutexRelease(contactor_mutex_id);
 
             // Update BMSFrame3 with errors
             BMSFrame3::Instance().SetStatusFlags(status_flags);
@@ -585,29 +639,33 @@ void ErrorThread(void* argument) {
 
         // If no errors, close contactors
         else {
+            HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
+
+            osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Close negative side contactor
             SetContactorState(4, true);
-            osDelay(250);
-            // Close precharge contactor
-            SetContactorState(2, true);
-            osDelay(500);
+            osDelay(800);
             // Close positive side contactor
             SetContactorState(3, true);
-            osDelay(100);
-            // Open precharge contactor
-            SetContactorState(2, false);
-            osDelay(100);
+            osDelay(250);
+
+            BMSFrame3::Instance().SetContactorStatus(3, true);
+            BMSFrame3::Instance().SetContactorStatus(4, true);
+
+            osMutexRelease(contactor_mutex_id);
+
+            // Send BMSFrame3 immediately to indicate contactors are closed
+            CANController::Send(&BMSFrame3::Instance());
         }
     }
 }
 
 void SecondaryFrame0Callback(uint8_t *data) {
-    // Update total pack voltage
-    total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage();
+    // Update total pack
+    total_pack_voltage = local_pack_voltage + BMSSecondaryFrame0::Instance().GetSubpackVoltage() * 10;
 
     // Update average cell voltage
-    // TODO: Fix this
-    uint32_t sum_cell_voltages = avg_cell_voltage * num_total_cells;
+    avg_cell_voltage = total_pack_voltage / num_total_cells;
 
     // Update high and low cell voltages
     // Error checking is done in ReadVoltageThread
@@ -619,7 +677,7 @@ void SecondaryFrame0Callback(uint8_t *data) {
 
 void VCUFrameCallback(uint8_t *data) {
     // Update kill flag status
-    if (VCUFrame0::Instance().GetKillStatus() == 0) {
+    if (VCUFrame0::Instance().GetKillStatus()) {
         BMSFrame3::Instance().SetKillSwitchPressedFault(true);
     } else {
         BMSFrame3::Instance().SetKillSwitchPressedFault(false);
@@ -627,4 +685,36 @@ void VCUFrameCallback(uint8_t *data) {
 
     // Trigger error thread
     osEventFlagsSet(error_event, 0x1);
+}
+
+/* Callback runs when DriverControlsFrame1 received 
+The only purpose of this is to control the MPPT contactors */
+// TODO: Check pack voltage to make sure safe to turn on MPPTs
+void DriverControls1Callback(uint8_t *data) {
+    // If reset requested, reset BMS
+    if (DriverControlsFrame1::Instance().GetBMSReset())
+        NVIC_SystemReset();
+
+    // If solar enabled and contactors not currently closed, close contactors
+    if (DriverControlsFrame1::Instance().GetPVEnable() && !BMSFrame3::Instance().GetContactorStatus(1)) {
+        osMutexAcquire(contactor_mutex_id, osWaitForever);
+        // Close precharge contactor
+        SetContactorState(2, true);
+        osDelay(500);
+        // Close MPPT contactor
+        SetContactorState(1, true);
+        osDelay(250);
+        // Open precharge contactor
+        SetContactorState(2, false);
+        osDelay(250);
+        BMSFrame3::Instance().SetContactorStatus(1, true);
+        osMutexRelease(contactor_mutex_id);
+    }
+    // If solar disabled and contactors currently closed, open contactors
+    else if (!DriverControlsFrame1::Instance().GetPVEnable()) {
+        osMutexAcquire(contactor_mutex_id, osWaitForever);
+        SetContactorState(1, false);
+        BMSFrame3::Instance().SetContactorStatus(1, false);
+        osMutexRelease(contactor_mutex_id);
+    }
 }

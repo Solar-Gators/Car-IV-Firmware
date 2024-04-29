@@ -14,6 +14,7 @@
 /* Datamodules */
 #include "CustomBMSFrames.hpp"
 #include "VCUFrame.hpp"
+#include "DriverControls.hpp"
 
 /* User configuration values */
 // TODO: Store configuration in EEPROM
@@ -42,7 +43,7 @@ const struct BMSConfig bms_config = {
     .MAX_CELL_VOLTAGE = 4200,
     .MIN_CELL_VOLTAGE = 2500,
     .MAX_DISCHARGE_CURRENT = 100.0,
-    .MAX_CHARGE_CURRENT = 21.775,
+    .MAX_CHARGE_CURRENT = 100.0,
     .MAX_CHARGE_TEMP = 60.0,
     .MAX_DISCHARGE_TEMP = 45.0,
     .LOG_VOLTAGE = true,

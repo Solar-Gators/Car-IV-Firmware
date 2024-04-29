@@ -328,9 +328,17 @@ void ReadTemperatureThread(void *argument) {
 
                 if (thermistor_vals[i] < thermistor_vals[min_index])
                     min_index = i;
-            }
-           
+            }        
         }
+
+        // Get high and low temps
+        high_temp = temps[max_index] * 100;
+        low_temp = temps[min_index] * 100;
+        high_temp_id = max_index + bms_config.NUM_CELLS_PRIMARY;
+        low_temp_id = min_index + bms_config.NUM_CELLS_PRIMARY;
+
+        // Get internal temp
+        internal_temp = ADCToTemp(thermistor_vals[22]) * 100;
 
         // Capture temperature data
         BMSSecondaryFrame2::Instance().SetHighTemp(high_temp);

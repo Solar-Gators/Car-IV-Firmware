@@ -16,6 +16,9 @@ void LogDataPeriodic(void);
 void LogData(void);
 void StrobeThread(void);
 
+/* Timers */
+extern osTimerId_t throttle_timer;
+
 /* Event flags */
 extern osEventFlagsId_t log_event;
 extern osEventFlagsId_t strobe_event;
@@ -29,6 +32,7 @@ void DriverControls1Callback(uint8_t *data);
 void BMSFaultCallback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
 void KillSwitchCallback(void);
+void ThrottleTimeoutCallback(void);
 
 
 #endif  /* THREADS_H_ */

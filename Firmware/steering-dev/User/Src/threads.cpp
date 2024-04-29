@@ -77,7 +77,7 @@ void ReadButtonsPeriodic() {
 
 /* Mutexes */
 osMutexId_t ui_mutex = osMutexNew(NULL);
-
+static uint32_t solar_power = 0;
 void UpdateUIPeriodic() {
     // Wheel diameter in miles/rotation
     static constexpr float WHEEL_DIAM_MI = (0.0010867658F);
@@ -87,17 +87,21 @@ void UpdateUIPeriodic() {
     // Update speed
     ui.UpdateSpeed(MitsubaFrame0::Instance().GetMotorRPM() * WHEEL_DIAM_MI * 60.0F);
 
-    // Update SoC
-    ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
-
     // Update battery voltage
-    ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) * 100.0);
+    ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0);
 
     // Update battery temperature
-    ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() * 100);
+    ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() / 100.0);
 
     // Update net power
     ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower());
+
+    // Update solar power
+    uint32_t solar_power_old = solar_power;
+    solar_power = static_cast<uint32_t>(MPPTInputMeasurementsFrame1::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame1::Instance().GetInputVoltage());
+    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame2::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame2::GetInputVoltage());
+    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame3::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame3::GetInputVoltage());
+    ui.UpdateSolarPower(solar_power);
 
     osMutexRelease(ui_mutex);
 }
@@ -185,6 +189,14 @@ void MCCallback() {
     osMutexRelease(ui_mutex);
 }
 
+void BMSResetCallback() {
+    Logger::LogInfo("BMS reset pressed");
+    DriverControlsFrame1::Instance().SetBMSReset(true);
+    CANController::Send(&DriverControlsFrame1::Instance());
+    osDelay(10); // Delay to allow message to send
+    DriverControlsFrame1::Instance().SetBMSReset(false);
+}
+
 void RightTurnCallback() {
     Logger::LogInfo("Right turn pressed");
     left_turn_btn.SetToggleState(false);
@@ -206,17 +218,51 @@ void PTTCallback() {
     Logger::LogInfo("PTT pressed");
 }
 
+// TODO: Switch to PV button
 void PVCallback() {
     Logger::LogInfo("PV pressed");
+    bool pv_state = pv_btn.GetToggleState();
+    DriverControlsFrame1::Instance().SetPVEnable(pv_state);
+    CANController::Send(&DriverControlsFrame1::Instance());
 }
 
 void BMSFrame3Callback(uint8_t *data) {
+    // For some reason, frame will be all 0s sometimes
+    // TODO: Figure out why this is the case
+    if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 0)
+        return;
+
+    // Update BMS status
     uint8_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
     osMutexAcquire(ui_mutex, osWaitForever);
     if (fault_flags)
         ui.UpdateBMSStatus(RGB565_RED);
     else
         ui.UpdateBMSStatus(RGB565_GREEN);
+
+    // Display error text
+    // If multiple errors are present, only the first one will be displayed
+    if (BMSFrame3::Instance().GetHighDischargeCurrentFault())
+        ui.DisplayError1("High Discharge Current");
+    else if (BMSFrame3::Instance().GetHighChargeCurrentFault())
+        ui.DisplayError1("High Charge Current");
+    else if (BMSFrame3::Instance().GetHighCellVoltageFault())
+        ui.DisplayError1("High Cell Voltage");
+    else if (BMSFrame3::Instance().GetLowCellVoltageFault())
+        ui.DisplayError1("Low Cell Voltage");
+    else if (BMSFrame3::Instance().GetHighTempFault())
+        ui.DisplayError1("High Cell Temp");
+    else
+        ui.DisplayError1("");
+
+    // Update SoC
+    ui.UpdateSOC(static_cast<float>(BMSFrame3::Instance().GetPackSoC()));
+
+    // Update PV status
+    if (BMSFrame3::Instance().GetContactorStatus(1))
+        ui.UpdatePVStatus(RGB565_GREEN);
+    else
+        ui.UpdatePVStatus(RGB565_RED);
     osMutexRelease(ui_mutex);
 }
 

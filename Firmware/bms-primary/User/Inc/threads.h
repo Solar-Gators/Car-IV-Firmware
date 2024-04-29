@@ -39,10 +39,13 @@ extern osEventFlagsId_t error_event;
 extern osMutexId_t adc_mutex_id;
 extern osMutexId_t logger_mutex_id;
 extern osMutexId_t current_integral_mutex_id;
+extern osMutexId_t contactor_mutex_id;
 
 /* Callbacks */
 //extern void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 void VCUFrameCallback(uint8_t *data);
+void SecondaryFrame0Callback(uint8_t *data);
+void DriverControls1Callback(uint8_t *data);
 
 
 #endif  /* THREADS_H_ */

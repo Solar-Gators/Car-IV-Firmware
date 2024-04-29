@@ -37,8 +37,8 @@ void readThrottle() {
 
    
     
-
-    DriverControlsFrame0::SetThrottleVal((readThrottleValue() << 4));
+    uint16_t test = readThrottleValue();
+    DriverControlsFrame0::SetThrottleVal(test << 4);
     
 
     
@@ -54,7 +54,8 @@ void readThrottle() {
 void readBrakes(){
 
     if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == true){
-        DriverControlsFrame0::SetBrake((true));
+       // DriverControlsFrame0::SetBrake((true));
+       DriverControlsFrame0::SetBrake((false));
     }else{
         DriverControlsFrame0::SetBrake((false));
     }

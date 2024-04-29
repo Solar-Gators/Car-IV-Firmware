@@ -12,7 +12,7 @@
 #include "ILI9341.hpp"
 
 #define SOC_THRESHOLD                   20.0f
-#define BATT_VOLTAGE_THRESHOLD          100.0f
+#define BATT_VOLTAGE_THRESHOLD          80.0f
 #define AUX_VOLTAGE_THRESHOLD           11.2f
 #define TEMP_THRESHOLD                  42u
 
@@ -46,11 +46,11 @@ public:
     HAL_StatusTypeDef UpdateSOC(float value);
     HAL_StatusTypeDef UpdateBattV(float value);
     HAL_StatusTypeDef UpdateAuxV(float value);
-    HAL_StatusTypeDef UpdateTemp(uint32_t value);
+    HAL_StatusTypeDef UpdateTemp(float value);
     HAL_StatusTypeDef UpdateEfficiency(uint32_t value);
-    HAL_StatusTypeDef UpdateNetPower(uint32_t value);
-    HAL_StatusTypeDef UpdateSolarPower(uint32_t value);
-    HAL_StatusTypeDef UpdateMotorPower(uint32_t value);
+    HAL_StatusTypeDef UpdateNetPower(int32_t value);
+    HAL_StatusTypeDef UpdateSolarPower(int32_t value);
+    HAL_StatusTypeDef UpdateMotorPower(int32_t value);
     HAL_StatusTypeDef DisplayError1(const char* str);
     HAL_StatusTypeDef DisplayError2(const char* str);
 protected:

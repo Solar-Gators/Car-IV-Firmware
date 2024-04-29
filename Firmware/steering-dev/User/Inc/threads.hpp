@@ -30,8 +30,10 @@ void CruisePlusCallback(void);
 void CruiseMinusCallback(void);
 void PTTCallback(void);
 void PVCallback(void);
+void BMSResetCallback(void);
 
 void BMSFrame3Callback(uint8_t *data);
+void MitsubaCallback(uint8_t *data);
 
 void ThreadsStart(void);
 

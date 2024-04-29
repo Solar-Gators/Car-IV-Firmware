@@ -19,7 +19,7 @@ Button right_turn_btn = Button(RT_Btn_GPIO_Port, RT_Btn_Pin, 50, GPIO_PIN_SET, f
 Button cruise_plus_btn = Button(Cplus_Btn_GPIO_Port, Cplus_Btn_Pin, 75, GPIO_PIN_SET, false);
 Button cruise_minus_btn = Button(Cminus_Btn_GPIO_Port, Cminus_Btn_Pin, 75, GPIO_PIN_SET, false);
 Button ptt_btn = Button(PTT_Btn_GPIO_Port, PTT_Btn_Pin, 75, GPIO_PIN_SET, false);
-Button pv_btn = Button(PV_Btn_GPIO_Port, PV_Btn_Pin, 75, GPIO_PIN_SET, false);
+Button pv_btn = Button(PV_Btn_GPIO_Port, PV_Btn_Pin, 150, GPIO_PIN_SET, false);
 
 HAL_StatusTypeDef CAN_Modules_Init() {
 	HAL_StatusTypeDef status = HAL_OK;
@@ -41,7 +41,7 @@ HAL_StatusTypeDef CAN_Modules_Init() {
 	CANController::AddRxMessage(&BMSFrame0::Instance());
 	CANController::AddRxMessage(&BMSFrame1::Instance());
 	CANController::AddRxMessage(&BMSFrame2::Instance());
-	CANController::AddRxMessage(&BMSFrame3::Instance());
+	CANController::AddRxMessage(&BMSFrame3::Instance(), BMSFrame3Callback);
 	CANController::AddFilterAll();
 
 	status = CANController::Start();
@@ -60,6 +60,10 @@ HAL_StatusTypeDef Buttons_Init() {
 	regen_btn.RegisterNormalPressCallback(RegenCallback);
 	horn_btn.RegisterNormalPressCallback(HornCallback);
 	mc_btn.RegisterNormalPressCallback(MCCallback);
+
+	// TODO: Get rid of this once PV button is working
+	mc_btn.RegisterLongPressCallback(BMSResetCallback, 800, false);
+	
 	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
 	cruise_plus_btn.RegisterNormalPressCallback(CruisePlusCallback);
 	cruise_minus_btn.RegisterNormalPressCallback(CruiseMinusCallback);

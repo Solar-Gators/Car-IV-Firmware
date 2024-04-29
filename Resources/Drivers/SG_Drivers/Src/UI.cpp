@@ -222,9 +222,9 @@ HAL_StatusTypeDef UI::UpdateAuxV(float value) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef UI::UpdateTemp(uint32_t value) {
-    etl::string<2> str_value;
-    etl::to_string(value, str_value, etl::format_spec().width(2).fill(' '), false);
+HAL_StatusTypeDef UI::UpdateTemp(float value) {
+    etl::string<4> str_value;
+    etl::to_string(value, str_value, etl::format_spec().precision(1).width(2).fill(' '), false);
 
     uint16_t color = RGB565_WHITE;
     if (value > TEMP_THRESHOLD)
@@ -246,7 +246,7 @@ HAL_StatusTypeDef UI::UpdateEfficiency(uint32_t value) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef UI::UpdateNetPower(uint32_t value) {
+HAL_StatusTypeDef UI::UpdateNetPower(int32_t value) {
     etl::string<4> str_value;
     etl::to_string(value, str_value, etl::format_spec().width(4).right().fill(' '), false);
 
@@ -256,7 +256,7 @@ HAL_StatusTypeDef UI::UpdateNetPower(uint32_t value) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef UI::UpdateSolarPower(uint32_t value) {
+HAL_StatusTypeDef UI::UpdateSolarPower(int32_t value) {
     etl::string<4> str_value;
     etl::to_string(value, str_value, etl::format_spec().width(4).right().fill(' '), false);
 
@@ -266,7 +266,7 @@ HAL_StatusTypeDef UI::UpdateSolarPower(uint32_t value) {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef UI::UpdateMotorPower(uint32_t value) {
+HAL_StatusTypeDef UI::UpdateMotorPower(int32_t value) {
     etl::string<4> str_value;
     etl::to_string(value, str_value, etl::format_spec().width(4).right().fill(' '), false);
 

@@ -43,7 +43,7 @@ bool DefaultOutputs() {
     SetAmplifierState(false);
 
     // Set contactors power source to supplemental battery
-    SetContactorSource(ContactorSource_Type::MAIN);
+    SetContactorSource(ContactorSource_Type::SUPPLEMENTAL);
 
     // TODO: Debug only
     // HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, GPIO_PIN_SET);
@@ -61,12 +61,15 @@ bool CAN_Modules_Init() {
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
     CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback);
-    CANController::AddRxMessage(&BMSSecondaryFrame0::Instance());
+    CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback);
+    CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
     CANController::AddRxMessage(&BMSSecondaryFrame1::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame2::Instance());
     CANController::AddRxMessage(&BMSSecondaryFrame3::Instance());
     CANController::AddFilterAll();
     CANController::Start();
+
+    return true;
 }
 
 void ADC_Modules_Init() {
@@ -84,6 +87,10 @@ void ADC_Modules_Init() {
         // For all ADCs, append channel ID to data
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
+
+        // For all ADCs, configure oversampling to 16
+        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_NONE) != HAL_OK)
+            Logger::LogError("ADC %d configure oversampling failed", i);
     }
 
     // For adc0, sequence channels 5, 7 for current sense

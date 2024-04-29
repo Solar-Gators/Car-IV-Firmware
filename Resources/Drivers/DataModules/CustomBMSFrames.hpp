@@ -224,10 +224,10 @@ DATAMODULE (
     }
 
     /*
-     * Bit 0: Contactor 0 Status
-     * Bit 1: Contactor 1 Status
-     * Bit 2: Contactor 2 Status
-     * Bit 3: Contactor 3 Status
+     * Bit 0: Contactor 1 Status
+     * Bit 1: Contactor 2 Status
+     * Bit 2: Contactor 3 Status
+     * Bit 3: Contactor 4 Status
      * Bit 4: Contactor Source (0: Main, 1: Supp)
      * Bit 5: Balancing Active
      * Bit 6: Reserved
@@ -238,7 +238,7 @@ DATAMODULE (
     }
 
     inline static bool GetContactorStatus(uint8_t contactor) {
-        return Data()[1] & (0b1 << contactor);
+        return Data()[1] & (0b1 << (contactor-1));
     }
 
     inline static bool GetContactorSource() {
@@ -341,10 +341,10 @@ DATAMODULE (
     }
 
     /*
-     * Bit 0: Contactor 0 Status
-     * Bit 1: Contactor 1 Status
-     * Bit 2: Contactor 2 Status
-     * Bit 3: Contactor 3 Status
+     * Bit 0: Contactor 1 Status
+     * Bit 1: Contactor 2 Status
+     * Bit 2: Contactor 3 Status
+     * Bit 3: Contactor 4 Status
      * Bit 4: Contactor Source (0: Main, 1: Supp)
      * Bit 5: Balancing Active
      * Bit 6: Reserved
@@ -355,7 +355,7 @@ DATAMODULE (
     }
 
     inline static void SetContactorStatus(uint8_t contactor, bool status) {
-        uint8_t flag = 0b1 << contactor;
+        uint8_t flag = 0b1 << (contactor-1);
         if (status) {
             Data()[1] |= flag;
         } else {

@@ -31,9 +31,11 @@ HAL_StatusTypeDef CANDevice::Start() {
   */
 HAL_StatusTypeDef CANDevice::Send(CANFrame *msg) {
     // Put message in queue, blocking if queue is full
-    // Aliasing is not an issue because data is copied to queue (how big is queue performance penalty?)
+    // Acquire lock on message so contents cannot be modified before sending
+    osMutexAcquire(msg->mutex_id_, osWaitForever);
     if (osMessageQueuePut(tx_queue_, &msg, 0, TX_TIMEOUT) != osOK) {
         HandleTxTimeout();
+        osMutexRelease(msg->mutex_id_);
         return HAL_ERROR;
     }
 
@@ -70,7 +72,6 @@ void CANDevice::HandleTx(void* argument) {
         #endif
 
         // Get message header from CANFrame object
-        osMutexAcquire(tx_msg->mutex_id_, osWaitForever);
         CAN_TxHeaderTypeDef txHeader = {
             .StdId = tx_msg->can_id,
             .ExtId = tx_msg->can_id,
@@ -79,6 +80,8 @@ void CANDevice::HandleTx(void* argument) {
             .DLC = tx_msg->len,
             .TransmitGlobalTime = DISABLE,
         };
+
+        // Release lock on message, lock was acquired in CANDevice::Send()
         osMutexRelease(tx_msg->mutex_id_);
 
         // Spinlock until a tx mailbox is empty
@@ -125,10 +128,17 @@ void CANDevice::HandleRx(void* argument) {
             rx_msg = messages_it == rx_messages_->end() ? nullptr : (*messages_it).second;
 
             if (rx_msg != nullptr) {
+                // Enter message critical region
                 osMutexAcquire(rx_msg->mutex_id_, osWaitForever);
+
                 memcpy(rx_msg->data, rxData, rx_msg->len);
                 for (uint32_t i = 0; i < rx_msg->len; i++)
                     rx_msg->data[i] = rxData[i];
+
+                // Update count and timestamp
+                rx_msg->count_++;
+                rx_msg->timestamp_ = osKernelGetTickCount();
+
                 osMutexRelease(rx_msg->mutex_id_);
 
                 // Call Rx callback

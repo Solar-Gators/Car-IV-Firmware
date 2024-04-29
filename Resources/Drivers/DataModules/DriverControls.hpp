@@ -77,7 +77,7 @@ DATAMODULE(
     0x012,
     CAN_ID_STD,
     CAN_RTR_DATA,
-    1,
+    2,
 
     inline static uint8_t GetFlags0() {
         return static_cast<uint8_t>(Data()[0]);
@@ -131,7 +131,7 @@ DATAMODULE(
         return static_cast<bool>(Data()[1] & 0x10);
     }
 
-    inline static bool GetBMSEnable() {
+    inline static bool GetBMSReset() {
         return static_cast<bool>(Data()[1] & 0x20);
     }
 
@@ -225,7 +225,7 @@ DATAMODULE(
         }
     }
 
-    inline static void SetBMSEnable(bool val) {
+    inline static void SetBMSReset(bool val) {
         if (val) {
             Data()[1] |= 0x20;
         } else {
