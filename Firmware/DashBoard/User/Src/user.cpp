@@ -93,8 +93,7 @@ void CPP_UserSetup(void) {
 uint16_t readThrottleValue() {
     //heart beat
     //Logger::LogInfo("Periodic timer fired\n");
-    HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
-
+   
    
     uint16_t rawData;
     //IMU_ReadAccel(&imu);

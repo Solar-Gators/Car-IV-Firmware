@@ -25,7 +25,7 @@ osTimerId_t brake_timer_id = osTimerNew((osThreadFunc_t)readBrakes, osTimerPerio
 /* Start periodic threads */
 void ThreadsStart() {
 
-    osTimerStart(throttle_timer_id, 1000);
+    osTimerStart(throttle_timer_id, 50);
     osTimerStart(brake_timer_id, 20);
 }
 
@@ -33,31 +33,32 @@ void ThreadsStart() {
 void readThrottle() {
     //heart beat
     //Logger::LogInfo("Periodic timer fired\n");
-    HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
    
     
 
     DriverControlsFrame0::SetThrottleVal((readThrottleValue() << 4));
     
-    CANController::Send(&DriverControlsFrame0::Instance());
 
     
-    if(HAL_GPIO_ReadPin(GPIOC, 6) == true){
+    if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == false){
        DriverControlsFrame0::SetShutdownStatus((true));
     }
     
+    CANController::Send(&DriverControlsFrame0::Instance());
 
 
 }
 
 void readBrakes(){
 
-    if(HAL_GPIO_ReadPin(GPIOA, 15) == true){
+    if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == true){
         DriverControlsFrame0::SetBrake((true));
     }else{
         DriverControlsFrame0::SetBrake((false));
     }
+    //CANController::Send(&DriverControlsFrame0::Instance());
 
 }
 
