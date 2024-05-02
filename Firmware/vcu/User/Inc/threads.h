@@ -18,9 +18,6 @@ void LogData(void);
 void StrobeThread(void);
 void SendTelemetry(void);
 
-/* Timers */
-extern osTimerId_t throttle_timer;
-
 /* Event flags */
 extern osEventFlagsId_t log_event;
 extern osEventFlagsId_t strobe_event;
