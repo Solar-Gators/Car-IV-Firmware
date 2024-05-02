@@ -1,6 +1,8 @@
 Features to implement:
 -SD card logging (BMS, MPPT, MC, throttle, brake)
 -Kill switch persistent state
+-Send telemetry data thru UART
+    stop making typos when spelling transceiver
 
 VCU Errata:
 -No SD card detect
