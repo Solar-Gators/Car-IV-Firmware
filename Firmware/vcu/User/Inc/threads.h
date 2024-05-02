@@ -7,6 +7,7 @@ void ThreadsStart();
 
 /* Defines */
 
+
 /* Periodic threads */
 void SendMitsubaRequest(void);
 void ToggleLights(void);
@@ -15,6 +16,7 @@ void LogDataPeriodic(void);
 /* Regular threads */
 void LogData(void);
 void StrobeThread(void);
+void SendTelemetry(void);
 
 /* Event flags */
 extern osEventFlagsId_t log_event;
@@ -30,5 +32,7 @@ void BMSFaultCallback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
 void KillSwitchCallback(void);
 
+/* Object Declarations */
+transceiver TransceiverController(&huart1);
 
 #endif  /* THREADS_H_ */

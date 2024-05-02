@@ -11,6 +11,7 @@
 #include "sg_can.hpp"
 #include "button.hpp"
 #include "DACx311.hpp"
+#include "transceiver.hpp"
 
 #include "VCUFrame.hpp"
 #include "DriverControls.hpp"
