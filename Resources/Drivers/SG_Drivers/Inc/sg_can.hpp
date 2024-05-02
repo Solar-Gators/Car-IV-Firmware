@@ -54,6 +54,14 @@ public:
         mutex_id_ = osMutexNew(&mutex_attributes_);
     };
 
+    osStatus_t Lock(uint32_t timeout = osWaitForever){
+        return osMutexAcquire(mutex_id_, timeout);
+    }
+
+    osStatus_t Unlock(){
+        return osMutexRelease(mutex_id_);
+    }
+
     void LoadData(uint8_t data[], uint32_t len) {
         this->len = len;
         etl::mem_copy(&data[0], len, &this->data[0]);
