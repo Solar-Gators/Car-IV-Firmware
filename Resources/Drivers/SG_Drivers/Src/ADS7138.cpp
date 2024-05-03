@@ -231,9 +231,9 @@ HAL_StatusTypeDef ADS7138::ConversionReadManual(uint16_t *buf, uint8_t channel) 
         // Swap endianness of each item in buffer
         buf[0] = (buf[0] << 8) | (buf[0] >> 8);
 
-    } while (_append_type != DataCfg_AppendType::ID || ((buf[0] & 0xF) != channel && num_attempts++ < 100));
+    } while (_append_type != DataCfg_AppendType::ID || ((buf[0] & 0xF) != channel && num_attempts++ < 20));
 
-    if (num_attempts >= 100)
+    if (num_attempts >= 20)
         return HAL_ERROR;
 
     return HAL_OK;
