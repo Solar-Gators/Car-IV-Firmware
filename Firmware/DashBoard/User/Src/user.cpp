@@ -52,6 +52,9 @@ void ADC_Modules_Init() {
     else
         Logger::LogInfo("ADC %d init success", 0);
 
+    if (adcs[0].ConfigureOversampling(OsrCfg_Type::OSR_16) != HAL_OK)
+        Logger::LogError("ADC %d configure oversampling failed", 0);
+
     // Set all ADCs to initiate conversion on request
     if (adcs[0].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
         Logger::LogError("ADC %d configure opmode failed", 0);

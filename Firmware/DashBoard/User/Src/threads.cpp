@@ -38,7 +38,7 @@ void readThrottle() {
    
     
     uint16_t test = readThrottleValue();
-    DriverControlsFrame0::SetThrottleVal(test << 4);
+    DriverControlsFrame0::SetThrottleVal(test);
     
 
     
