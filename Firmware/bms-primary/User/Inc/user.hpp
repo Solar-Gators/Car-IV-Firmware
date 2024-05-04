@@ -46,9 +46,9 @@ const struct BMSConfig bms_config = {
     .MAX_CHARGE_CURRENT = 100.0,
     .MAX_CHARGE_TEMP = 60.0,
     .MAX_DISCHARGE_TEMP = 45.0,
-    .LOG_VOLTAGE = true,
-    .LOG_CURRENT = true,
-    .LOG_TEMPERATURE = true,
+    .LOG_VOLTAGE = false,
+    .LOG_CURRENT = false,
+    .LOG_TEMPERATURE = false,
 };
 
 /* Device handles */

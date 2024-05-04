@@ -91,7 +91,7 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                             NULL, 
                                             &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 50;
+static const uint32_t read_current_period = 100;
 osTimerAttr_t current_periodic_timer_attr = {
     .name = "Read Current Thread",
     .attr_bits = 0,
