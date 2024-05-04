@@ -34,6 +34,6 @@ void KillSwitchCallback(void);
 void ThrottleTimeoutCallback(void);
 
 /* Object Declarations */
-transceiver TransceiverController(&huart1);
+extern transceiver TransceiverController;
 
 #endif  /* THREADS_H_ */

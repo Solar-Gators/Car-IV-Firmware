@@ -9,7 +9,7 @@
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
 osEventFlagsId_t strobe_event = osEventFlagsNew(NULL);
-
+transceiver TransceiverController(&huart1);
 /* Setup periodic threads */
 osTimerAttr_t mitsuba_req_periodic_timer_attr = {
     .name = "Send Mitsuba Request Thread",
