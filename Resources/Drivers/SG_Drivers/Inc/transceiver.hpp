@@ -8,7 +8,6 @@
 #ifndef transceiver_HPP_
 #define transceiver_HPP_
 
-#include "main.h"
 #include "sg_can.hpp"
 class transceiver{
 public:

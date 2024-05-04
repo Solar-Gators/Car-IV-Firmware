@@ -17,7 +17,7 @@ HAL_StatusTypeDef transceiver::SendFrame(CANFrame& Frame){
 
         status = SendByte(EscapeData(Frame.len));
 
-        for(int i = 0; i < Frame.len; i++){
+        for(uint32_t i = 0; i < Frame.len; i++){
             status = SendByte(EscapeData(data_[i]));
         }
         status = SendByte(END_CHAR);
