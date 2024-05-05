@@ -9,6 +9,14 @@
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
 osEventFlagsId_t strobe_event = osEventFlagsNew(NULL);
+StaticSemaphore_t throttle_mutex_cb;
+const osMutexAttr_t throttle_mutex_attr = {
+    .name = "Throttle Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &throttle_mutex_cb,
+    .cb_size = sizeof(throttle_mutex_cb),
+};
+osMutexId_t throttle_mutex_id = osMutexNew(NULL);
 
 /* Setup periodic threads */
 osTimerAttr_t mitsuba_req_periodic_timer_attr = {
@@ -327,10 +335,12 @@ void DriverControls0Callback(uint8_t *data) {
 
     // If regen or brake is active, set throttle to 0 and regen to value
     if (DriverControlsFrame1::GetRegenEnable() || DriverControlsFrame0::GetBrake()) {
+        osMutexAcquire(throttle_mutex_id, osWaitForever);
         SetThrottle(0);
         if (DriverControlsFrame1::GetRegenEnable())
             // TODO: Calculate max regen value
             SetRegen(10000);
+        osMutexRelease(throttle_mutex_id);
     }
     // If no regen or brake, set throttle to value and regen to 0
     else {
@@ -339,12 +349,14 @@ void DriverControls0Callback(uint8_t *data) {
             throttle = DriverControlsFrame0::GetThrottleVal();
         else
             throttle = 58000;
+        osMutexAcquire(throttle_mutex_id, osWaitForever);
         SetThrottle(throttle);
         SetRegen(0);
+        osMutexRelease(throttle_mutex_id);
     }
 
     // Start throttle timeout
-    //osTimerStart(throttle_timer, 250);
+    osTimerStart(throttle_timer, 250);
 
     // Set brake light
     if (DriverControlsFrame0::GetBrake()) {
@@ -440,5 +452,7 @@ void KillSwitchCallback(void) {
 void ThrottleTimeoutCallback(void) {
     Logger::LogError("Throttle timeout");
     // If throttle update has not been received in 100ms, set throttle to 0
-    // SetThrottle(0);
+    osMutexAcquire(throttle_mutex_id, osWaitForever);
+    SetThrottle(0);
+    osMutexRelease(throttle_mutex_id);
 }
