@@ -103,11 +103,11 @@ void ADC_Modules_Init() {
         if (adcs[i].ConfigureSequenceMode(SeqMode_Type::AUTO) != HAL_OK)
             Logger::LogError("ADC %d configure sequence mode failed", i);
 
-        // Configure sampling rate to 10.4kSPS
+        // Configure sampling rate to 166.7 kSPS
         if (adcs[i].ConfigureOpmode(false, 
                                     ConvMode_Type::AUTONOMOUS, 
                                     Osc_Type::HIGH_SPEED, 
-                                    0b1101) != HAL_OK)
+                                    0b0101) != HAL_OK)
             Logger::LogError("ADC %d configure opmode failed", i);
 
         // Configure oversampling to 16x
@@ -131,23 +131,6 @@ void CPP_UserSetup(void) {
     DefaultOutputs();
 
     ADC_Modules_Init();
-
-    // TODO: Test ADCs
-    SetAmplifierState(true);
-    while (1) {
-        adcs[2].StartSequence();
-
-        HAL_Delay(500);
-
-        uint16_t adc_vals[8] = {0};
-        for (int i = 0; i < 8; i++) {
-            if (adcs[2].ReadChannel(i, &adc_vals[i]) != HAL_OK)
-                Logger::LogError("ADC %d read failed", i);
-            Logger::LogInfo("ADC %d: %d", i, adc_vals[i]);
-        }
-
-        HAL_Delay(2000);
-    }
 
     // Initialize BMS
     if (bms.Init(&hi2c3) != HAL_OK)

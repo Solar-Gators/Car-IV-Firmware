@@ -358,8 +358,36 @@ void ReadCurrentThread(void *argument) {
 
     osDelay(5); // TODO: Figure out minimum value to allow current value to settle
 
-    adcs[0].ConversionReadManual(&adc_vals[0], 5);
-    adcs[0].ConversionReadManual(&adc_vals[1], 7);
+    // Set adc0 to sequence channels 5 and 7
+    if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 configure sequence failed");
+        osMutexRelease(logger_mutex_id);
+    }
+    if (adcs[0].StartSequence() != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 start sequence failed");
+        osMutexRelease(logger_mutex_id);
+    }
+
+    osDelay(1);
+    if (adcs[0].StopSequence() != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 stop sequence failed");
+        osMutexRelease(logger_mutex_id);
+    }
+
+    // Read current values
+    if (adcs[0].ReadChannel(5, &adc_vals[0]) != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 channel 5 read failed");
+        osMutexRelease(logger_mutex_id);
+    }
+    if (adcs[0].ReadChannel(7, &adc_vals[1]) != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 channel 7 read failed");
+        osMutexRelease(logger_mutex_id);
+    }
 
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
     osMutexRelease(adc_mutex_id);
@@ -445,54 +473,65 @@ void ReadTemperatureThread(void *argument) {
         
         // Enable thermistor amplifiers
         SetAmplifierState(true);
-        osDelay(5);
+        osDelay(2);
 
-        // For adc0, manually read channels except 5 and 7
-        // Acquire and release mutex every time to avoid blocking current sensing for too long
-        uint8_t adc0_thermistor_channels[6] = {0, 1, 2, 3, 4, 6};
-        for (auto channel : adc0_thermistor_channels) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
+        osMutexAcquire(adc_mutex_id, osWaitForever);
 
-            if (adcs[0].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(0, channel)], channel)
-                != HAL_OK) {
+        // For adc0, configure sequence to read all channels except 5 and 7 (current sense channels)
+        // adc1 and adc2 are already configured to sequence all channels
+        // Start conversion on all ADCs
+        if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
+        }
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StartSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d start sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Wait for conversions to complete
+        // In next hardware revision, read ALERT pin instead of randomly waiting
+        // At 166.7kSPS, 8 channels w/ 16x oversampling takes 0.8ms to convert
+        osDelay(2);
+
+        // Stop sequence on all ADCs
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StopSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d stop sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Read all channels
+        uint8_t adc0_channels[6] = {0, 1, 2, 3, 4, 6};
+        for (uint8_t channel : adc0_channels) {
+            if (adcs[0].ReadChannel(channel, 
+                                &thermistor_vals[MapADCChannelToThermistor(0, channel)])
+                                != HAL_OK) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
-
-            osMutexRelease(adc_mutex_id);
         }
-
-        // For adc1, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[1].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(1, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
+        for(int i = 1; i < 3; i++) {
+            for (int channel = 0; channel < 8; channel++) {
+                if (adcs[i].ReadChannel(channel, 
+                                    &thermistor_vals[MapADCChannelToThermistor(i, channel)])
+                                    != HAL_OK) {
+                    osMutexAcquire(logger_mutex_id, osWaitForever);
+                    Logger::LogError("ADC%d channel %d read failed", i, channel);
+                    osMutexRelease(logger_mutex_id);
+                }
             }
-
-            osMutexRelease(adc_mutex_id);
-        }
-
-        // For adc2, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[2].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(2, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
-            }
-
-            osMutexRelease(adc_mutex_id);
         }
 
         // Disable thermistor amplifiers
-        // SetAmplifierState(false);
+        SetAmplifierState(false);
         osMutexRelease(adc_mutex_id);
 
         // Get secondary BMS temperature data
