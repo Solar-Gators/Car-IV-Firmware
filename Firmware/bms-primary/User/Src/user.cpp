@@ -58,52 +58,70 @@ bool CAN_Modules_Init() {
 
 
     // Add CAN devices and CAN frames
-    CANController::AddDevice(&candev1);
-    CANController::AddDevice(&candev2);
-    CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback);
-    CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback);
-    CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback);
-    CANController::AddRxMessage(&BMSSecondaryFrame1::Instance());
-    CANController::AddRxMessage(&BMSSecondaryFrame2::Instance());
-    CANController::AddRxMessage(&BMSSecondaryFrame3::Instance());
-    CANController::AddFilterAll();
-    CANController::Start();
+    if (CANController::AddDevice(&candev1) != HAL_OK)
+        return false;
+    if (CANController::AddDevice(&candev2) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&BMSSecondaryFrame1::Instance()) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&BMSSecondaryFrame2::Instance()) != HAL_OK)
+        return false;
+    if (CANController::AddRxMessage(&BMSSecondaryFrame3::Instance()) != HAL_OK)
+        return false;
+    if (CANController::AddFilterAll() != HAL_OK)
+        return false;
+    if (CANController::Start() != HAL_OK)
+        return false;
 
     return true;
 }
 
 void ADC_Modules_Init() {
+    // Common for all ADCs
     for (int i = 0; i < 3; i++) {
-        // Initialize ADC
+        // Initialize ADC and test I2C
         if (adcs[i].Init() != HAL_OK || adcs[i].TestI2C() != HAL_OK)
             Logger::LogError("ADC %d init failed", i);
         else
             Logger::LogInfo("ADC %d init success", i);
 
+        // Configure all channels as ADC inputs
+        if (adcs[i].ConfigurePinMode(0x0) != HAL_OK)
+            Logger::LogError("ADC %d configure pin mode failed", i);
+
+        // Select all channels for sequence
+        if (adcs[i].ConfigureSequenceAll() != HAL_OK)
+            Logger::LogError("ADC %d configure sequence failed", i);
+
+        // Configure auto-sequence
+        if (adcs[i].ConfigureSequenceMode(SeqMode_Type::AUTO) != HAL_OK)
+            Logger::LogError("ADC %d configure sequence mode failed", i);
+
+        // Configure sampling rate to 10.4kSPS
+        if (adcs[i].ConfigureOpmode(false, 
+                                    ConvMode_Type::AUTONOMOUS, 
+                                    Osc_Type::HIGH_SPEED, 
+                                    0b1101) != HAL_OK)
+            Logger::LogError("ADC %d configure opmode failed", i);
+
         // Configure oversampling to 16x
-        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_4) != HAL_OK)
+        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_32) != HAL_OK)
             Logger::LogError("ADC %d configure oversampling failed", i);
 
-        // Set all ADCs to initiate conversion on request
-        if (adcs[i].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
-            Logger::LogError("ADC %d configure opmode failed", i);
+        // Enable statistics
+        if (adcs[i].ConfigureStatistics(true) != HAL_OK)
+            Logger::LogError("ADC %d configure statistics failed", i);
 
         // For all ADCs, append channel ID to data
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
     }
-
-    // For adc0, sequence channels 5, 7 for current sense
-    if (adcs[0].AutoSelectChannels((0x1 << 5) | (0x1 << 7)) != HAL_OK)
-       Logger::LogError("ADC 0 auto select channels failed");
-
-    // For adc1, sequence all channels, all channels are thermistors
-    if (adcs[1].AutoSelectChannels(0xFF) != HAL_OK)
-        Logger::LogError("ADC 1 auto select channels failed");
-
-    // For adc2, sequence all channels, all channels are thermistors
-    if (adcs[2].AutoSelectChannels(0xFF) != HAL_OK)
-        Logger::LogError("ADC 2 auto select channels failed");
 }
 
 void CPP_UserSetup(void) {
@@ -111,10 +129,25 @@ void CPP_UserSetup(void) {
     HAL_Delay(10);
 
     DefaultOutputs();
-    
-    CAN_Modules_Init();
 
     ADC_Modules_Init();
+
+    // TODO: Test ADCs
+    SetAmplifierState(true);
+    while (1) {
+        adcs[2].StartSequence();
+
+        HAL_Delay(500);
+
+        uint16_t adc_vals[8] = {0};
+        for (int i = 0; i < 8; i++) {
+            if (adcs[2].ReadChannel(i, &adc_vals[i]) != HAL_OK)
+                Logger::LogError("ADC %d read failed", i);
+            Logger::LogInfo("ADC %d: %d", i, adc_vals[i]);
+        }
+
+        HAL_Delay(2000);
+    }
 
     // Initialize BMS
     if (bms.Init(&hi2c3) != HAL_OK)
@@ -130,6 +163,9 @@ void CPP_UserSetup(void) {
 
     // Start fan PWM
     // HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+
+    if (!CAN_Modules_Init())
+        Logger::LogError("CAN init failed");
 
     ThreadsStart();
 }

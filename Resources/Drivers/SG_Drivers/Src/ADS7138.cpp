@@ -10,7 +10,6 @@ ADS7138::ADS7138(I2C_HandleTypeDef *phi2c, uint8_t address) {
 HAL_StatusTypeDef ADS7138::Init() {
     // Soft reset ADC
     uint8_t generalCfg = ADS7138_GENERAL_CFG_RST;
-
     if (WriteReg(ADS7138_Register::GENERAL_CFG, generalCfg) != HAL_OK)
         return HAL_ERROR;
 
@@ -20,13 +19,13 @@ HAL_StatusTypeDef ADS7138::Init() {
     uint8_t system_status;
     ReadReg(ADS7138_Register::SYSTEM_STATUS, &system_status);
 
-    // Check that bit 7 is set to 1
-    if ((system_status & 0x80) == 0) {
+    // Check that bit 7 (constant value) is set to 1
+    if ((system_status & ADS7138_SYSTEM_STATUS_RSVD) == 0) {
         return HAL_ERROR;
     }
 
     // Check that I2C is not in high-speed mode
-    if ((system_status & 0x10) != 0) {
+    if ((system_status & ADS7138_SYSTEM_I2C_SPEED) != 0) {
         return HAL_ERROR;
     }
 
@@ -58,15 +57,21 @@ HAL_StatusTypeDef ADS7138::TestI2C() {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef ADS7138::SequenceAll() {
-    // Enable all channels in scanning sequence
-    uint8_t seq_ch_sel = 0xFF;
-    if (WriteReg(ADS7138_Register::SEQUENCE_CFG, seq_ch_sel) != HAL_OK)
+/**
+ * @brief Enable or disable statistics module (get high, low, latest regs)
+ * @param stats_en Enable statistics module
+*/
+HAL_StatusTypeDef ADS7138::ConfigureStatistics(bool stats_en) {
+    uint8_t generalCfg;
+    if (ReadReg(ADS7138_Register::GENERAL_CFG, &generalCfg) != HAL_OK)
         return HAL_ERROR;
 
-    // Enable auto-sequence mode
-    uint8_t seq_cfg = 0x1;
-    if (WriteReg(ADS7138_Register::SEQUENCE_CFG, seq_cfg) != HAL_OK)
+    if (stats_en)
+        generalCfg |= ADS7138_GENERAL_CFG_STATS_EN;
+    else
+        generalCfg &= ~ADS7138_GENERAL_CFG_STATS_EN;
+
+    if (WriteReg(ADS7138_Register::GENERAL_CFG, generalCfg) != HAL_OK)
         return HAL_ERROR;
 
     return HAL_OK;
@@ -83,18 +88,19 @@ HAL_StatusTypeDef ADS7138::ConfigureData(bool fix_pattern, DataCfg_AppendType ap
     if (fix_pattern)
         dataCfg |= ADS7138_DATA_CFG_FIX_PAT;
 
-    dataCfg |= static_cast<uint8_t>(append_type) << 4;
+    dataCfg |= static_cast<uint8_t>(append_type);
 
     if (WriteReg(ADS7138_Register::DATA_CFG, dataCfg) != HAL_OK)
         return HAL_ERROR;
 
+    // Set internal variables
+    _fix_pattern = fix_pattern;
     _append_type = append_type;
 
-    // TODO: Debug only, read back data to verify
+    // Read back data to verify write
     uint8_t readDataCfg;
     if (ReadReg(ADS7138_Register::DATA_CFG, &readDataCfg) != HAL_OK)
         return HAL_ERROR;
-
     if (readDataCfg != dataCfg)
         return HAL_ERROR;
 
@@ -120,6 +126,29 @@ HAL_StatusTypeDef ADS7138::ConfigureOversampling(OsrCfg_Type osr_cfg) {
  * @param conv_mode ADC conversion initiator mode, manual, autonomous, or turbo mode
 */
 HAL_StatusTypeDef ADS7138::ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_mode) {
+    uint8_t opmodeCfg = 0;
+
+    if (conv_on_err)
+        opmodeCfg |= ADS7138_OPMODE_CFG_CONV_ON_ERR;
+
+    opmodeCfg |= static_cast<uint8_t>(conv_mode);
+
+    if (WriteReg(ADS7138_Register::OPMODE_CFG, opmodeCfg) != HAL_OK)
+        return HAL_ERROR;
+
+    _conv_mode = conv_mode;
+
+    return HAL_OK;
+}
+
+/**
+ * @brief Configure ADC operational mode
+ * @param conv_on_err If set to true, CRC error will change all inputs to analog and pause channel sequencing
+ * @param conv_mode ADC conversion initiator mode, manual, autonomous, or turbo mode
+ * @param osc_type Oscillator type, high-speed or low-power
+ * @param clk_div Clock divider for the oscillator (4-bit)
+*/
+HAL_StatusTypeDef ADS7138::ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_mode, Osc_Type osc_type, uint8_t clk_div) {
     uint8_t generalCfg = 0;
 
     if (conv_on_err)
@@ -127,7 +156,11 @@ HAL_StatusTypeDef ADS7138::ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_
 
     generalCfg |= static_cast<uint8_t>(conv_mode);
 
-    if (WriteReg(ADS7138_Register::GENERAL_CFG, generalCfg) != HAL_OK)
+    generalCfg |= static_cast<uint8_t>(osc_type);
+
+    generalCfg |= (clk_div & 0xF);
+
+    if (WriteReg(ADS7138_Register::OPMODE_CFG, generalCfg) != HAL_OK)
         return HAL_ERROR;
 
     _conv_mode = conv_mode;
@@ -147,6 +180,37 @@ HAL_StatusTypeDef ADS7138::ConfigurePinMode(uint8_t pin_mode) {
 }
 
 /**
+ * @brief Configure the scanning sequence for auto-sequence or autonomous mode
+ * @param channels Bitmask of channels to scan
+*/
+HAL_StatusTypeDef ADS7138::ConfigureSequence(uint8_t channels) {
+    if (WriteReg(ADS7138_Register::AUTO_SEQ_CH_SEL, channels) != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
+}
+
+/**
+ * @brief Enable all channels in the scanning sequence
+*/
+HAL_StatusTypeDef ADS7138::ConfigureSequenceAll() {
+    return ConfigureSequence(0xFF);
+}
+
+/**
+ * @brief Configure the scanning sequence mode
+ * @param seq_mode Sequence mode to set
+*/
+HAL_StatusTypeDef ADS7138::ConfigureSequenceMode(SeqMode_Type seq_mode) {
+    uint8_t seqCfg = static_cast<uint8_t>(seq_mode);
+
+    if (WriteReg(ADS7138_Register::SEQUENCE_CFG, seqCfg) != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
+}
+
+/**
  * @brief Select a channel for manual conversion (ADC must be in manual mode)
  * @param channel Channel to select (0-7)
 */
@@ -155,17 +219,6 @@ HAL_StatusTypeDef ADS7138::ManualSelectChannel(uint8_t channel) {
         return HAL_ERROR;
 
     if (WriteReg(ADS7138_Register::MANUAL_CH_SEL, channel) != HAL_OK)
-        return HAL_ERROR;
-
-    return HAL_OK;
-}
-
-/**
- * @brief Select channels for auto sequence conversion (ADC must be in auto sequence mode)
- * @param channels Bitmask of channels to select
-*/
-HAL_StatusTypeDef ADS7138::AutoSelectChannels(uint8_t channels) {
-    if (WriteReg(ADS7138_Register::AUTO_SEQ_CH_SEL, channels) != HAL_OK)
         return HAL_ERROR;
 
     return HAL_OK;
@@ -269,6 +322,34 @@ HAL_StatusTypeDef ADS7138::ConversionReadAutoSequence(uint16_t *buf, uint8_t len
 
     // Stop sequence and switch to manual select mode
     WriteReg(ADS7138_Register::SEQUENCE_CFG, 0x0);
+
+    return HAL_OK;
+}
+
+/**
+ * @brief Initialize the ADC in autonomous mode
+ * @param channels Bitmask of channels to scan
+*/
+HAL_StatusTypeDef ADS7138::InitAutonomous(uint8_t channels) {
+    // Configure selected channels as AIN/GPIO
+    if (ConfigurePinMode(channels) != HAL_OK)
+        return HAL_ERROR;
+
+    // Enable all channels in scanning sequence
+    if (ConfigureSequenceAll() != HAL_OK)
+        return HAL_ERROR;
+
+    // Do not configure any alert conditions
+
+    // Configure sampling rate
+    // TODO: make this configurable
+    if (ConfigureOpmode(false, ConvMode_Type::AUTONOMOUS, Osc_Type::HIGH_SPEED, 0b1101) != HAL_OK)
+        return HAL_ERROR;
+
+    // Configure oversampling rate
+    // TODO: make this configurable
+    if (ConfigureOversampling(OsrCfg_Type::OSR_16) != HAL_OK)
+        return HAL_ERROR;
 
     return HAL_OK;
 }
