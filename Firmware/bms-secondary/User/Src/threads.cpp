@@ -67,6 +67,8 @@ static uint8_t high_temp_id;
 static uint8_t low_temp_id;
 static uint16_t internal_temp;
 
+static uint8_t amplifier_users = 0;     // Number of threads using the amplifiers, max of 2 (temp and current)
+
 static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
 static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
@@ -131,7 +133,16 @@ const osMutexAttr_t adc_mutex_attr = {
     .cb_mem = &adc_mutex_cb,
     .cb_size = sizeof(adc_mutex_cb),
 };
-osMutexId_t adc_mutex_id = osMutexNew(NULL);
+osMutexId_t adc0_mutex_id = osMutexNew(NULL);
+
+StaticSemaphore_t amplifier_mutex_cb;
+const osMutexAttr_t amplifier_mutex_attr = {
+    .name = "Amplifier Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &amplifier_mutex_cb,
+    .cb_size = sizeof(amplifier_mutex_cb),
+};
+osMutexId_t amplifier_mutex_id = osMutexNew(NULL);
 
 StaticSemaphore_t logger_mutex_cb;
 const osMutexAttr_t logger_mutex_attr = {
@@ -273,57 +284,86 @@ void ReadTemperatureThread(void *argument) {
     while (1) {
         osEventFlagsWait(read_temperature_event, 0x1, osFlagsWaitAny, osWaitForever);
         
-        // Enable thermistor amplifiers
+        // Turn on amplifiers
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
         SetAmplifierState(true);
-        osDelay(5);
+        amplifier_users++;
+        osMutexRelease(amplifier_mutex_id);
 
-        // For adc0, manually read channels except 5 and 7
-        // Acquire and release mutex every time to avoid blocking current sensing for too long
-        uint8_t adc0_thermistor_channels[6] = {0, 1, 2, 3, 4, 6};
-        for (auto channel : adc0_thermistor_channels) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
+        // Wait for thermistor values to settle
+        osDelay(2);
 
-            if (adcs[0].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(0, channel)], channel)
-                != HAL_OK) {
+        // For adc0, configure sequence to read all channels except 5 and 7 (current sense channels)
+        // adc1 and adc2 are already configured to sequence all channels
+        // Start conversion on all ADCs
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
+        }
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StartSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d start sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Wait for conversions to complete
+        // In next hardware revision, read ALERT pin instead of randomly waiting
+        // At 166.7kSPS, 8 channels w/ 16x oversampling takes 0.8ms to convert
+        osDelay(2);
+
+        // Stop sequence on all ADCs
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StopSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d stop sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Read all channels
+        uint8_t adc0_channels[6] = {0, 1, 2, 3, 4, 6};
+        for (uint8_t channel : adc0_channels) {
+            if (adcs[0].ReadChannel(channel, 
+                                &thermistor_vals[MapADCChannelToThermistor(0, channel)])
+                                != HAL_OK) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
-
-            osMutexRelease(adc_mutex_id);
+            // Release mutex for adc0
+            osMutexRelease(adc0_mutex_id);
         }
-
-        // For adc1, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[1].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(1, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
+        for(int i = 1; i < 3; i++) {
+            for (int channel = 0; channel < 8; channel++) {
+                if (adcs[i].ReadChannel(channel, 
+                                    &thermistor_vals[MapADCChannelToThermistor(i, channel)])
+                                    != HAL_OK) {
+                    osMutexAcquire(logger_mutex_id, osWaitForever);
+                    Logger::LogError("ADC%d channel %d read failed", i, channel);
+                    osMutexRelease(logger_mutex_id);
+                }
             }
-
-            osMutexRelease(adc_mutex_id);
         }
 
-        // For adc2, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[2].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(2, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
-            }
-
-            osMutexRelease(adc_mutex_id);
+        // Set adc0 to sequence channels 5 and 7 (for current thread)
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
         }
+        osMutexRelease(adc0_mutex_id);
 
-        // Disable thermistor amplifiers
-        SetAmplifierState(false);
-        osMutexRelease(adc_mutex_id);
+        // Turn off amplifiers if possible
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
+        amplifier_users--;
+        if (amplifier_users == 0)
+            SetAmplifierState(false);
+        osMutexRelease(amplifier_mutex_id);
 
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= bms_config.NUM_THERMISTORS_SECONDARY; i++) {

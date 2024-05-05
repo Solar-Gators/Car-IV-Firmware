@@ -75,6 +75,8 @@ static uint8_t high_temp_id;
 static uint8_t low_temp_id;
 static uint16_t internal_temp;
 
+static uint8_t amplifier_users = 0;     // Number of threads using the amplifiers, max of 2 (temp and current)
+
 static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
 static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
@@ -181,7 +183,16 @@ const osMutexAttr_t adc_mutex_attr = {
     .cb_mem = &adc_mutex_cb,
     .cb_size = sizeof(adc_mutex_cb),
 };
-osMutexId_t adc_mutex_id = osMutexNew(NULL);
+osMutexId_t adc0_mutex_id = osMutexNew(NULL);
+
+StaticSemaphore_t amplifier_mutex_cb;
+const osMutexAttr_t amplifier_mutex_attr = {
+    .name = "Amplifier Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &amplifier_mutex_cb,
+    .cb_size = sizeof(amplifier_mutex_cb),
+};
+osMutexId_t amplifier_mutex_id = osMutexNew(NULL);
 
 StaticSemaphore_t logger_mutex_cb;
 const osMutexAttr_t logger_mutex_attr = {
@@ -277,10 +288,6 @@ void ReadVoltageThread(void *argument) {
                             INT16_MAX : BMSSecondaryFrame0::Instance().GetLowCellVoltage();
     low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID() + 16;
 
-    // Voltage sum for computing average
-    // Value is multiplied by 10 because subpack voltage is in 0.01V units, while everything else is in mV
-    uint32_t sum_cell_voltage = BMSSecondaryFrame0::Instance().GetSubpackVoltage() * 10;
-
     // Update cell voltage values in bms
     bms.ReadVoltages();
 
@@ -352,18 +359,19 @@ void ReadCurrentThread(void *argument) {
     // Current_L in adc_vals[0] and Current_H in adc_vals[1]
     static uint16_t adc_vals[2];
 
-    osMutexAcquire(adc_mutex_id, osWaitForever);
+    // Turn on current sensor
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
+
+    // Turn on amplifier
+    osMutexAcquire(amplifier_mutex_id, osWaitForever);
     SetAmplifierState(true);
+    amplifier_users++;
+    osMutexRelease(amplifier_mutex_id);
 
     osDelay(5); // TODO: Figure out minimum value to allow current value to settle
 
-    // Set adc0 to sequence channels 5 and 7
-    if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
-        osMutexAcquire(logger_mutex_id, osWaitForever);
-        Logger::LogError("ADC0 configure sequence failed");
-        osMutexRelease(logger_mutex_id);
-    }
+    // Start sequence. adc0 is already set up to read current channels
+    osMutexAcquire(adc0_mutex_id, osWaitForever);
     if (adcs[0].StartSequence() != HAL_OK) {
         osMutexAcquire(logger_mutex_id, osWaitForever);
         Logger::LogError("ADC0 start sequence failed");
@@ -371,12 +379,7 @@ void ReadCurrentThread(void *argument) {
     }
 
     osDelay(1);
-    if (adcs[0].StopSequence() != HAL_OK) {
-        osMutexAcquire(logger_mutex_id, osWaitForever);
-        Logger::LogError("ADC0 stop sequence failed");
-        osMutexRelease(logger_mutex_id);
-    }
-
+    
     // Read current values
     if (adcs[0].ReadChannel(5, &adc_vals[0]) != HAL_OK) {
         osMutexAcquire(logger_mutex_id, osWaitForever);
@@ -389,8 +392,24 @@ void ReadCurrentThread(void *argument) {
         osMutexRelease(logger_mutex_id);
     }
 
+    // Stop sequence
+    if (adcs[0].StopSequence() != HAL_OK) {
+        osMutexAcquire(logger_mutex_id, osWaitForever);
+        Logger::LogError("ADC0 stop sequence failed");
+        osMutexRelease(logger_mutex_id);
+    }
+
+    osMutexRelease(adc0_mutex_id);
+
+    // Turn off current sensor
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
-    osMutexRelease(adc_mutex_id);
+
+    // Turn off amplifier if possible
+    osMutexAcquire(amplifier_mutex_id, osWaitForever);
+    amplifier_users--;
+    if (amplifier_users == 0)
+        SetAmplifierState(false);
+    osMutexRelease(amplifier_mutex_id);
 
     // Convert ADC values to current
     float current_l = ADCToCurrentL(adc_vals[0]);
@@ -471,15 +490,19 @@ void ReadTemperatureThread(void *argument) {
     while (1) {
         osEventFlagsWait(read_temperature_event, 0x1, osFlagsWaitAny, osWaitForever);
         
-        // Enable thermistor amplifiers
+        // Turn on amplifiers
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
         SetAmplifierState(true);
-        osDelay(2);
+        amplifier_users++;
+        osMutexRelease(amplifier_mutex_id);
 
-        osMutexAcquire(adc_mutex_id, osWaitForever);
+        // Wait for thermistor values to settle
+        osDelay(2);
 
         // For adc0, configure sequence to read all channels except 5 and 7 (current sense channels)
         // adc1 and adc2 are already configured to sequence all channels
         // Start conversion on all ADCs
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
         if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
             osMutexAcquire(logger_mutex_id, osWaitForever);
             Logger::LogError("ADC0 configure sequence failed");
@@ -517,6 +540,8 @@ void ReadTemperatureThread(void *argument) {
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
+            // Release mutex for adc0
+            osMutexRelease(adc0_mutex_id);
         }
         for(int i = 1; i < 3; i++) {
             for (int channel = 0; channel < 8; channel++) {
@@ -530,9 +555,21 @@ void ReadTemperatureThread(void *argument) {
             }
         }
 
-        // Disable thermistor amplifiers
-        SetAmplifierState(false);
-        osMutexRelease(adc_mutex_id);
+        // Set adc0 to sequence channels 5 and 7 (for current thread)
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
+        }
+        osMutexRelease(adc0_mutex_id);
+
+        // Turn off amplifiers if possible
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
+        amplifier_users--;
+        if (amplifier_users == 0)
+            SetAmplifierState(false);
+        osMutexRelease(amplifier_mutex_id);
 
         // Get secondary BMS temperature data
         high_temp = BMSSecondaryFrame2::Instance().GetHighTemp();

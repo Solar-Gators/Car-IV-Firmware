@@ -95,10 +95,6 @@ void ADC_Modules_Init() {
         if (adcs[i].ConfigurePinMode(0x0) != HAL_OK)
             Logger::LogError("ADC %d configure pin mode failed", i);
 
-        // Select all channels for sequence
-        if (adcs[i].ConfigureSequenceAll() != HAL_OK)
-            Logger::LogError("ADC %d configure sequence failed", i);
-
         // Configure auto-sequence
         if (adcs[i].ConfigureSequenceMode(SeqMode_Type::AUTO) != HAL_OK)
             Logger::LogError("ADC %d configure sequence mode failed", i);
@@ -122,6 +118,16 @@ void ADC_Modules_Init() {
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
     }
+
+    // For adc0, sequence channels 5 and 7 for current measurement
+    if (adcs[0].ConfigureSequence(0b10100000) != HAL_OK)
+        Logger::LogError("ADC 0 configure sequence failed");
+
+    // For adc1 and adc2, sequence all channels
+    if (adcs[1].ConfigureSequenceAll() != HAL_OK)
+        Logger::LogError("ADC 1 configure sequence failed");
+    if (adcs[2].ConfigureSequenceAll() != HAL_OK)
+        Logger::LogError("ADC 2 configure sequence failed");
 }
 
 void CPP_UserSetup(void) {
