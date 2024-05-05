@@ -114,12 +114,12 @@
             "cppStandard": "c++17"
         },
         {
-            "name": "Front-VCU",                   // Project dependent
+            "name": "DashBoard",                   // Project dependent
             "intelliSenseMode": "gcc-arm",
             "includePath": [
                 "${common_includes}",
-                "Firmware/Front-VCU/Core/Inc",     // Project dependent
-                "Firmware/Front-VCU/User/Inc",     // Project dependent
+                "Firmware/DashBoard/Core/Inc",     // Project dependent
+                "Firmware/DashBoard/User/Inc",     // Project dependent
                 "${stm32l4_includes}"               // Project dependent
             ],
             "browse": {
