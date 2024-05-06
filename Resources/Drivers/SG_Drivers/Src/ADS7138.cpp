@@ -436,3 +436,12 @@ HAL_StatusTypeDef ADS7138::ClearRegBits(ADS7138_Register reg, uint8_t mask) {
 
     return HAL_OK;
 }
+
+
+// TODO: Get rid of this
+HAL_StatusTypeDef ADS7138::AutoSelectChannels(uint8_t channels) {
+    if (WriteReg(ADS7138_Register::AUTO_SEQ_CH_SEL, channels) != HAL_OK)
+        return HAL_ERROR;
+
+    return HAL_OK;
+}

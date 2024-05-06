@@ -234,6 +234,8 @@ public:
     // 8.4.4 Autonomous Mode
     HAL_StatusTypeDef InitAutonomous(uint8_t channels);
     HAL_StatusTypeDef ReadChannel(uint8_t channel, uint16_t *data);
+    
+    HAL_StatusTypeDef AutoSelectChannels(uint8_t channels);
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;

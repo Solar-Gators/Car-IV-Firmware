@@ -106,7 +106,7 @@ void ADC_Modules_Init() {
                                     0b0101) != HAL_OK)
             Logger::LogError("ADC %d configure opmode failed", i);
 
-        // Configure oversampling to 16x
+        // Configure oversampling to 32x
         if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_32) != HAL_OK)
             Logger::LogError("ADC %d configure oversampling failed", i);
 

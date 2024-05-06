@@ -183,7 +183,7 @@ const osMutexAttr_t adc_mutex_attr = {
     .cb_mem = &adc_mutex_cb,
     .cb_size = sizeof(adc_mutex_cb),
 };
-osMutexId_t adc0_mutex_id = osMutexNew(NULL);
+osMutexId_t adc0_mutex_id = osMutexNew(&adc_mutex_attr);
 
 StaticSemaphore_t amplifier_mutex_cb;
 const osMutexAttr_t amplifier_mutex_attr = {
@@ -192,7 +192,16 @@ const osMutexAttr_t amplifier_mutex_attr = {
     .cb_mem = &amplifier_mutex_cb,
     .cb_size = sizeof(amplifier_mutex_cb),
 };
-osMutexId_t amplifier_mutex_id = osMutexNew(NULL);
+osMutexId_t amplifier_mutex_id = osMutexNew(&amplifier_mutex_attr);
+
+StaticSemaphore_t i2c4_mutex_cb;
+const osMutexAttr_t i2c4_mutex_attr = {
+    .name = "I2C4 Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &i2c4_mutex_cb,
+    .cb_size = sizeof(i2c4_mutex_cb),
+};
+osMutexId_t i2c4_mutex_id = osMutexNew(&i2c4_mutex_attr);
 
 StaticSemaphore_t logger_mutex_cb;
 const osMutexAttr_t logger_mutex_attr = {
@@ -201,7 +210,7 @@ const osMutexAttr_t logger_mutex_attr = {
     .cb_mem = &logger_mutex_cb,
     .cb_size = sizeof(logger_mutex_cb),
 };
-osMutexId_t logger_mutex_id = osMutexNew(NULL);
+osMutexId_t logger_mutex_id = osMutexNew(&logger_mutex_attr);
 
 StaticSemaphore_t current_integral_mutex_cb;
 const osMutexAttr_t current_integral_mutex_attr = {
@@ -210,7 +219,7 @@ const osMutexAttr_t current_integral_mutex_attr = {
     .cb_mem = &current_integral_mutex_cb,
     .cb_size = sizeof(current_integral_mutex_cb),
 };
-osMutexId_t current_integral_mutex_id = osMutexNew(NULL);
+osMutexId_t current_integral_mutex_id = osMutexNew(&current_integral_mutex_attr);
 
 StaticSemaphore_t contactor_mutex_cb;
 const osMutexAttr_t contactor_mutex_attr = {
@@ -219,7 +228,7 @@ const osMutexAttr_t contactor_mutex_attr = {
     .cb_mem = &contactor_mutex_cb,
     .cb_size = sizeof(contactor_mutex_cb),
 };
-osMutexId_t contactor_mutex_id = osMutexNew(NULL);
+osMutexId_t contactor_mutex_id = osMutexNew(&contactor_mutex_attr);
 
 /* Event flag to trigger read_thermistor_thread */
 osEventFlagsId_t read_temperature_event = osEventFlagsNew(NULL);
@@ -371,6 +380,8 @@ void ReadCurrentThread(void *argument) {
     osDelay(5); // TODO: Figure out minimum value to allow current value to settle
 
     // Start sequence. adc0 is already set up to read current channels
+    // Make sure to always acquire i2c4_mutex before adc0_mutex to prevent deadlock
+    osMutexAcquire(i2c4_mutex_id, osWaitForever);
     osMutexAcquire(adc0_mutex_id, osWaitForever);
     if (adcs[0].StartSequence() != HAL_OK) {
         osMutexAcquire(logger_mutex_id, osWaitForever);
@@ -400,6 +411,7 @@ void ReadCurrentThread(void *argument) {
     }
 
     osMutexRelease(adc0_mutex_id);
+    osMutexRelease(i2c4_mutex_id);
 
     // Turn off current sensor
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
@@ -502,6 +514,7 @@ void ReadTemperatureThread(void *argument) {
         // For adc0, configure sequence to read all channels except 5 and 7 (current sense channels)
         // adc1 and adc2 are already configured to sequence all channels
         // Start conversion on all ADCs
+        osMutexAcquire(i2c4_mutex_id, osWaitForever);
         osMutexAcquire(adc0_mutex_id, osWaitForever);
         if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
             osMutexAcquire(logger_mutex_id, osWaitForever);
@@ -515,12 +528,16 @@ void ReadTemperatureThread(void *argument) {
                 osMutexRelease(logger_mutex_id);
             }
         }
+        osMutexRelease(adc0_mutex_id);
+        osMutexRelease(i2c4_mutex_id);
 
         // Wait for conversions to complete
         // In next hardware revision, read ALERT pin instead of randomly waiting
         // At 166.7kSPS, 8 channels w/ 16x oversampling takes 0.8ms to convert
         osDelay(2);
 
+        osMutexAcquire(i2c4_mutex_id, osWaitForever);
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
         // Stop sequence on all ADCs
         for (int i = 0; i < 3; i++) {
             if (adcs[i].StopSequence() != HAL_OK) {
@@ -540,11 +557,14 @@ void ReadTemperatureThread(void *argument) {
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
-            // Release mutex for adc0
+            // Release mutex for adc0 and i2c4
             osMutexRelease(adc0_mutex_id);
+            osMutexRelease(i2c4_mutex_id);
         }
         for(int i = 1; i < 3; i++) {
             for (int channel = 0; channel < 8; channel++) {
+                // Acquire mutex for i2c4 each time to avoid blocking current sense for too long
+                osMutexAcquire(i2c4_mutex_id, osWaitForever);
                 if (adcs[i].ReadChannel(channel, 
                                     &thermistor_vals[MapADCChannelToThermistor(i, channel)])
                                     != HAL_OK) {
@@ -552,10 +572,12 @@ void ReadTemperatureThread(void *argument) {
                     Logger::LogError("ADC%d channel %d read failed", i, channel);
                     osMutexRelease(logger_mutex_id);
                 }
+                osMutexRelease(i2c4_mutex_id);
             }
         }
 
         // Set adc0 to sequence channels 5 and 7 (for current thread)
+        osMutexAcquire(i2c4_mutex_id, osWaitForever);
         osMutexAcquire(adc0_mutex_id, osWaitForever);
         if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
             osMutexAcquire(logger_mutex_id, osWaitForever);
@@ -563,6 +585,7 @@ void ReadTemperatureThread(void *argument) {
             osMutexRelease(logger_mutex_id);
         }
         osMutexRelease(adc0_mutex_id);
+        osMutexRelease(i2c4_mutex_id);
 
         // Turn off amplifiers if possible
         osMutexAcquire(amplifier_mutex_id, osWaitForever);

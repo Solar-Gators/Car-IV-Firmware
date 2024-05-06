@@ -38,6 +38,7 @@ extern osEventFlagsId_t error_event;
 /* Mutexes */
 extern osMutexId_t adc0_mutex_id;
 extern osMutexId_t amplifier_mutex_id;
+extern osMutexId_t i2c4_mutex_id;
 extern osMutexId_t logger_mutex_id;
 extern osMutexId_t current_integral_mutex_id;
 extern osMutexId_t contactor_mutex_id;

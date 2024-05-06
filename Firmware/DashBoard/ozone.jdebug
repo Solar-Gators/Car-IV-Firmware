@@ -23,7 +23,7 @@ void OnProjectLoad (void) {
   // Dialog-generated settings
   //
   Project.SetDevice ("STM32L496RG");
-  Project.SetHostIF ("USB", "801046072");
+  Project.SetHostIF ("USB", "801022976");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
   Project.SetTraceSource ("SWO");
