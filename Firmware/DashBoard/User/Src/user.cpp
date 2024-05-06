@@ -60,6 +60,10 @@ void ADC_Modules_Init() {
     if (adcs[0].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
         Logger::LogError("ADC %d configure data failed", 0);
 
+    // Set oversampling rate to 16
+    if (adcs[0].ConfigureOversampling(OsrCfg_Type::OSR_16) != HAL_OK)
+        Logger::LogError("ADC %d configure oversampling failed", 0);
+
 
     // For adc0, sequence channels 5, 7 for current sense
     if (adcs[0].AutoSelectChannels((0x1 << 0)) != HAL_OK)
