@@ -127,7 +127,7 @@ HAL_StatusTypeDef ADS7138::ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_
 
     generalCfg |= static_cast<uint8_t>(conv_mode);
 
-    if (WriteReg(ADS7138_Register::GENERAL_CFG, generalCfg) != HAL_OK)
+    if (WriteReg(ADS7138_Register::OPMODE_CFG, generalCfg) != HAL_OK)
         return HAL_ERROR;
 
     _conv_mode = conv_mode;
