@@ -41,7 +41,8 @@
         "ff.h": "c",
         "ffconf.h": "c",
         "memory": "cpp",
-        "usbd_cdc_if.h": "c"
+        "usbd_cdc_if.h": "c",
+        "cstring": "cpp"
     },
     "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
