@@ -161,18 +161,26 @@ void LogDataPeriodic() {
 
 //thread function to send telemetry data
 void SendTelemetry(){
+    TransceiverController.SendFrame(MitsubaFrame0::Instance());
+    TransceiverController.SendFrame(MitsubaFrame1::Instance());
+    TransceiverController.SendFrame(MitsubaFrame2::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame1::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame2::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame3::Instance());
+    
     TransceiverController.SendFrame(BMSFrame0::Instance());
     TransceiverController.SendFrame(BMSFrame1::Instance());
     TransceiverController.SendFrame(BMSFrame2::Instance());
     TransceiverController.SendFrame(BMSFrame3::Instance());
-
+    /*
     TransceiverController.SendFrame(MitsubaFrame0::Instance());
     TransceiverController.SendFrame(MitsubaFrame1::Instance());
     TransceiverController.SendFrame(MitsubaFrame2::Instance());
-
+   
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame1::Instance());
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame2::Instance());
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame3::Instance());
+    */
 }
 
 /* Thread function to log data to SD card */

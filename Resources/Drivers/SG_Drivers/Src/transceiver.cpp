@@ -10,29 +10,25 @@ HAL_StatusTypeDef transceiver::SendFrame(CANFrame& Frame){
     HAL_StatusTypeDef status = HAL_OK;
     if(Frame.Lock() == osOK){
         //send CAN ID
-        status = SendByte(EscapeData((canid & 0xFF000000) >> 24));
-        status = SendByte(EscapeData((canid & 0x00FF0000) >> 16));
-        status = SendByte(EscapeData((canid & 0x0000FF00) >> 8));
-        status = SendByte(EscapeData(canid & 0x000000FF));
+        
+        packet[0] = ((canid & 0xFF000000) >> 24);
+        packet[1] = ((canid & 0x00FF0000) >> 16);
+        packet[2] = ((canid & 0x0000FF00) >> 8);
+        packet[3] = (canid & 0x000000FF);
 
-        status = SendByte(EscapeData(Frame.len));
+        packet[4] = Frame.len;
 
-        for(uint32_t i = 0; i < Frame.len; i++){
-            status = SendByte(EscapeData(data_[i]));
+        for(uint32_t i = 0; i < 8; i++){
+            packet[i+5] = (data_[i]);
         }
-        status = SendByte(END_CHAR);
+        
         Frame.Unlock();
+        SendByte(packet);
     }
+    HAL_Delay(2);
     return status;
 }
 
-uint8_t transceiver::EscapeData(uint8_t data){
-    if(data == START_CHAR|| data == END_CHAR || data == ESC_CHAR){
-        HAL_UART_Transmit(huart_, &data, 1, HAL_MAX_DELAY);
-    }
-    return data;
-}
-
-HAL_StatusTypeDef transceiver::SendByte(uint8_t data){
-    return HAL_UART_Transmit(huart_, &data, 1, HAL_MAX_DELAY);
+HAL_StatusTypeDef transceiver::SendByte(uint8_t* data){
+    return HAL_UART_Transmit(huart_, data, PACKETLEN, HAL_MAX_DELAY);
 }
