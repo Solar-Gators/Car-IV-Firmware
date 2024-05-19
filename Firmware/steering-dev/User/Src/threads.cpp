@@ -266,6 +266,13 @@ void BMSFrame3Callback(uint8_t *data) {
     osMutexRelease(ui_mutex);
 }
 
+void PowerBoardCallback(uint8_t *data) {
+    // Update supp batt voltage
+    osMutexAcquire(ui_mutex, osWaitForever);
+    ui.UpdateAuxV(static_cast<float>(PowerBoardFrame::GetSuppBattVoltage()) / 100.0);
+    osMutexRelease(ui_mutex);
+}
+
 void ThreadsStart() {
     // Read button state every 20 ms
     osTimerStart(read_buttons_periodic_timer_id, 20);

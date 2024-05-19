@@ -34,6 +34,7 @@ void BMSResetCallback(void);
 
 void BMSFrame3Callback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
+void PowerBoardCallback(uint8_t *data);
 
 void ThreadsStart(void);
 
