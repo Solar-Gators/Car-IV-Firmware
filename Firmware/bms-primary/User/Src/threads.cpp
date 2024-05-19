@@ -274,8 +274,10 @@ void ReadVoltageThread(void *argument) {
                             BMSSecondaryFrame1::Instance().GetHighCellVoltageID(), 
                             BMSSecondaryFrame0::Instance().GetHighCellVoltage());
 
-        // Set high cell voltage error bit
+        // Set high cell voltage error bit and schedule error_event
         // This error can only be cleared by a power cycle
+        BMSFrame3::Instance().SetHighCellVoltageFault(true);
+        osEventFlagsSet(error_event, 0x1);
     }
 
     if (BMSSecondaryFrame0::Instance().GetLowCellVoltage() != 0 &&
@@ -284,8 +286,10 @@ void ReadVoltageThread(void *argument) {
                             BMSSecondaryFrame1::Instance().GetLowCellVoltageID(), 
                             BMSSecondaryFrame0::Instance().GetLowCellVoltage());
 
-        // Set low cell voltage error bit
+        // Set low cell voltage error bit and schedule error_event
         // This error can only be cleared by a power cycle
+        BMSFrame3::Instance().SetLowCellVoltageFault(true);
+        osEventFlagsSet(error_event, 0x1);
     }
 
     // Reset and update high and low cell voltages from secondary bms
@@ -298,6 +302,7 @@ void ReadVoltageThread(void *argument) {
     low_cell_voltage_id = BMSSecondaryFrame1::Instance().GetLowCellVoltageID() + 16;
 
     // Update cell voltage values in bms
+    // This function updates the cell voltages in the bms driver which can be read with GetCellVoltage()
     bms.ReadVoltages();
 
     local_pack_voltage = 0;
@@ -333,6 +338,8 @@ void ReadVoltageThread(void *argument) {
 
         // Set high cell voltage error bit
         // This error can only be cleared by a power cycle
+        BMSFrame3::Instance().SetHighCellVoltageFault(true);
+        osEventFlagsSet(error_event, 0x1);
     }
 
     if (low_cell_voltage < bms_config.MIN_CELL_VOLTAGE) {
@@ -340,6 +347,8 @@ void ReadVoltageThread(void *argument) {
 
         // Set low cell voltage error bit
         // This error can only be cleared by a power cycle
+        BMSFrame3::Instance().SetLowCellVoltageFault(true);
+        osEventFlagsSet(error_event, 0x1);
     }
 
     // If configured, log the voltages every 2.5 seconds
@@ -516,11 +525,11 @@ void ReadTemperatureThread(void *argument) {
         // Start conversion on all ADCs
         osMutexAcquire(i2c4_mutex_id, osWaitForever);
         osMutexAcquire(adc0_mutex_id, osWaitForever);
-        if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
-            osMutexAcquire(logger_mutex_id, osWaitForever);
-            Logger::LogError("ADC0 configure sequence failed");
-            osMutexRelease(logger_mutex_id);
-        }
+        // if (adcs[0].ConfigureSequence(0b11111111) != HAL_OK) {
+        //     osMutexAcquire(logger_mutex_id, osWaitForever);
+        //     Logger::LogError("ADC0 configure sequence failed");
+        //     osMutexRelease(logger_mutex_id);
+        // }
         for (int i = 0; i < 3; i++) {
             if (adcs[i].StartSequence() != HAL_OK) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
@@ -528,16 +537,12 @@ void ReadTemperatureThread(void *argument) {
                 osMutexRelease(logger_mutex_id);
             }
         }
-        osMutexRelease(adc0_mutex_id);
-        osMutexRelease(i2c4_mutex_id);
 
         // Wait for conversions to complete
         // In next hardware revision, read ALERT pin instead of randomly waiting
         // At 166.7kSPS, 8 channels w/ 16x oversampling takes 0.8ms to convert
         osDelay(2);
 
-        osMutexAcquire(i2c4_mutex_id, osWaitForever);
-        osMutexAcquire(adc0_mutex_id, osWaitForever);
         // Stop sequence on all ADCs
         for (int i = 0; i < 3; i++) {
             if (adcs[i].StopSequence() != HAL_OK) {
@@ -557,10 +562,12 @@ void ReadTemperatureThread(void *argument) {
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
-            // Release mutex for adc0 and i2c4
-            osMutexRelease(adc0_mutex_id);
-            osMutexRelease(i2c4_mutex_id);
         }
+        // Release mutex for adc0 and i2c4
+        osMutexRelease(adc0_mutex_id);
+        osMutexRelease(i2c4_mutex_id);
+
+        // Read all channels on adc1 and adc2
         for(int i = 1; i < 3; i++) {
             for (int channel = 0; channel < 8; channel++) {
                 // Acquire mutex for i2c4 each time to avoid blocking current sense for too long
@@ -577,15 +584,15 @@ void ReadTemperatureThread(void *argument) {
         }
 
         // Set adc0 to sequence channels 5 and 7 (for current thread)
-        osMutexAcquire(i2c4_mutex_id, osWaitForever);
-        osMutexAcquire(adc0_mutex_id, osWaitForever);
-        if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
-            osMutexAcquire(logger_mutex_id, osWaitForever);
-            Logger::LogError("ADC0 configure sequence failed");
-            osMutexRelease(logger_mutex_id);
-        }
-        osMutexRelease(adc0_mutex_id);
-        osMutexRelease(i2c4_mutex_id);
+        // osMutexAcquire(i2c4_mutex_id, osWaitForever);
+        // osMutexAcquire(adc0_mutex_id, osWaitForever);
+        // if (adcs[0].ConfigureSequence(0b11111111) != HAL_OK) {
+        //     osMutexAcquire(logger_mutex_id, osWaitForever);
+        //     Logger::LogError("ADC0 configure sequence failed");
+        //     osMutexRelease(logger_mutex_id);
+        // }
+        // osMutexRelease(adc0_mutex_id);
+        // osMutexRelease(i2c4_mutex_id);
 
         // Turn off amplifiers if possible
         osMutexAcquire(amplifier_mutex_id, osWaitForever);
@@ -691,7 +698,7 @@ void BroadcastThread(void* argument) {
         BMSFrame1::Instance().SetLowCellVoltageID(low_cell_voltage_id);
 
         // Capture current data
-        BMSFrame1::Instance().SetPackCurrent(pack_current);
+        BMSFrame1::Instance().SetPackCurrent(static_cast<uint16_t>(pack_current * 100));
 
         // Capture then reset current integral
         osMutexAcquire(current_integral_mutex_id, osWaitForever);
@@ -700,7 +707,7 @@ void BroadcastThread(void* argument) {
         osMutexRelease(current_integral_mutex_id);
 
         // Calculate power
-        int16_t avg_power = BMSFrame1::Instance().GetPackCurrent() * BMSFrame0::Instance().GetPackVoltage() / 100;
+        int16_t avg_power = static_cast<int16_t>(pack_current * (total_pack_voltage / 1000.0));
         BMSFrame1::Instance().SetAveragePower(avg_power);
 
         // Capture temperature data

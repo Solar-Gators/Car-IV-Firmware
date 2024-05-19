@@ -120,7 +120,9 @@ void ADC_Modules_Init() {
     }
 
     // For adc0, sequence channels 5 and 7 for current measurement
-    if (adcs[0].ConfigureSequence(0b10100000) != HAL_OK)
+    // if (adcs[0].ConfigureSequence(0b10100000) != HAL_OK)
+    //     Logger::LogError("ADC 0 configure sequence failed");
+    if (adcs[0].ConfigureSequenceAll() != HAL_OK)
         Logger::LogError("ADC 0 configure sequence failed");
 
     // For adc1 and adc2, sequence all channels
