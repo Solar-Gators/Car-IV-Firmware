@@ -13,6 +13,9 @@ TMC4671::TMC4671(SPI_HandleTypeDef *phspi, GPIO_TypeDef *cs_port, uint16_t cs_pi
     - ADC I1 INP vs GND
     - Rest of valuees leave at all zeros
 */
+//montitoring
+//control
+//testing functions
 
 uint8_t TMC4671::INIT(sdfgfdsdfghgfdsdfghj){
     HAL_StatusTypeDef status;
