@@ -105,7 +105,7 @@ void PeriodicTask1(void *argument) {
     DriverControlsFrame0::SetThrottleVal(rawData << 4);
     
     // Read shutdown status
-    if(HAL_GPIO_ReadPin(GPIOC, 6) == GPIO_PIN_RESET){
+    if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET){
        DriverControlsFrame0::SetShutdownStatus((true));
     }
 

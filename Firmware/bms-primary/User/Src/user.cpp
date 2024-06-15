@@ -62,11 +62,14 @@ bool CAN_Modules_Init() {
         return false;
     if (CANController::AddDevice(&candev2) != HAL_OK)
         return false;
-    if (CANController::AddRxMessage(&VCUFrame0::Instance(), VCUFrameCallback) != HAL_OK)
+    if (CANController::AddRxMessage(&VCUFrame0::Instance(), 
+        VCUFrameCallback) != HAL_OK)
         return false;
-    if (CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), SecondaryFrame0Callback) != HAL_OK)
+    if (CANController::AddRxMessage(&BMSSecondaryFrame0::Instance(), 
+        SecondaryFrame0Callback) != HAL_OK)
         return false;
-    if (CANController::AddRxMessage(&DriverControlsFrame1::Instance(), DriverControls1Callback) != HAL_OK)
+    if (CANController::AddRxMessage(&DriverControlsFrame1::Instance(), 
+        DriverControls1Callback) != HAL_OK)
         return false;
     if (CANController::AddRxMessage(&BMSSecondaryFrame1::Instance()) != HAL_OK)
         return false;
@@ -163,7 +166,8 @@ void CPP_UserSetup(void) {
 
 /* Controls power supply to thermistor amplifier ICs */
 void SetAmplifierState(bool state) {
-    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, state ? 
+                        GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 /* Selects contactor power supply between main 12V and supplemental battery */
@@ -177,16 +181,24 @@ void SetContactorSource(ContactorSource_Type source) {
 void SetContactorState(uint8_t contactor, bool state) {
     switch (contactor) {
         case 1:
-            HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, 
+                                CONTACTOR1_CTRL_Pin,
+                                state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 2:
-            HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, 
+                                CONTACTOR2_CTRL_Pin,
+                                state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 3:
-            HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, 
+                                CONTACTOR3_CTRL_Pin,
+                                state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 4:
-            HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, 
+                                CONTACTOR4_CTRL_Pin,
+                                state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         default:
             Logger::LogError("Invalid contactor number");

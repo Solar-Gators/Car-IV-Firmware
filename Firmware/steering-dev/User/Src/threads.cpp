@@ -166,6 +166,7 @@ void ModeLongCallback() {
     }
     else if (mode == MODE_REV) {
         mode = last_fwd_mode;
+
     }
     SendMode(mode);
 }

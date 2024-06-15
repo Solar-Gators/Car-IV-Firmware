@@ -839,7 +839,20 @@ void ProcessSD(void) {
 				if (fil_addr) {
 					fresult = f_lseek(&fil, fil_addr);
 				} else {
-					fresult = (FRESULT)f_puts("Time (ms),State of Charge,Battery Voltage,Battery Current,Battery Avg Temp (C),Battery High Temp (C),Motor RPM,Motor Temp,MPPT0 Voltage,MPPT0 Current,MPPT1 Voltage,MPPT1 Current,MPPT2 Voltage,MPPT2 Current\n", &fil);
+					fresult = (FRESULT)f_puts("Time (ms),
+								State of Charge,
+								Battery Voltage,
+								Battery Current,
+								Battery Avg Temp (C),
+								Battery High Temp (C),
+								Motor RPM,
+								Motor Temp,
+								MPPT0 Voltage,
+								MPPT0 Current,
+								MPPT1 Voltage,
+								MPPT1 Current,
+								MPPT2 Voltage,
+								MPPT2 Current\n", &fil);
 				}
 
 				static constexpr etl::format_spec format_long(10,8,1,false,false,false,false,'0');
