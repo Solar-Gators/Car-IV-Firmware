@@ -4,178 +4,390 @@
 //High level functions
 #include "M24C02.hpp"
 
-void Float_To_Bytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
+union FourBytes{
+	float f;
+	int i;
+	uint8_t bytesArray[4];
+};
 
-	union U //Creates a shared memory space of the largest item (4 bytes).
-	{
-		float tempFloat; //Both items are saved in the same memory space concurrently.
-		uint8_t bytesArray[4];
-	};
+union dataStorage{
+	memory obj;
+	uint8_t bytesArray[sizeof(memory)];
+};
 
-	U temp;
+void FloatToBytes(float val, uint8_t* bytes){ //Converts float to a 4 byte array. Pass the float and an pointer to the save location of the bytes.
 
-	temp.tempFloat = val;
+ 	FourBytes temp;
 
-	// Creates a temp variable to reassign the pointer
-	uint8_t* temp = bytes;
+ 	temp.f = val;
 
-	for(int i = 0 ; i < 4; i++){
-		bytes[i] = temp.bytesArray[i];
-	}
+ 	for(int i = 0 ; i < 4; i++){
+ 		bytes[i] = temp.bytesArray[i];
+ 	}
 
-	delete temp;
 }
 
 void BytesToFloat(float &val, uint8_t* bytes){
 
-	union U //Creates a shared memory space of the largest item (4 bytes).
-	{
-		float tempFloat; //Both items are saved in the same memory space concurrently.
-		uint8_t bytesArray[4];
-	};
+	FourBytes temp;
 
-	U temp;
+ 	for(int i = 0 ; i < 4; i++){
+ 		temp.bytesArray[i] = bytes[i];
+ 	}
 
-	for(int i = 0 ; i < 4; i++){
-		temp.bytesArray[i] = bytes[i];
-	}
-
-	val = temp.tempFloat;
+ 	val = temp.f;
 }
 
-bool intToBytes(int val, uint8_t* bytes){
+void intToBytes(int val, uint8_t* bytes){
 
-	union U //Creates a shared memory space of the largest item (4 bytes).
-	{
-		int tempInt; //Both items are saved in the same memory space concurrently.
-		uint8_t bytesArray[4];
-	};
+ 	FourBytes temp;
 
-	U temp;
+	temp.i = val;
 
-	temp.tempInt = val;
-
-	uint8_t* tempBytes = bytes;
-
-	for(int i = 0 ; i < 4; i++){
-		bytes[i] = temp.bytesArray[i];
+ 	for(int i = 0 ; i < 4; i++){
+ 		bytes[i] = temp.bytesArray[i];
 	}
-
-	delete tempBytes;
 
 }
 
 void BytesToInt(int &val, uint8_t* bytes){
 
-	union U //Creates a shared memory space of the largest item (4 bytes).
-	{
-		int tempInt; //Both items are saved in the same memory space concurrently.
-		uint8_t bytesArray[4];
-	};
+ 	FourBytes temp;
 
-	U temp;
+ 	for(int i = 0 ; i < 4; i++){
+ 		temp.bytesArray[i] = bytes[i];
+ 	}
 
-	for(int i = 0 ; i < 4; i++){
+ 	val = temp.i;
+
+}
+
+void StructToBytes(memory obj, uint8_t* bytes){
+
+	dataStorage temp;
+
+	temp.obj = obj;
+
+	for(int i = 0 ; i < sizeof(bytes) ; i++){
+		bytes[i] = temp.bytesArray[i];
+	}
+
+
+}
+
+void BytesToStruct(memory obj, uint8_t* bytes){
+
+	dataStorage temp;
+
+	for(int i = 0 ; i < sizeof(obj) ; i++){
 		temp.bytesArray[i] = bytes[i];
 	}
 
-	val = temp.tempInt;
+	obj = temp.obj;
+}
+
+memory storage;
+
+
+M24C02::M24C02(){}
+
+M24C02::M24C02(I2C_HandleTypeDef *i2cHandle){
+	i2cHandle = i2cHandle;
 
 }
 
-bool cstringToBytes(const char *name, int &length, uint8_t *nameData){
-	
-	int strLen = sizeof(name);
-	length = strLen;
+HAL_StatusTypeDef M24C02::ReadAll(uint8_t *data){ 
 
-	uint8_t *temp = nameData;
-		
-		for(int i = 0 ; i < strLen ; i++){
-
-			nameData[i] = name[i];
-
-		}
-		return true;
+	try{
+		HAL_StatusTypeDef HALStat = ReadRegister(0x00, data, sizeof(storage));
+		return HALStat;
 	}
 	catch(...){
-		return false;
+		return HAL_ERROR;
 	}
 
-	delete temp;
+}
+
+HAL_StatusTypeDef M24C02::UpdateAll(void* struc){//
+
+	uint8_t *tempData = new uint8_t;
+
+	StructToBytes(struct, tempData);
+	WriteRegister(0x00, tempData, sizeof(struc))
+
+
+
+	delete tempData;
+}
+
+
+void M24C02::ShiftDataForwards(uint8_t startAddr, uint8_t byteShift){ //Shifts all the data starting at a given address for the given byte shift length. Used to make space to add new member variables in the structs.
+
+	uint8_t *tempData = new uint8_t;
+
+	// Read from start address until end of memory
+	HAL_StatusTypeDef HALStat = ReadRegister(startAddr, tempData, (sizeof(memory) - startAddr));
+
+	// Makes room for the data of size byteShift
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, 0x00, byteShift);
+	// Write the rest of the data after the byteShift
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + byteShift, tempData, sizeof(tempData));
+
+	delete tempData;
+}
+
+void M24C02::ShiftDataBackwards(uint8_t startAddr, uint8_t byteShift){
+
+	uint8_t *tempData = new uint8_t;
+
+	// Read from after what we want to shift till the end
+	HAL_StatusTypeDef HALStat = ReadRegister(startAddr + byteShift, tempData, (sizeof(memory) - startAddr - byteShift));
+
+	// Write starting at the start address, overwriting the memory at the byteShift
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr, tempData, sizeof(tempData));
+	// Write zeros at the end where memory would be
+	HAL_StatusTypeDef HALStat = WriteRegister(startAddr + sizeof(tempData), 0x00, byteShift);
+
+	delete tempData;
 
 }
 
-// returns the data from the memory chip into data
-HAL_StatusTypeDef getData(memory obj, uint8_t *data){
+//VCU Functions
 
-	uint8_t *temp = data;
+HAL_StatusTypeDef M24C02::TickOdometer(){
 
-	Hal_StatusTypeDef status = M24C02_ReadRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
+	uint8_t *structBytes = new uint8_t;
+	memory tempStore;
 
-	delete temp;
+	HAL_StatusTypeDef HALStat;
+	try{
+		HALStat = ReadRegister(0x00, structBytes, sizeof(storage));
 
-	return status;
+		if (HALStat == HAL_ERROR){
+			throw;
+		} else {
+			BytesToStruct(tempStore, structBytes);
+			tempStore.VCU.odomter += 1;
+			StructToBytes(tempStore, structBytes);
+
+			HALStat = WriteRegister(0x00, structBytes, sizeof(storage));
+			if (HALStat == HAL_ERROR){
+				throw;
+				
+			} else {
+
+				delete structBytes;
+				return HAL_OK;
+			}
+		}
+
+	}
+	catch(...){
+
+		delete structBytes;
+		return HAL_ERROR;
+	}
+
+}
+
+HAL_StatusTypeDef M24C02::ReadVCU(uint8_t *data){
+
+	uint8_t VCUAddr = 0x00;
+
+	try{
+		HAL_StatusTypeDef HALStat = ReadRegister(VCUAddr, data, sizeof(storage.VCU));
+		return HALStat;
+	}
+	catch(...){
+		return HAL_ERROR;
+	}
+}
+
+//Update Functions
+HAL_StatusTypeDef M24C02::ChangePotential(float val){
+	
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.potential = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
 	
 }
 
-HAL_StatusTypeDef setData(memory obj, uint8_t *data){
+HAL_StatusTypeDef M24C02::ChangeIntegral(float val){
 
-	uint8_t *temp = data;
-	HAL_StatusTypeDef status = M24C02_WriteRegister(M24C02 *dev, obj.getAddr(), uint8_t *data, obj.getSize());
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
 
-	delete temp;
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	} else {
 
-	return status;
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.integral = val;
+		StructToBytes(tempStruct, tempData);
 
-}
-
-
-HAL_StatusTypeDef M24C02FetchMemInfo(uint8_t *info){
-	
-}
-
-//HAL_StatusTypeDef M24C02ReadAll{
-
-
-
-//}
-
-HAL_StatusTypeDef M24C02TickOdometer(memory odomObj){
-
-	uint8_t tempBytes[4];
-	getData[odomObj, tempBytes];
-
-
-	int tempInt;
-	BytesToInt(tempInt, tempBytes);
-
-	tempInt += 1;
-
-	IntToBytes(tempInt, tempBytes);
-
-
-
-	
-
-	
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
 
 }
 
+HAL_StatusTypeDef M24C02::ChangeDerivative(float val){
 
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
 
-//Low level functions
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
 
-HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data){ //Function to read data off the EEPROM.
-    return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, 1, HAL_MAX_DELAY);
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.derivative = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
 }
 
-HAL_StatusTypeDef M24C02_ReadRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length){ //Function to read data off the EEPROM. Utilizes overloading.
-    return HAL_I2C_Mem_Read(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+HAL_StatusTypeDef M24C02::ChangeOdometer(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.odomter = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
 }
 
-HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data){ //Function to write data to the EEPROM.
-	return HAL_I2C_Mem_Write(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, 1, HAL_MAX_DELAY);
+HAL_StatusTypeDef M24C02::ChangeRegen(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.regen = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
 }
-HAL_StatusTypeDef M24C02_WriteRegister(M24C02 *dev, uint8_t reg, uint8_t *data, int length){ //Function to write data to the EEPROM. Utilizes overloading.
-	return HAL_I2C_Mem_Write(dev->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+
+HAL_StatusTypeDef M24C02::ChangeSpeed(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.VCU.speed = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
 }
+
+//BMS Functions
+
+HAL_StatusTypeDef M24C02::ReadBMS(uint8_t *data){
+
+	uint8_t BMSAddr = 0x00 + sizeof(storage.VCU) - 0x01;
+
+	try{
+		HAL_StatusTypeDef HALStat = ReadRegister(BMSAddr, data, sizeof(storage.BMS));
+		return HALStat;
+	}
+	catch(...){
+		return HAL_ERROR;
+	}
+}
+
+//Update Functions
+HAL_StatusTypeDef M24C02::ChangeMaxTemp(float val){
+
+	uint8_t *tempData = new uint8_t;
+	HAL_StatusTypeDef HALStat;
+	memory tempStruct;
+
+	HALStat = ReadRegister(0x00, tempData, sizeof(memory));
+	if(HALStat == ERROR){
+		delete tempData;
+		return HALStat;
+	}else {
+
+		BytesToStruct(tempStruct, tempData);
+		tempStruct.BMS.maxTemp = val;
+		StructToBytes(tempStruct, tempData);
+
+		HALStat = WriteRegister(0x00, tempData, sizeof(memory));
+		delete tempData;
+		return HALStat;
+	}
+
+}
+
+//Low Level Functions
+
+HAL_StatusTypeDef M24C02::ReadRegister(uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Read(this->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+}
+
+HAL_StatusTypeDef M24C02::WriteRegister(uint8_t reg, uint8_t *data, int length = 1){
+	return HAL_I2C_Mem_Write(this->i2cHandle, M24C02_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, data, length, HAL_MAX_DELAY);
+}
+

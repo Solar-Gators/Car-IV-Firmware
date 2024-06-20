@@ -59,6 +59,7 @@ file(GLOB SG_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/DACx311.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/button.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/M24C02.cpp
 )
 list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_msp_template.c)
 list(REMOVE_ITEM GLOB_SOURCES ${COMMON_DIR}/${MCU_FAMILY}_HAL_Driver/Src/${MCU_FAMILY_LOWER}_hal_timebase_tim_template.c)

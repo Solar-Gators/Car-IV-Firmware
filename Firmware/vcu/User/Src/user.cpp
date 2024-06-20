@@ -236,6 +236,36 @@ void CPP_UserSetup(void) {
     // Make sure that timer priorities are configured correctly
     HAL_Delay(10);
 
+
+
+
+    
+    // Driver test
+    M24C02 mem_dev(&hi2c2);
+
+    uint8_t write_data[5] = {0x11, 0x22, 0x33, 0x44, 0x55};
+    mem_dev.WriteRegister(0, write_data, 5);
+
+    HAL_Delay(10);
+
+    uint8_t read_data[5];
+    mem_dev.ReadRegister(0, (uint8_t*)&read_data, 5);
+
+    Logger::LogInfo("Read data: %x", read_data);
+
+    while(1);
+
+
+
+
+
+
+
+
+
+
+
+
     // Initialize CAN things
     CAN_Modules_Init();
 
