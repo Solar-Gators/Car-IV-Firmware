@@ -134,12 +134,12 @@ target_link_options(${EXECUTABLE} PRIVATE
     ${CPU_PARAMETERS}
     -T${LINKER_SCRIPT}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map,--cref
-    --specs=nosys.specs
+    --specs=rdimon.specs
     -Wl,--undefined,_printf_float
     -Wl,--start-group
     -lc
     -lm
-    -lnosys
+    -lrdimon
     -Wl,--end-group
     -Wl,--gc-sections,--print-memory-usage)
 

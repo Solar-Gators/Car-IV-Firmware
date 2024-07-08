@@ -14,6 +14,12 @@ set(CMAKE_EXECUTABLE_SUFFIX_ASM ".elf")
 set(CMAKE_EXECUTABLE_SUFFIX_C ".elf")
 set(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 
+# Set Ninja as the default generator if not specified
+if(NOT CMAKE_GENERATOR)
+    set(CMAKE_GENERATOR Ninja CACHE STRING "Default generator" FORCE)
+endif()
+
+
 # Compiler flags
 set(CMAKE_C_FLAGS 
     "-mcpu=cortex-m4 \
