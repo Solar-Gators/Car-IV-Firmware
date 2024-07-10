@@ -52,10 +52,10 @@ static GPIO_PinState horn_last_state = GPIO_PIN_SET;
 static GPIO_PinState ptt_last_state = GPIO_PIN_SET;
 void ReadButtonsPeriodic() {
     // Check if cruise minus is pressed
-    if (cruise_minus_btn.ReadPin() != cruise_minus_last_state) {
-        Button::triggered_button_ = &cruise_minus_btn;
-        osSemaphoreRelease(Button::button_semaphore_id_);
-    }
+    // if (cruise_minus_btn.ReadPin() != cruise_minus_last_state) {
+    //     Button::triggered_button_ = &cruise_minus_btn;
+    //     osSemaphoreRelease(Button::button_semaphore_id_);
+    // }
 
     // Check if PV is pressed
     if (pv_btn.ReadPin() != pv_last_state) {

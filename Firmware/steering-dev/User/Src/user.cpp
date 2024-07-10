@@ -17,7 +17,7 @@ Button horn_btn = Button(Horn_Btn_GPIO_Port, Horn_Btn_Pin, 75, GPIO_PIN_SET, fal
 Button mc_btn = Button(MC_Btn_GPIO_Port, MC_Btn_Pin, 75, GPIO_PIN_SET, false);
 Button right_turn_btn = Button(RT_Btn_GPIO_Port, RT_Btn_Pin, 50, GPIO_PIN_SET, false);
 Button cruise_plus_btn = Button(Cplus_Btn_GPIO_Port, Cplus_Btn_Pin, 75, GPIO_PIN_SET, false);
-Button cruise_minus_btn = Button(Cminus_Btn_GPIO_Port, Cminus_Btn_Pin, 75, GPIO_PIN_SET, false);
+// Button cruise_minus_btn = Button(Cminus_Btn_GPIO_Port, Cminus_Btn_Pin, 75, GPIO_PIN_SET, false);
 Button ptt_btn = Button(PTT_Btn_GPIO_Port, PTT_Btn_Pin, 75, GPIO_PIN_SET, false);
 Button pv_btn = Button(PV_Btn_GPIO_Port, PV_Btn_Pin, 150, GPIO_PIN_SET, false);
 
@@ -66,7 +66,7 @@ HAL_StatusTypeDef Buttons_Init() {
 	
 	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
 	cruise_plus_btn.RegisterNormalPressCallback(CruisePlusCallback);
-	cruise_minus_btn.RegisterNormalPressCallback(CruiseMinusCallback);
+	// cruise_minus_btn.RegisterNormalPressCallback(CruiseMinusCallback);
 	ptt_btn.RegisterNormalPressCallback(PTTCallback);
 	pv_btn.RegisterNormalPressCallback(PVCallback);
 

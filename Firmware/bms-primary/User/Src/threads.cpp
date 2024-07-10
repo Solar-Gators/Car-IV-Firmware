@@ -77,10 +77,8 @@ static uint16_t internal_temp;
 
 static uint8_t amplifier_users = 0;     // Number of threads using the amplifiers, max of 2 (temp and current)
 
-static constexpr etl::format_spec 
-                    format_float(10, 5, 2, false, false, false, false, ' ');
-static constexpr etl::format_spec 
-                    format_int(10, 4, 0, false, false, false, false, ' ');
+static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
+static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
 /* Setup periodic threads */
 static const uint32_t read_voltage_period = 25;
@@ -90,11 +88,10 @@ osTimerAttr_t voltage_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t voltage_timer_id = osTimerNew(
-                                        (osThreadFunc_t)ReadVoltageThread, 
-                                        osTimerPeriodic, 
-                                        NULL, 
-                                        &voltage_periodic_timer_attr);
+osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread, 
+                                          osTimerPeriodic, 
+                                          NULL, 
+                                          &voltage_periodic_timer_attr);
 
 static const uint32_t read_current_period = 100;
 osTimerAttr_t current_periodic_timer_attr = {
@@ -103,11 +100,10 @@ osTimerAttr_t current_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t current_timer_id = osTimerNew(
-                                        (osThreadFunc_t)ReadCurrentThread, 
-                                        osTimerPeriodic, 
-                                        NULL, 
-                                        &current_periodic_timer_attr);
+osTimerId_t current_timer_id = osTimerNew((osThreadFunc_t)ReadCurrentThread, 
+                                          osTimerPeriodic, 
+                                          NULL, 
+                                          &current_periodic_timer_attr);
 
 static const uint32_t read_temperature_period = 1000;
 osTimerAttr_t temperature_periodic_timer_attr = {
@@ -116,11 +112,10 @@ osTimerAttr_t temperature_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t temperature_timer_id = osTimerNew(
-                                        (osThreadFunc_t)ReadTemperaturePeriodic, 
-                                        osTimerPeriodic, 
-                                        NULL, 
-                                        &temperature_periodic_timer_attr);
+osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePeriodic, 
+                                              osTimerPeriodic, 
+                                              NULL, 
+                                              &temperature_periodic_timer_attr);
 
 static const uint32_t broadcast_period = 100;
 osTimerAttr_t broadcast_periodic_timer_attr = {
@@ -129,11 +124,10 @@ osTimerAttr_t broadcast_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t broadcast_timer_id = osTimerNew(
-                                        (osThreadFunc_t)BroadcastPeriodic, 
-                                        osTimerPeriodic, 
-                                        NULL, 
-                                        &broadcast_periodic_timer_attr);
+osTimerId_t broadcast_timer_id = osTimerNew((osThreadFunc_t)BroadcastPeriodic, 
+                                            osTimerPeriodic, 
+                                            NULL, 
+                                            &broadcast_periodic_timer_attr);
 
 /* Setup regular threads */
 osThreadId_t thermistor_thread_id;
@@ -290,8 +284,8 @@ void ReadVoltageThread(void *argument) {
         BMSSecondaryFrame0::Instance().GetHighCellVoltage() > 
         bms_config.MAX_CELL_VOLTAGE) {
         Logger::LogError("High cell voltage on cell %d: %dmV", 
-                        BMSSecondaryFrame1::Instance().GetHighCellVoltageID(), 
-                        BMSSecondaryFrame0::Instance().GetHighCellVoltage());
+                         BMSSecondaryFrame1::Instance().GetHighCellVoltageID(), 
+                         BMSSecondaryFrame0::Instance().GetHighCellVoltage());
 
         // Set high cell voltage error bit and schedule error_event
         // This error can only be cleared by a power cycle
@@ -305,8 +299,8 @@ void ReadVoltageThread(void *argument) {
         BMSSecondaryFrame0::Instance().GetLowCellVoltage() < 
         bms_config.MIN_CELL_VOLTAGE) {
         Logger::LogError("Low cell voltage on cell %d: %dmV", 
-                            BMSSecondaryFrame1::Instance().GetLowCellVoltageID(), 
-                            BMSSecondaryFrame0::Instance().GetLowCellVoltage());
+                         BMSSecondaryFrame1::Instance().GetLowCellVoltageID(), 
+                         BMSSecondaryFrame0::Instance().GetLowCellVoltage());
 
         // Set low cell voltage error bit and schedule error_event
         // This error can only be cleared by a power cycle

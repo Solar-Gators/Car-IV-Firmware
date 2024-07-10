@@ -142,7 +142,10 @@ HAL_StatusTypeDef BQ76952::ReadSafetyFaults() {
     return HAL_OK;
 }
 
-HAL_StatusTypeDef BQ76952::ChangeBalancingStatus(bool enableManualBal, bool enableBalWhileSleep, bool enableBalWhileRelax, bool enableBalWhileCharging){
+HAL_StatusTypeDef BQ76952::ChangeBalancingStatus(bool enableManualBal, 
+                                                 bool enableBalWhileSleep, 
+                                                 bool enableBalWhileRelax, 
+                                                 bool enableBalWhileCharging) {
     HAL_StatusTypeDef status;
     status = ConfigUpdate(true);
     if (status != HAL_OK) 
