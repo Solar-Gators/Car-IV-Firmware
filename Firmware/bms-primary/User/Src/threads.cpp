@@ -471,7 +471,8 @@ void ReadCurrentThread(void *argument) {
 
     // If current is <50A, use current_l, 
     // else use current_h to update global current
-    pack_current = current_l < 50.0 ? current_l : current_h;
+    float abs_current_l = current_l < 0 ? -current_l : current_l;
+    pack_current = abs_current_l < 50.0 ? current_l : current_h;
 
     // Check if discharge current exceeded
     if (pack_current > bms_config.MAX_DISCHARGE_CURRENT) {
@@ -489,7 +490,7 @@ void ReadCurrentThread(void *argument) {
     }
 
     // Check if charge current exceeded
-    if (current_l < -bms_config.MAX_CHARGE_CURRENT) {
+    if (pack_current < -bms_config.MAX_CHARGE_CURRENT) {
         // Set charge current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighChargeCurrentFault(true);
@@ -788,9 +789,10 @@ void BroadcastThread(void* argument) {
 
 void ErrorThread(void* argument) {
     // Delay to allow errors to show up
-    osDelay(500);
+    // osDelay(500);
 
     while (1) {
+        osEventFlagsClear(error_event, ~0x0);
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
         // Any set bit in fault_flags indicates an error
@@ -828,10 +830,10 @@ void ErrorThread(void* argument) {
             osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Close negative side contactor
             SetContactorState(4, true);
-            osDelay(800);
+            HAL_Delay(800);
             // Close positive side contactor
             SetContactorState(3, true);
-            osDelay(250);
+            HAL_Delay(250);
 
             BMSFrame3::Instance().SetContactorStatus(3, true);
             BMSFrame3::Instance().SetContactorStatus(4, true);
@@ -854,10 +856,14 @@ void SecondaryFrame0Callback(uint8_t *data) {
 
     // Update high and low cell voltages
     // Error checking is done in ReadVoltageThread
+    if (BMSSecondaryFrame0::Instance().GetHighCellVoltage() < 500)
+        return;
     high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() > 
                         high_cell_voltage ? 
                         BMSSecondaryFrame0::Instance().GetHighCellVoltage() : 
                         high_cell_voltage;
+    if (BMSSecondaryFrame0::Instance().GetLowCellVoltage() < 500)
+        return;
     low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() < 
                         low_cell_voltage ? 
                         BMSSecondaryFrame0::Instance().GetLowCellVoltage() : 
@@ -890,13 +896,13 @@ void DriverControls1Callback(uint8_t *data) {
         osMutexAcquire(contactor_mutex_id, osWaitForever);
         // Close precharge contactor
         SetContactorState(2, true);
-        osDelay(500);
+        HAL_Delay(500);
         // Close MPPT contactor
         SetContactorState(1, true);
-        osDelay(250);
+        HAL_Delay(250);
         // Open precharge contactor
         SetContactorState(2, false);
-        osDelay(250);
+        HAL_Delay(250);
         BMSFrame3::Instance().SetContactorStatus(1, true);
         osMutexRelease(contactor_mutex_id);
     }

@@ -108,6 +108,9 @@ void PeriodicTask1(void *argument) {
     if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET){
        DriverControlsFrame0::SetShutdownStatus((true));
     }
+    else {
+       DriverControlsFrame0::SetShutdownStatus((false));
+    }
 
     CANController::Send(&DriverControlsFrame0::Instance());
 

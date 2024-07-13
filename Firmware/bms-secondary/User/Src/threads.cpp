@@ -296,6 +296,9 @@ void ReadTemperatureThread(void *argument) {
     while (1) {
         osEventFlagsWait(read_temperature_event, 
                         0x1, osFlagsWaitAny, osWaitForever);
+
+        // Toggle OK LED
+        HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
         
         // Turn on amplifiers
         osMutexAcquire(amplifier_mutex_id, osWaitForever);

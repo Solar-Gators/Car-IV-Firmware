@@ -472,13 +472,16 @@ void MitsubaCallback(uint8_t *data) {
 
 /* Callback executed when kill switch is pressed */
 void KillSwitchCallback(void) {
-    if (kill_sw.ReadPin() == GPIO_PIN_RESET) {
+    if (kill_sw.ReadPin() == GPIO_PIN_SET) {
         // If kill switch is pressed, set kill state to true
         kill_state = true;
         Logger::LogError("Kill switch pressed");
 
         // Turn on strobe light
         osEventFlagsSet(strobe_event, 0x1);
+
+        // Turn on error LED
+        HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
 
         // Send kill switch status over CAN
         VCUFrame0::Instance().SetKillStatus(true);
@@ -492,6 +495,9 @@ void KillSwitchCallback(void) {
         HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, 
                           STRB_LIGHT_EN_Pin, 
                           GPIO_PIN_RESET);
+
+        // Turn off error LED
+        HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
 
         // Send kill switch status over CAN
         VCUFrame0::Instance().SetKillStatus(false);
