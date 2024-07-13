@@ -794,7 +794,8 @@ void ErrorThread(void* argument) {
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
         // Any set bit in fault_flags indicates an error
-        if (BMSFrame3::Instance().GetFaultFlags() != 0) {
+        if (BMSFrame3::Instance().GetFaultFlags() != 0 && 
+            !DriverControlsFrame1::Instance().GetBMSError()) {
             HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
 
             osMutexAcquire(contactor_mutex_id, osWaitForever);

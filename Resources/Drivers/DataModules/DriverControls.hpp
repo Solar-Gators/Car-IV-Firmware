@@ -135,6 +135,10 @@ DATAMODULE(
         return static_cast<bool>(Data()[1] & 0x20);
     }
 
+    inline static bool GetBMSError() {
+        return static_cast<bool>(Data()[1] & 0x40);
+    }
+
     inline static void SetFlags0(uint8_t flags) {
         Data()[0] = flags;
     }
@@ -230,6 +234,14 @@ DATAMODULE(
             Data()[1] |= 0x20;
         } else {
             Data()[1] &= ~0x20;
+        }
+    }
+
+    inline static void SetBMSError(bool val) {
+        if (val) {
+            Data()[1] |= 0x40;
+        } else {
+            Data()[1] &= ~0x40;
         }
     }
 )
