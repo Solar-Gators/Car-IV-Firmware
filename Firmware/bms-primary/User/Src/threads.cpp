@@ -479,7 +479,7 @@ void ReadCurrentThread(void *argument) {
     pack_current = abs_current_l < 50.0 ? current_l : current_h;
 
     // Check if discharge current exceeded
-    if (pack_current > bms_config.MAX_CHARGE_CURRENT) {
+    if (pack_current < -bms_config.MAX_DISCHARGE_CURRENT) {
         // Set current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighDischargeCurrentFault(true);
@@ -494,7 +494,7 @@ void ReadCurrentThread(void *argument) {
     }
 
     // Check if charge current exceeded
-    if (pack_current < -bms_config.MAX_CHARGE_CURRENT) {
+    if (pack_current > bms_config.MAX_CHARGE_CURRENT) {
         // Set charge current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighChargeCurrentFault(true);
@@ -683,7 +683,7 @@ void ReadTemperatureThread(void *argument) {
 
         // Check for overtemperature conditions
         if (BMSFrame1::Instance().GetPackCurrent() > 0 && 
-            high_temp / 100.0 > bms_config.MAX_DISCHARGE_TEMP) {
+            high_temp > bms_config.MAX_DISCHARGE_TEMP) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 
@@ -694,8 +694,7 @@ void ReadTemperatureThread(void *argument) {
                             high_temp_id, float_buf.c_str());
             osMutexRelease(logger_mutex_id);
         }
-        else if (BMSFrame1::Instance().GetPackCurrent() < 0 &&
-                low_temp / 100.0 < bms_config.MAX_CHARGE_TEMP) {
+        else if (high_temp > bms_config.MAX_CHARGE_TEMP) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 

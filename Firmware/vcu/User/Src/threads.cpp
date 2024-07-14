@@ -448,7 +448,7 @@ void DriverControls1Callback(uint8_t *data) {
 void BMSFaultCallback(uint8_t *data) {
     uint32_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
 
-    fault_flags &= ~(0x1 << 7);     // Ignore kill switch fault, generated here
+    // fault_flags &= ~(0x1 << 7);     // Ignore kill switch fault, generated here
 
     if (fault_flags) {
         Logger::LogError("BMS Fault: %lu\n", fault_flags);

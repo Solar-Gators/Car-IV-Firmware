@@ -18,10 +18,10 @@ DATAMODULE(
     1,
 
     inline static bool GetKillStatus() {
-        return static_cast<bool>(Data()[0]);
+        return static_cast<bool>(Data()[0] & 0x1);
     }
 
     inline static void SetKillStatus(bool status) {
-        Data()[0] = status;
+        Data()[0] = status & 0x1;
     }
 )

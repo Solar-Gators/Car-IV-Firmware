@@ -28,8 +28,8 @@ struct BMSConfig {
     int16_t MIN_CELL_VOLTAGE;
     float MAX_DISCHARGE_CURRENT;
     float MAX_CHARGE_CURRENT;
-    float MAX_CHARGE_TEMP;
-    float MAX_DISCHARGE_TEMP;
+    uint16_t MAX_CHARGE_TEMP;
+    uint16_t MAX_DISCHARGE_TEMP;
     bool LOG_VOLTAGE;
     bool LOG_CURRENT;
     bool LOG_TEMPERATURE;
@@ -44,8 +44,8 @@ const struct BMSConfig bms_config = {
     .MIN_CELL_VOLTAGE = 2500,
     .MAX_DISCHARGE_CURRENT = 60.0,
     .MAX_CHARGE_CURRENT = 26.0,
-    .MAX_CHARGE_TEMP = 45.0,
-    .MAX_DISCHARGE_TEMP = 60.0,
+    .MAX_CHARGE_TEMP = 4500,
+    .MAX_DISCHARGE_TEMP = 6000,
     .LOG_VOLTAGE = false,
     .LOG_CURRENT = false,
     .LOG_TEMPERATURE = false,
