@@ -107,6 +107,10 @@ DATAMODULE(
         return static_cast<bool>(Data()[0] & 0x20);
     }
 
+    inline static bool GetDriverFan() {
+        return static_cast<bool>(Data()[0] & 0x40);
+    }
+
     inline static uint8_t GetFlags1() {
         return static_cast<uint8_t>(Data()[1]);
     }
@@ -188,6 +192,14 @@ DATAMODULE(
             Data()[0] |= 0x20;
         } else {
             Data()[0] &= ~0x20;
+        }
+    }
+
+    inline static void SetDriverFan(bool val) {
+        if (val) {
+            Data()[0] |= 0x40;
+        } else {
+            Data()[0] &= ~0x40;
         }
     }
 

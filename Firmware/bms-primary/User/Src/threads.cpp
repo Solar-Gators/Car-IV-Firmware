@@ -81,7 +81,7 @@ static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, fa
 static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 25;
+static const uint32_t read_voltage_period = 50;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
@@ -93,7 +93,7 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                           NULL, 
                                           &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 100;
+static const uint32_t read_current_period = 25;
 osTimerAttr_t current_periodic_timer_attr = {
     .name = "Read Current Thread",
     .attr_bits = 0,
@@ -117,7 +117,7 @@ osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePer
                                               NULL, 
                                               &temperature_periodic_timer_attr);
 
-static const uint32_t broadcast_period = 100;
+static const uint32_t broadcast_period = 500;
 osTimerAttr_t broadcast_periodic_timer_attr = {
     .name = "Broadcast Thread",
     .attr_bits = 0,
@@ -131,7 +131,7 @@ osTimerId_t broadcast_timer_id = osTimerNew((osThreadFunc_t)BroadcastPeriodic,
 
 /* Setup regular threads */
 osThreadId_t thermistor_thread_id;
-uint32_t thermistor_thread_buffer[512];
+uint32_t thermistor_thread_buffer[1024];
 StaticTask_t thermistor_thread_control_block;
 const osThreadAttr_t thermistor_thread_attributes = {
     .name = "Thermistor Thread",
@@ -146,7 +146,7 @@ const osThreadAttr_t thermistor_thread_attributes = {
 };
 
 osThreadId_t broadcast_thread_id;
-uint32_t broadcast_thread_buffer[128];
+uint32_t broadcast_thread_buffer[512];
 StaticTask_t broadcast_thread_control_block;
 const osThreadAttr_t broadcast_thread_attributes = {
     .name = "Broadcast Thread",
@@ -161,7 +161,7 @@ const osThreadAttr_t broadcast_thread_attributes = {
 };
 
 osThreadId_t error_thread_id;
-uint32_t error_thread_buffer[64];
+uint32_t error_thread_buffer[128];
 StaticTask_t error_thread_control_block;
 const osThreadAttr_t error_thread_attributes = {
     .name = "Error Thread",
@@ -170,7 +170,7 @@ const osThreadAttr_t error_thread_attributes = {
     .cb_size = sizeof(error_thread_control_block),
     .stack_mem = &error_thread_buffer[0],
     .stack_size = sizeof(error_thread_buffer),
-    .priority = (osPriority_t) osPriorityHigh,
+    .priority = (osPriority_t) osPriorityAboveNormal,
     .tz_module = 0,
     .reserved = 0,
 };
@@ -254,7 +254,7 @@ void ThreadsStart() {
     osTimerStart(broadcast_timer_id, broadcast_period);
 
     // Trigger contactors once, wait for frame from VCU instead
-    osEventFlagsSet(error_event, 0x1);
+    // osEventFlagsSet(error_event, 0x1);
 
     // Initialize regular threads
     thermistor_thread_id = osThreadNew(
@@ -328,6 +328,9 @@ void ReadVoltageThread(void *argument) {
     // This function updates the cell voltages in the bms driver which 
     // can be read with GetCellVoltage()
     bms.ReadVoltages();
+    if (voltage_thread_counter % 100 == 0) {
+        bms.Reset();
+    }
 
     local_pack_voltage = 0;
     for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY; i++) {
@@ -369,7 +372,8 @@ void ReadVoltageThread(void *argument) {
         osEventFlagsSet(error_event, 0x1);
     }
 
-    if (low_cell_voltage < bms_config.MIN_CELL_VOLTAGE) {
+    if (low_cell_voltage > 0 &&
+        low_cell_voltage < bms_config.MIN_CELL_VOLTAGE) {
         Logger::LogError("Low cell voltage on cell %d: %dmV", 
                         low_cell_voltage_id, low_cell_voltage);
 
@@ -475,7 +479,7 @@ void ReadCurrentThread(void *argument) {
     pack_current = abs_current_l < 50.0 ? current_l : current_h;
 
     // Check if discharge current exceeded
-    if (pack_current > bms_config.MAX_DISCHARGE_CURRENT) {
+    if (pack_current > bms_config.MAX_CHARGE_CURRENT) {
         // Set current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighDischargeCurrentFault(true);
@@ -679,7 +683,7 @@ void ReadTemperatureThread(void *argument) {
 
         // Check for overtemperature conditions
         if (BMSFrame1::Instance().GetPackCurrent() > 0 && 
-            high_temp > bms_config.MAX_DISCHARGE_TEMP) {
+            high_temp / 100.0 > bms_config.MAX_DISCHARGE_TEMP) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 
@@ -691,7 +695,7 @@ void ReadTemperatureThread(void *argument) {
             osMutexRelease(logger_mutex_id);
         }
         else if (BMSFrame1::Instance().GetPackCurrent() < 0 &&
-                low_temp < bms_config.MAX_CHARGE_TEMP) {
+                low_temp / 100.0 < bms_config.MAX_CHARGE_TEMP) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 
@@ -788,11 +792,7 @@ void BroadcastThread(void* argument) {
 }
 
 void ErrorThread(void* argument) {
-    // Delay to allow errors to show up
-    // osDelay(500);
-
     while (1) {
-        osEventFlagsClear(error_event, ~0x0);
         osEventFlagsWait(error_event, 0x1, osFlagsWaitAny, osWaitForever);
 
         // Any set bit in fault_flags indicates an error
@@ -800,7 +800,7 @@ void ErrorThread(void* argument) {
             !DriverControlsFrame1::Instance().GetBMSError()) {
             HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
 
-            osMutexAcquire(contactor_mutex_id, osWaitForever);
+            // osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Open main contactors
             SetContactorState(3, false);
             SetContactorState(4, false);
@@ -812,7 +812,7 @@ void ErrorThread(void* argument) {
             BMSFrame3::Instance().SetContactorStatus(4, false);
             BMSFrame3::Instance().SetContactorStatus(1, false);
 
-            osMutexRelease(contactor_mutex_id);
+            // osMutexRelease(contactor_mutex_id);
 
             // Update BMSFrame3 with errors
             BMSFrame3::Instance().SetStatusFlags(status_flags);
@@ -827,21 +827,20 @@ void ErrorThread(void* argument) {
                             ERROR_LED_Pin, 
                             GPIO_PIN_RESET);
 
-            osMutexAcquire(contactor_mutex_id, osWaitForever);
+            // osMutexAcquire(contactor_mutex_id, osWaitForever);
             // Close negative side contactor
             SetContactorState(4, true);
-            HAL_Delay(800);
+            osDelay(800);
             // Close positive side contactor
             SetContactorState(3, true);
-            HAL_Delay(250);
 
             BMSFrame3::Instance().SetContactorStatus(3, true);
             BMSFrame3::Instance().SetContactorStatus(4, true);
 
-            osMutexRelease(contactor_mutex_id);
+            // osMutexRelease(contactor_mutex_id);
 
             // Send BMSFrame3 immediately to indicate contactors are closed
-            CANController::Send(&BMSFrame3::Instance());
+            // CANController::Send(&BMSFrame3::Instance());
         }
     }
 }
@@ -856,14 +855,10 @@ void SecondaryFrame0Callback(uint8_t *data) {
 
     // Update high and low cell voltages
     // Error checking is done in ReadVoltageThread
-    if (BMSSecondaryFrame0::Instance().GetHighCellVoltage() < 500)
-        return;
     high_cell_voltage = BMSSecondaryFrame0::Instance().GetHighCellVoltage() > 
                         high_cell_voltage ? 
                         BMSSecondaryFrame0::Instance().GetHighCellVoltage() : 
                         high_cell_voltage;
-    if (BMSSecondaryFrame0::Instance().GetLowCellVoltage() < 500)
-        return;
     low_cell_voltage = BMSSecondaryFrame0::Instance().GetLowCellVoltage() < 
                         low_cell_voltage ? 
                         BMSSecondaryFrame0::Instance().GetLowCellVoltage() : 

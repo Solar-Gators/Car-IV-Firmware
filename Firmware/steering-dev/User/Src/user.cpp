@@ -59,6 +59,7 @@ HAL_StatusTypeDef Buttons_Init() {
 	mode_btn.RegisterLongPressCallback(ModeLongCallback, 800, false);
 	regen_btn.RegisterNormalPressCallback(RegenCallback);
 	horn_btn.RegisterNormalPressCallback(HornCallback);
+	horn_btn.RegisterLongPressCallback(FanCallback, 800, false);
 	mc_btn.RegisterNormalPressCallback(MCCallback);
 
 	// TODO: Get rid of this once PV button is working
@@ -100,7 +101,7 @@ void CPP_UserSetup() {
 	ui.UpdateMotorPower(0);
 	ui.UpdateMCStatus(RGB565_RED);
 	ui.UpdatePVStatus(RGB565_RED);
-	ui.UpdateBMSStatus(RGB565_RED);
+	ui.UpdateBMSStatus(RGB565_GREEN);
 
 	ThreadsStart();
 

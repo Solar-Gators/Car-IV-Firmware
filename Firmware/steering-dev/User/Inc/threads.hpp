@@ -24,6 +24,7 @@ void ModeCallback(void);
 void ModeLongCallback(void);
 void RegenCallback(void);
 void HornCallback(void);
+void FanCallback(void);
 void MCCallback(void);
 void RightTurnCallback(void);
 void CruisePlusCallback(void);

@@ -4,12 +4,22 @@
 HAL_StatusTypeDef BQ76952::Init(I2C_HandleTypeDef *hi2c){
     hi2c_ = hi2c;
 
+    Reset();
+    volatile uint32_t delay = 100000;
+    while(delay--);
+
+    DatamemWriteU1(BQ769X2_SET_PROT_ENABLED_A, 12);
+
     manual_bal_enabled_ = 1; // default states of balancing
-    auto_bal_charging_enabled_ = 0;
+    auto_bal_charging_enabled_ = 1;
     auto_bal_relax_enabled_ = 0;
     auto_bal_sleep_enabled_ = 0;
 
     return HAL_I2C_IsDeviceReady(hi2c_, BQ_I2C_ADDR_WRITE, 10, 50);
+}
+
+HAL_StatusTypeDef BQ76952::Reset() {
+    return SubcmdCmdOnly(BQ769X2_SUBCMD_RESET);
 }
 
 HAL_StatusTypeDef BQ76952::ConfigUpdate(bool config_update){
@@ -43,8 +53,9 @@ HAL_StatusTypeDef BQ76952::ReadVoltages() {
     HAL_StatusTypeDef status = HAL_OK;
 
     int16_t voltage_sum = 0;
-    low_cell_voltage_ = 0;
-    high_cell_voltage_ = 10;
+    low_cell_voltage_ = INT16_MAX;
+    high_cell_voltage_ = INT16_MIN;
+
     for (int i = 0; i < 16; i++) {
         status = DirectReadI2(CELL_NO_TO_ADDR(i+1), &cell_voltages_[i]);
         if (status != HAL_OK) { return status; }
@@ -249,6 +260,10 @@ HAL_StatusTypeDef BQ76952::DisableBalancingWhileCharging(){
 
 HAL_StatusTypeDef BQ76952::Shutdown() {
     return SubcmdCmdOnly(BQ769X2_SUBCMD_SHUTDOWN);
+}
+
+HAL_StatusTypeDef BQ76952::ReadCsrReg(uint16_t* value) {
+    return DatamemReadU1(BQ769X2_CMD_SAFETY_STATUS_A, (uint8_t*)value);
 }
 
 HAL_StatusTypeDef BQ76952::StartBalancingOnCells(uint16_t cell_bitmask){

@@ -76,7 +76,7 @@ static constexpr etl::format_spec
                     format_int(10, 4, 0, false, false, false, false, ' ');
 
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 25;
+static const uint32_t read_voltage_period = 50;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
@@ -200,6 +200,9 @@ void ReadVoltageThread(void *argument) {
 
     // Update cell voltage values in bms
     bms.ReadVoltages();
+    if (voltage_thread_counter % 100 == 0) {
+        bms.Reset();
+    }
 
     for (int i = 0; i < bms_config.NUM_CELLS_SECONDARY; i++) {
         // Populate cell_voltages array

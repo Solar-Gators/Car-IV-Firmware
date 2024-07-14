@@ -179,6 +179,12 @@ void HornCallback() {
     Logger::LogInfo("Horn pressed");
 }
 
+void FanCallback() {
+    Logger::LogInfo("Fan pressed");
+    DriverControlsFrame1::Instance().SetDriverFan(horn_btn.GetLongToggleState());
+    DriverControlsFrame1::Instance().SetBMSError(horn_btn.GetLongToggleState());
+}
+
 void MCCallback() {
     Logger::LogInfo("MC pressed");
     DriverControlsFrame1::Instance().SetMotorEnable(mc_btn.GetToggleState());

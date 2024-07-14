@@ -28,6 +28,7 @@ static const uint8_t temp_registers[] = {BQ769X2_CMD_TEMP_TS1, BQ769X2_CMD_TEMP_
 class BQ76952 {
 public:
     HAL_StatusTypeDef Init(I2C_HandleTypeDef *hi2c);
+    HAL_StatusTypeDef Reset();
     HAL_StatusTypeDef ConfigUpdate(bool config_update); // TODO
     HAL_StatusTypeDef ConfigureVoltageRegs(); // TODO
     HAL_StatusTypeDef ReadVoltages();       // TODO: Add support for connected cells
@@ -56,6 +57,9 @@ public:
     HAL_StatusTypeDef ModifySleepCurrentBoundary(int16_t boundary); // in mA, signed integer but minimum value is zero, max is 32767, startup is 20 mA
 
     HAL_StatusTypeDef Shutdown();
+
+    // Status Register Read
+    HAL_StatusTypeDef ReadCsrReg(uint16_t* value);
 
     int16_t GetCellVoltage(uint32_t cell_num);
     int16_t GetPackVoltage();

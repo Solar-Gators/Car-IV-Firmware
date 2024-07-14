@@ -83,7 +83,7 @@ const osThreadAttr_t strobe_thread_attributes = {
     .cb_size = sizeof(strobe_thread_control_block),
     .stack_mem = &strobe_thread_buffer[0],
     .stack_size = sizeof(strobe_thread_buffer),
-    .priority = (osPriority_t) osPriorityAboveNormal,
+    .priority = (osPriority_t) osPriorityBelowNormal,
     .tz_module = 0,
     .reserved = 0,
 };
@@ -180,6 +180,7 @@ void LogDataPeriodic() {
 
 /* Thread function to log data to SD card */
 void LogData() {
+    sd_present = SD_Init();
     uint32_t log_counter = 0;
 
     while (1) {
@@ -325,23 +326,16 @@ void LogData() {
 
 /* Thread runs when strobe light is turned on */
 void StrobeThread() {
+    // Once strobe event happens, thread is latched until reset
+    osEventFlagsWait(strobe_event, 0x1, osFlagsWaitAny, osWaitForever);
     while (1) {
-        if (kill_state || bms_trip) {
-            for (int i = 0; i < 6; i++) {
-                HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
-                osDelay(100);
-            }
-            for (int i = 0; i < 6; i++) {
-                HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
-                osDelay(200);
-            }
-            if (kill_sw.ReadPin() == GPIO_PIN_SET)
-                KillSwitchCallback();
-        } else {
-            HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, 
-                              STRB_LIGHT_EN_Pin,
-                              GPIO_PIN_RESET);
-            osEventFlagsWait(strobe_event, 0x1, osFlagsWaitAny, osWaitForever);
+        for (int i = 0; i < 6; i++) {
+            HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
+            osDelay(100);
+        }
+        for (int i = 0; i < 6; i++) {
+            HAL_GPIO_TogglePin(STRB_LIGHT_EN_GPIO_Port, STRB_LIGHT_EN_Pin);
+            osDelay(200);
         }
     }
 }
@@ -437,6 +431,12 @@ void DriverControls1Callback(uint8_t *data) {
                       static_cast<GPIO_PinState>(
                       DriverControlsFrame1::GetHorn()));
 
+    // Driver fan
+    HAL_GPIO_WritePin(FAN_EN_GPIO_Port,
+                      FAN_EN_Pin,
+                      static_cast<GPIO_PinState>(
+                      DriverControlsFrame1::GetDriverFan()));
+
     // Motor mode and direction
     // Motor enable handled in DriverControlsFrame0 callback
     SetMotorMode(DriverControlsFrame1::GetDriveMode());
@@ -472,13 +472,10 @@ void MitsubaCallback(uint8_t *data) {
 
 /* Callback executed when kill switch is pressed */
 void KillSwitchCallback(void) {
-    if (kill_sw.ReadPin() == GPIO_PIN_SET) {
+    if (kill_sw.ReadPin() == GPIO_PIN_RESET) {
         // If kill switch is pressed, set kill state to true
         kill_state = true;
         Logger::LogError("Kill switch pressed");
-
-        // Turn on strobe light
-        osEventFlagsSet(strobe_event, 0x1);
 
         // Turn on error LED
         HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
@@ -486,15 +483,15 @@ void KillSwitchCallback(void) {
         // Send kill switch status over CAN
         VCUFrame0::Instance().SetKillStatus(true);
         CANController::Send(&VCUFrame0::Instance());
+
+        osDelay(50);
+
+        // Turn on strobe light (latched until reset)
+        osEventFlagsSet(strobe_event, 0x1);
     } else {
         // If kill switch is unpressed, set kill state to false
         kill_state = false;
         Logger::LogInfo("Kill switch unpressed");
-
-        // Turn off strobe light
-        HAL_GPIO_WritePin(STRB_LIGHT_EN_GPIO_Port, 
-                          STRB_LIGHT_EN_Pin, 
-                          GPIO_PIN_RESET);
 
         // Turn off error LED
         HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);

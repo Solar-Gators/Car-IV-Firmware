@@ -32,7 +32,7 @@ HAL_StatusTypeDef CANDevice::Start() {
 HAL_StatusTypeDef CANDevice::Send(CANFrame *msg) {
     // Put message in queue, blocking if queue is full
     // Acquire lock on message so contents cannot be modified before sending
-    osMutexAcquire(msg->mutex_id_, osWaitForever);
+    //osMutexAcquire(msg->mutex_id_, osWaitForever);
     if (osMessageQueuePut(tx_queue_, &msg, 0, TX_TIMEOUT) != osOK) {
         HandleTxTimeout();
         osMutexRelease(msg->mutex_id_);
@@ -118,8 +118,8 @@ void CANDevice::HandleRx(void* argument) {
             }
 
             #ifdef USE_LOGGING
-            Logger::LogDebug("Rx ID: %x", rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
-            Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
+            // Logger::LogDebug("Rx ID: %x", rxHeader.IDE == CAN_ID_STD ? rxHeader.StdId : rxHeader.ExtId);
+            // Logger::LogDebug("RX Data: %x %x %x %x %x %x %x %x", rxData[7], rxData[6], rxData[5], rxData[4], rxData[3], rxData[2], rxData[1], rxData[0]);
             #endif
 
             // Find message in map
