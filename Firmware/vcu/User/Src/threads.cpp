@@ -9,6 +9,7 @@
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
 osEventFlagsId_t strobe_event = osEventFlagsNew(NULL);
+transceiver TransceiverController(&huart1);
 StaticSemaphore_t throttle_mutex_cb;
 const osMutexAttr_t throttle_mutex_attr = {
     .name = "Throttle Mutex",
@@ -18,6 +19,7 @@ const osMutexAttr_t throttle_mutex_attr = {
 };
 osMutexId_t throttle_mutex_id = osMutexNew(NULL);
 
+
 /* Setup periodic threads */
 osTimerAttr_t mitsuba_req_periodic_timer_attr = {
     .name = "Send Mitsuba Request Thread",
@@ -25,6 +27,16 @@ osTimerAttr_t mitsuba_req_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
+osTimerAttr_t send_telemetry_periodic_timer_attr = {
+    .name = "Send Telemetry Thread",
+    .attr_bits = 0,
+    .cb_mem = NULL,
+    .cb_size = 0,
+};
+osTimerId_t send_telemetry_periodic_timer_id = osTimerNew((osThreadFunc_t)SendTelemetry,
+                                                            osTimerPeriodic,
+                                                            NULL,
+                                                            &send_telemetry_periodic_timer_attr);
 osTimerId_t mitsuba_req_periodic_timer_id = osTimerNew(
                                             (osThreadFunc_t)SendMitsubaRequest, 
                                             osTimerPeriodic, 
@@ -108,6 +120,9 @@ void ThreadsStart() {
     // Toggle lights (hazards & turn signals) every 500ms
     osTimerStart(toggle_lights_periodic_timer_id, 500);
 
+    // Send Telemetry Data, every 1s
+    osTimerStart(send_telemetry_periodic_timer_id, 1000);
+
     // Toggle logger thread every 100ms if SD card is present
     if (sd_present)
         osTimerStart(logger_periodic_timer_id, 100);
@@ -176,6 +191,30 @@ void ToggleLights() {
  */
 void LogDataPeriodic() {
     osEventFlagsSet(log_event, 0x1);
+}
+
+//thread function to send telemetry data
+void SendTelemetry(){
+    TransceiverController.SendFrame(MitsubaFrame0::Instance());
+    TransceiverController.SendFrame(MitsubaFrame1::Instance());
+    TransceiverController.SendFrame(MitsubaFrame2::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame1::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame2::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame3::Instance());
+    
+    TransceiverController.SendFrame(BMSFrame0::Instance());
+    TransceiverController.SendFrame(BMSFrame1::Instance());
+    TransceiverController.SendFrame(BMSFrame2::Instance());
+    TransceiverController.SendFrame(BMSFrame3::Instance());
+    /*
+    TransceiverController.SendFrame(MitsubaFrame0::Instance());
+    TransceiverController.SendFrame(MitsubaFrame1::Instance());
+    TransceiverController.SendFrame(MitsubaFrame2::Instance());
+   
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame1::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame2::Instance());
+    TransceiverController.SendFrame(MPPTInputMeasurementsFrame3::Instance());
+    */
 }
 
 /* Thread function to log data to SD card */
