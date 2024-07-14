@@ -27,11 +27,6 @@ osTimerAttr_t mitsuba_req_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-
-osTimerId_t mitsuba_req_periodic_timer_id = osTimerNew((osThreadFunc_t)SendMitsubaRequest, 
-                                                            osTimerPeriodic, 
-                                                            NULL, 
-                                                            &mitsuba_req_periodic_timer_attr);
 osTimerAttr_t send_telemetry_periodic_timer_attr = {
     .name = "Send Telemetry Thread",
     .attr_bits = 0,
