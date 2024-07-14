@@ -83,7 +83,7 @@ static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, fals
 extern IWDG_HandleTypeDef hiwdg;
 
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 50*2;
+static const uint32_t read_voltage_period = 50;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
@@ -95,7 +95,7 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                           NULL, 
                                           &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 25*2;
+static const uint32_t read_current_period = 25;
 osTimerAttr_t current_periodic_timer_attr = {
     .name = "Read Current Thread",
     .attr_bits = 0,
