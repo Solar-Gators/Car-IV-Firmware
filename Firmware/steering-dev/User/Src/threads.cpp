@@ -122,6 +122,13 @@ void TurnSignalToggle() {
             osMutexRelease(ui_mutex);
             osDelay(500);
         }
+        else if (left_turn_btn.GetLongToggleState() == true) {
+            osMutexAcquire(ui_mutex, osWaitForever);
+            ui.ToggleLeftTurn();
+            ui.ToggleRightTurn();
+            osMutexRelease(ui_mutex);
+            osDelay(500);
+        }
         else {
             osMutexAcquire(ui_mutex, osWaitForever);
             ui.DeactivateRightTurn();
@@ -135,6 +142,15 @@ void TurnSignalToggle() {
 void LeftTurnCallback() {
     Logger::LogInfo("Left turn pressed");
     right_turn_btn.SetToggleState(false);
+    DriverControlsFrame1::Instance().SetLeftTurn(left_turn_btn.GetToggleState());
+    DriverControlsFrame1::Instance().SetRightTurn(right_turn_btn.GetToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
+    osEventFlagsSet(turn_signal_event, 0x1);
+}
+
+void HazardsCallback() {
+    Logger::LogInfo("Hazards pressed");
+    DriverControlsFrame1::Instance().SetHazards(left_turn_btn.GetLongToggleState());
     DriverControlsFrame1::Instance().SetLeftTurn(left_turn_btn.GetToggleState());
     DriverControlsFrame1::Instance().SetRightTurn(right_turn_btn.GetToggleState());
     CANController::Send(&DriverControlsFrame1::Instance());

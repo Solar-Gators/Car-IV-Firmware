@@ -3,7 +3,6 @@
 
 Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp:360, State=BP_STATE_ON
 Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp:478:9, State=BP_STATE_DISABLED
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp:485, State=BP_STATE_ON
 Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp:493:9, State=BP_STATE_DISABLED
 OpenDocument="list.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/list.c", Line=134
 OpenDocument="sg_can.cpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Drivers/SG_Drivers/Src/sg_can.cpp", Line=111
@@ -12,23 +11,23 @@ OpenDocument="tasks.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Mid
 OpenDocument="user.cpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/user.cpp", Line=44
 OpenDocument="stm32l4xx_hal_spi.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c", Line=4096
 OpenDocument="startup_stm32l496xx.s", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/startup_stm32l496xx.s", Line=50
-OpenDocument="threads.cpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp", Line=467
+OpenDocument="threads.cpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/vcu/User/Src/threads.cpp", Line=466
 OpenDocument="SEGGER_RTT.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Drivers/segger-rtt-master/RTT/SEGGER_RTT.c", Line=1202
 OpenToolbar="Debug", Floating=0, x=0, y=0
 OpenWindow="Call Stack", DockArea=LEFT, x=0, y=1, w=328, h=209, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Registers 1", DockArea=BOTTOM, x=2, y=0, w=743, h=208, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
 OpenWindow="Disassembly", DockArea=LEFT, x=0, y=2, w=328, h=202, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=459, h=370, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=459, h=370, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=459, h=370, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=459, h=367, TabPos=2, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=459, h=367, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=459, h=367, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Functions", DockArea=LEFT, x=0, y=0, w=328, h=218, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Call Graph", DockArea=LEFT, x=0, y=2, w=328, h=202, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory Usage", DockArea=BOTTOM, x=2, y=0, w=743, h=208, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=1, y=0, w=394, h=224, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=331, h=224, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=459, h=260, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
+OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=459, h=263, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
-TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[214;100;100;100;100;27;386]
+TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[214;100;100;100;100;27;100]
 TableHeader="Local Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[192;175;134;100;144;27;100]
 TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[137;256;100;100;100]
 TableHeader="Call Graph", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Stack Total";"Stack Local";"Code Total";"Code Local";"Depth";"Called From"], ColWidths=[321;114;116;113;115;100;100]

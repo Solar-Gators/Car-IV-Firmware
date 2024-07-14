@@ -164,7 +164,7 @@ void ToggleLights() {
     }
 
     // If in kill state or BMS trip, turn on strobe light, otherwise off
-    if (kill_state || bms_trip)
+    if ((kill_state) || bms_trip)
         osEventFlagsSet(strobe_event, 0x1);
 }
 
@@ -472,7 +472,7 @@ void MitsubaCallback(uint8_t *data) {
 
 /* Callback executed when kill switch is pressed */
 void KillSwitchCallback(void) {
-    if (kill_sw.ReadPin() == GPIO_PIN_RESET) {
+    if (kill_sw.ReadPin() == GPIO_PIN_SET) {
         // If kill switch is pressed, set kill state to true
         kill_state = true;
         Logger::LogError("Kill switch pressed");

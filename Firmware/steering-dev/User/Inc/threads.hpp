@@ -20,6 +20,7 @@ extern osMutexId_t ui_mutex;
 
 /* Callbacks */
 void LeftTurnCallback(void);
+void HazardsCallback(void);
 void ModeCallback(void);
 void ModeLongCallback(void);
 void RegenCallback(void);

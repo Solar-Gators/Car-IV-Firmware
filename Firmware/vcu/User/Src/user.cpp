@@ -35,7 +35,7 @@ DACx311 regen_dac = DACx311(&hspi1, REGEN_CS_GPIO_Port, REGEN_CS_Pin);
 /* Initialize kill switch button */
 /* Debounce = 50ms, default state = 1 */
 // TODO: Use simple debounce instead? Need to register press and unpress
-Button kill_sw = Button(KILL_SW_GPIO_Port, KILL_SW_Pin, 50, GPIO_PIN_SET);
+Button kill_sw = Button(KILL_SW_GPIO_Port, KILL_SW_Pin, 50, GPIO_PIN_RESET);
 
 /* Setup functions */
 static void Default_Outputs() {

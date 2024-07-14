@@ -55,6 +55,7 @@ HAL_StatusTypeDef CAN_Modules_Init() {
 
 HAL_StatusTypeDef Buttons_Init() {
 	left_turn_btn.RegisterNormalPressCallback(LeftTurnCallback);
+	left_turn_btn.RegisterLongPressCallback(HazardsCallback);
 	mode_btn.RegisterNormalPressCallback(ModeCallback);
 	mode_btn.RegisterLongPressCallback(ModeLongCallback, 800, false);
 	regen_btn.RegisterNormalPressCallback(RegenCallback);

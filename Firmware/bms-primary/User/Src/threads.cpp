@@ -80,8 +80,10 @@ static uint8_t amplifier_users = 0;     // Number of threads using the amplifier
 static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
 static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
 
+extern IWDG_HandleTypeDef hiwdg;
+
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 50;
+static const uint32_t read_voltage_period = 50*2;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
@@ -93,7 +95,7 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                           NULL, 
                                           &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 25;
+static const uint32_t read_current_period = 25*2;
 osTimerAttr_t current_periodic_timer_attr = {
     .name = "Read Current Thread",
     .attr_bits = 0,
@@ -277,6 +279,9 @@ void ThreadsStart() {
 void ReadVoltageThread(void *argument) {
     // Counter currently unused
     voltage_thread_counter++;
+
+    // Reset watchdog timer
+    HAL_IWDG_Refresh(&hiwdg);
 
     // Check for overvoltage condition on secondary bms, 
     // trigger error thread if necessary

@@ -48,6 +48,8 @@ I2C_HandleTypeDef hi2c2;
 I2C_HandleTypeDef hi2c3;
 I2C_HandleTypeDef hi2c4;
 
+IWDG_HandleTypeDef hiwdg;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim16;
@@ -74,6 +76,7 @@ static void MX_TIM1_Init(void);
 static void MX_I2C4_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_TIM16_Init(void);
+static void MX_IWDG_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -91,6 +94,7 @@ void CPP_UserSetup(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -126,6 +130,7 @@ int main(void)
   MX_I2C4_Init();
   MX_I2C2_Init();
   MX_TIM16_Init();
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   CPP_UserSetup();
 
@@ -168,6 +173,7 @@ int main(void)
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -198,8 +204,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 2;
@@ -365,7 +372,7 @@ static void MX_I2C3_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x00909BEB;
+  hi2c3.Init.Timing = 0x00D09BE3;
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -442,6 +449,35 @@ static void MX_I2C4_Init(void)
   /* USER CODE BEGIN I2C4_Init 2 */
 
   /* USER CODE END I2C4_Init 2 */
+
+}
+
+/**
+  * @brief IWDG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_IWDG_Init(void)
+{
+
+  /* USER CODE BEGIN IWDG_Init 0 */
+
+  /* USER CODE END IWDG_Init 0 */
+
+  /* USER CODE BEGIN IWDG_Init 1 */
+
+  /* USER CODE END IWDG_Init 1 */
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
+  hiwdg.Init.Window = 125;
+  hiwdg.Init.Reload = 125;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN IWDG_Init 2 */
+
+  /* USER CODE END IWDG_Init 2 */
 
 }
 
