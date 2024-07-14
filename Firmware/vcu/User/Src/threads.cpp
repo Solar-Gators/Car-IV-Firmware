@@ -9,7 +9,7 @@
 /* Setup data structures */
 osEventFlagsId_t log_event = osEventFlagsNew(NULL);
 osEventFlagsId_t strobe_event = osEventFlagsNew(NULL);
-
+transceiver TransceiverController(&huart1);
 StaticSemaphore_t throttle_mutex_cb;
 const osMutexAttr_t throttle_mutex_attr = {
     .name = "Throttle Mutex",
