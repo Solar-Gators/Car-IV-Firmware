@@ -7,6 +7,7 @@ void ThreadsStart();
 
 /* Defines */
 
+
 /* Periodic threads */
 void SendMitsubaRequest(void);
 void ToggleLights(void);
@@ -18,6 +19,7 @@ void StrobeThread(void);
 
 /* Timers */
 extern osTimerId_t throttle_timer;
+void SendTelemetry(void);
 
 /* Event flags */
 extern osEventFlagsId_t log_event;
@@ -35,5 +37,6 @@ void MitsubaCallback(uint8_t *data);
 void KillSwitchCallback(void);
 void ThrottleTimeoutCallback(void);
 
+/* Object Declarations */
 
 #endif  /* THREADS_H_ */

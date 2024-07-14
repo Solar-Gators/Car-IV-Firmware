@@ -108,7 +108,8 @@ void Error_Handler(void);
 #define PTT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+//defining as an extern here so it's accessible by threads.cpp
+extern UART_HandleTypeDef huart1;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
