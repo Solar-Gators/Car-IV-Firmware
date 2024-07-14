@@ -16,6 +16,9 @@ void LogDataPeriodic(void);
 /* Regular threads */
 void LogData(void);
 void StrobeThread(void);
+
+/* Timers */
+extern osTimerId_t throttle_timer;
 void SendTelemetry(void);
 
 /* Event flags */
