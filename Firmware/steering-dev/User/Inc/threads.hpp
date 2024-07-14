@@ -24,6 +24,7 @@ void ModeCallback(void);
 void ModeLongCallback(void);
 void RegenCallback(void);
 void HornCallback(void);
+void FanCallback(void);
 void MCCallback(void);
 void RightTurnCallback(void);
 void CruisePlusCallback(void);
@@ -34,6 +35,7 @@ void BMSResetCallback(void);
 
 void BMSFrame3Callback(uint8_t *data);
 void MitsubaCallback(uint8_t *data);
+void PowerBoardCallback(uint8_t *data);
 
 void ThreadsStart(void);
 

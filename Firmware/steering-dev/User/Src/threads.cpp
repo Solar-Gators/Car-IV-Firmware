@@ -52,10 +52,10 @@ static GPIO_PinState horn_last_state = GPIO_PIN_SET;
 static GPIO_PinState ptt_last_state = GPIO_PIN_SET;
 void ReadButtonsPeriodic() {
     // Check if cruise minus is pressed
-    if (cruise_minus_btn.ReadPin() != cruise_minus_last_state) {
-        Button::triggered_button_ = &cruise_minus_btn;
-        osSemaphoreRelease(Button::button_semaphore_id_);
-    }
+    // if (cruise_minus_btn.ReadPin() != cruise_minus_last_state) {
+    //     Button::triggered_button_ = &cruise_minus_btn;
+    //     osSemaphoreRelease(Button::button_semaphore_id_);
+    // }
 
     // Check if PV is pressed
     if (pv_btn.ReadPin() != pv_last_state) {
@@ -166,6 +166,7 @@ void ModeLongCallback() {
     }
     else if (mode == MODE_REV) {
         mode = last_fwd_mode;
+
     }
     SendMode(mode);
 }
@@ -176,6 +177,12 @@ void RegenCallback() {
 
 void HornCallback() {
     Logger::LogInfo("Horn pressed");
+}
+
+void FanCallback() {
+    Logger::LogInfo("Fan pressed");
+    DriverControlsFrame1::Instance().SetDriverFan(horn_btn.GetLongToggleState());
+    DriverControlsFrame1::Instance().SetBMSError(horn_btn.GetLongToggleState());
 }
 
 void MCCallback() {
@@ -263,6 +270,13 @@ void BMSFrame3Callback(uint8_t *data) {
         ui.UpdatePVStatus(RGB565_GREEN);
     else
         ui.UpdatePVStatus(RGB565_RED);
+    osMutexRelease(ui_mutex);
+}
+
+void PowerBoardCallback(uint8_t *data) {
+    // Update supp batt voltage
+    osMutexAcquire(ui_mutex, osWaitForever);
+    ui.UpdateAuxV(static_cast<float>(PowerBoardFrame::GetSuppBattVoltage()) / 100.0);
     osMutexRelease(ui_mutex);
 }
 

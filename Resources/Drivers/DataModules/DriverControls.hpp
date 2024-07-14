@@ -107,6 +107,10 @@ DATAMODULE(
         return static_cast<bool>(Data()[0] & 0x20);
     }
 
+    inline static bool GetDriverFan() {
+        return static_cast<bool>(Data()[0] & 0x40);
+    }
+
     inline static uint8_t GetFlags1() {
         return static_cast<uint8_t>(Data()[1]);
     }
@@ -133,6 +137,10 @@ DATAMODULE(
 
     inline static bool GetBMSReset() {
         return static_cast<bool>(Data()[1] & 0x20);
+    }
+
+    inline static bool GetBMSError() {
+        return static_cast<bool>(Data()[1] & 0x40);
     }
 
     inline static void SetFlags0(uint8_t flags) {
@@ -187,6 +195,14 @@ DATAMODULE(
         }
     }
 
+    inline static void SetDriverFan(bool val) {
+        if (val) {
+            Data()[0] |= 0x40;
+        } else {
+            Data()[0] &= ~0x40;
+        }
+    }
+
     inline static void SetFlags1(uint8_t flags) {
         Data()[1] = flags;
     }
@@ -230,6 +246,14 @@ DATAMODULE(
             Data()[1] |= 0x20;
         } else {
             Data()[1] &= ~0x20;
+        }
+    }
+
+    inline static void SetBMSError(bool val) {
+        if (val) {
+            Data()[1] |= 0x40;
+        } else {
+            Data()[1] &= ~0x40;
         }
     }
 )

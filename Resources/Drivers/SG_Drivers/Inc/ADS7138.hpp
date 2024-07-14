@@ -134,10 +134,10 @@ enum class ADS7138_Register : uint8_t {
 };
 
 enum class DataCfg_AppendType : uint8_t {
-    NONE = 0x0,
-    ID = 0x1,
-    STATUS = 0x2,
-    BOTH = 0x3,
+    NONE = 0x0 << 4,
+    ID = 0x1 << 4,
+    STATUS = 0x2 << 4,
+    BOTH = 0x3 << 4,
 };
 
 enum class OsrCfg_Type : uint8_t {
@@ -152,12 +152,22 @@ enum class OsrCfg_Type : uint8_t {
 };
 
 enum class ConvMode_Type : uint8_t {
-    MANUAL = 0x0,
-    AUTONOMOUS = 0x1,
-    TURBO = 0x2,
+    MANUAL = 0x0 << 5,
+    AUTONOMOUS = 0x1 << 5,
+};
+
+enum class Osc_Type : uint8_t {
+    HIGH_SPEED = 0x0 << 4,
+    LOW_POWER = 0x1 << 4,
+};
+
+enum class SeqMode_Type : uint8_t {
+    MANUAL = 0x0 << 0,
+    AUTO = 0x1 << 0,
 };
 
 /* SYSTEM_STATUS Register Fields */
+constexpr uint8_t ADS7138_SYSTEM_STATUS_RSVD =      (0x1 << 7);
 constexpr uint8_t ADS7138_SYSTEM_STATUS_SEQ_STATUS =(0x1 << 6);
 constexpr uint8_t ADS7138_SYSTEM_I2C_SPEED =        (0x1 << 5);
 constexpr uint8_t ADS7138_SYSTEM_OSR_DONE =         (0x1 << 3);
@@ -199,32 +209,39 @@ constexpr uint8_t ADS7138_SEQUENCE_CFG_SEQ_MODE =  (0x3 << 0);
 class ADS7138 {
 public:
     ADS7138(I2C_HandleTypeDef *phi2c, uint8_t address);
-    HAL_StatusTypeDef Init();
-    HAL_StatusTypeDef TestI2C();
-    HAL_StatusTypeDef SequenceAll();
+    HAL_StatusTypeDef Init(); // working
+    HAL_StatusTypeDef TestI2C(); // working
 
+    HAL_StatusTypeDef ConfigureStatistics(bool stats_en);
     HAL_StatusTypeDef ConfigureData(bool fix_pattern, DataCfg_AppendType append_type);
     HAL_StatusTypeDef ConfigureOversampling(OsrCfg_Type osr_cfg);
     HAL_StatusTypeDef ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_mode);
+    HAL_StatusTypeDef ConfigureOpmode(bool conv_on_err, ConvMode_Type conv_mode, Osc_Type osc_type, uint8_t clk_div);
     HAL_StatusTypeDef ConfigurePinMode(uint8_t pin_mode);
-
+    HAL_StatusTypeDef ConfigureSequence(uint8_t channels);
+    HAL_StatusTypeDef ConfigureSequenceAll();
+    HAL_StatusTypeDef ConfigureSequenceMode(SeqMode_Type seq_mode);
     HAL_StatusTypeDef ManualSelectChannel(uint8_t channel);
-
-    HAL_StatusTypeDef AutoSelectChannels(uint8_t channels);
 
     HAL_StatusTypeDef StartConversion();
     HAL_StatusTypeDef StartSequence();
     HAL_StatusTypeDef StopSequence();
 
+    // 8.4.2 Manual Mode
     HAL_StatusTypeDef ConversionReadManual(uint16_t *buf, uint8_t channel); // working
-    HAL_StatusTypeDef ConversionReadAutoSequence(uint16_t *buf, uint8_t len); // working
-
+    // 8.4.3 Auto-Sequence Mode
+    HAL_StatusTypeDef ConversionReadAutoSequence(uint16_t *buf, uint8_t len); // not working
+    // 8.4.4 Autonomous Mode
+    HAL_StatusTypeDef InitAutonomous(uint8_t channels);
     HAL_StatusTypeDef ReadChannel(uint8_t channel, uint16_t *data);
+    
+    HAL_StatusTypeDef AutoSelectChannels(uint8_t channels);
 private:
     I2C_HandleTypeDef *_phi2c;
     uint8_t _address;
 
     ConvMode_Type _conv_mode;
+    bool _fix_pattern;
     DataCfg_AppendType _append_type;
 
     HAL_StatusTypeDef ReadReg(ADS7138_Register reg, uint8_t *data);

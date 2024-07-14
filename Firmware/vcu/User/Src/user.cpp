@@ -20,7 +20,7 @@ FRESULT fres;
 DWORD fre_clust;
 
 /* Global states */
-bool kill_state = true;
+bool kill_state = false;
 bool bms_trip = false;
 bool sd_present = false;
 
@@ -242,14 +242,11 @@ void CPP_UserSetup(void) {
     // Setup kill switch callbacks
     kill_sw.RegisterNormalPressCallback(KillSwitchCallback);
 
-    // Initialize SD card
-    sd_present = SD_Init();
-
     // Read initial kill switch state and send status over CAN
     KillSwitchCallback();   
 
     // Delay 3 seconds before starting the motor controller
-    HAL_Delay(3000); 
+    HAL_Delay(1000); 
 
     // Start periodic tasks
     ThreadsStart();

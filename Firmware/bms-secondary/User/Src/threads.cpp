@@ -51,7 +51,8 @@
 */
 
 /* Global variables */
-static const uint8_t num_total_cells = bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY;
+static const uint8_t num_total_cells = bms_config.NUM_CELLS_PRIMARY + 
+                                        bms_config.NUM_CELLS_SECONDARY;
 
 static unsigned int voltage_thread_counter = 0;
 static int16_t cell_voltages[32];  // Array to store cell voltages in mV
@@ -67,21 +68,26 @@ static uint8_t high_temp_id;
 static uint8_t low_temp_id;
 static uint16_t internal_temp;
 
-static constexpr etl::format_spec format_float(10, 5, 2, false, false, false, false, ' ');
-static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, false, ' ');
+static uint8_t amplifier_users = 0;     // Number of threads using the amplifiers, max of 2 (temp and current)
+
+static constexpr etl::format_spec 
+                    format_float(10, 5, 2, false, false, false, false, ' ');
+static constexpr etl::format_spec 
+                    format_int(10, 4, 0, false, false, false, false, ' ');
 
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 25;
+static const uint32_t read_voltage_period = 50;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread, 
-                                            osTimerPeriodic, 
-                                            NULL, 
-                                            &voltage_periodic_timer_attr);
+osTimerId_t voltage_timer_id = osTimerNew(
+                                    (osThreadFunc_t)ReadVoltageThread, 
+                                    osTimerPeriodic, 
+                                    NULL, 
+                                    &voltage_periodic_timer_attr);
 
 static const uint32_t read_temperature_period = 1000;
 osTimerAttr_t temperature_periodic_timer_attr = {
@@ -90,10 +96,11 @@ osTimerAttr_t temperature_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t temperature_timer_id = osTimerNew((osThreadFunc_t)ReadTemperaturePeriodic, 
-                                            osTimerPeriodic, 
-                                            NULL, 
-                                            &temperature_periodic_timer_attr);
+osTimerId_t temperature_timer_id = osTimerNew(
+                                    (osThreadFunc_t)ReadTemperaturePeriodic, 
+                                    osTimerPeriodic, 
+                                    NULL, 
+                                    &temperature_periodic_timer_attr);
 
 static const uint32_t broadcast_period = 1000;
 osTimerAttr_t broadcast_periodic_timer_attr = {
@@ -102,10 +109,11 @@ osTimerAttr_t broadcast_periodic_timer_attr = {
     .cb_mem = NULL,
     .cb_size = 0,
 };
-osTimerId_t broadcast_timer_id = osTimerNew((osThreadFunc_t)BroadcastPeriodic, 
-                                            osTimerPeriodic, 
-                                            NULL, 
-                                            &broadcast_periodic_timer_attr);
+osTimerId_t broadcast_timer_id = osTimerNew(
+                                    (osThreadFunc_t)BroadcastPeriodic, 
+                                    osTimerPeriodic, 
+                                    NULL, 
+                                    &broadcast_periodic_timer_attr);
 
 /* Setup regular threads */
 osThreadId_t thermistor_thread_id;
@@ -131,7 +139,16 @@ const osMutexAttr_t adc_mutex_attr = {
     .cb_mem = &adc_mutex_cb,
     .cb_size = sizeof(adc_mutex_cb),
 };
-osMutexId_t adc_mutex_id = osMutexNew(NULL);
+osMutexId_t adc0_mutex_id = osMutexNew(NULL);
+
+StaticSemaphore_t amplifier_mutex_cb;
+const osMutexAttr_t amplifier_mutex_attr = {
+    .name = "Amplifier Mutex",
+    .attr_bits = osMutexRecursive | osMutexPrioInherit | osMutexRobust,
+    .cb_mem = &amplifier_mutex_cb,
+    .cb_size = sizeof(amplifier_mutex_cb),
+};
+osMutexId_t amplifier_mutex_id = osMutexNew(NULL);
 
 StaticSemaphore_t logger_mutex_cb;
 const osMutexAttr_t logger_mutex_attr = {
@@ -165,7 +182,8 @@ void ThreadsStart() {
     // osEventFlagsSet(error_event, 0x1); // Trigger contactors once
 
     // Initialize regular threads
-    thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, NULL, &thermistor_thread_attributes);
+    thermistor_thread_id = osThreadNew((osThreadFunc_t)ReadTemperatureThread, 
+                                        NULL, &thermistor_thread_attributes);
 }
 
 /* 
@@ -182,6 +200,9 @@ void ReadVoltageThread(void *argument) {
 
     // Update cell voltage values in bms
     bms.ReadVoltages();
+    if (voltage_thread_counter % 100 == 0) {
+        bms.Reset();
+    }
 
     for (int i = 0; i < bms_config.NUM_CELLS_SECONDARY; i++) {
         // Populate cell_voltages array
@@ -211,14 +232,16 @@ void ReadVoltageThread(void *argument) {
 
     // Check for overvoltage and undervoltage conditions on local bms
     if (high_cell_voltage > bms_config.MAX_CELL_VOLTAGE) {
-        Logger::LogError("High cell voltage on cell %d: %dmV", high_cell_voltage_id, high_cell_voltage);
+        Logger::LogError("High cell voltage on cell %d: %dmV", 
+                         high_cell_voltage_id, high_cell_voltage);
 
         // Set high cell voltage error bit
         // This error can only be cleared by a power cycle
     }
 
     if (low_cell_voltage < bms_config.MIN_CELL_VOLTAGE) {
-        Logger::LogError("Low cell voltage on cell %d: %dmV", low_cell_voltage_id, low_cell_voltage);
+        Logger::LogError("Low cell voltage on cell %d: %dmV", 
+                         low_cell_voltage_id, low_cell_voltage);
 
         // Set low cell voltage error bit
         // This error can only be cleared by a power cycle
@@ -241,13 +264,16 @@ void ReadVoltageThread(void *argument) {
         static int counter = 0;
         static constexpr int log_interval = 2500 / read_voltage_period;
         if (counter++ % log_interval == 0) {
-            for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY + bms_config.NUM_CELLS_SECONDARY; i++) {
+            for (int i = 0; i < bms_config.NUM_CELLS_PRIMARY + 
+                 bms_config.NUM_CELLS_SECONDARY; i++) {
                 Logger::LogInfo("Cell %d Voltage: %d", i, bms.GetCellVoltage(i));
             }
             Logger::LogInfo("Pack Voltage: %d", bms.GetPackVoltage());
             Logger::LogInfo("Average Cell Voltage: %d", avg_cell_voltage);
-            Logger::LogInfo("High Cell Voltage: %d on cell %d", high_cell_voltage, high_cell_voltage_id);
-            Logger::LogInfo("Low Cell Voltage: %d on cell %d", low_cell_voltage, low_cell_voltage_id);
+            Logger::LogInfo("High Cell Voltage: %d on cell %d", 
+                            high_cell_voltage, high_cell_voltage_id);
+            Logger::LogInfo("Low Cell Voltage: %d on cell %d", 
+                            low_cell_voltage, low_cell_voltage_id);
         }
     }
 }
@@ -271,59 +297,94 @@ void ReadTemperatureThread(void *argument) {
     int max_index = 1;
 
     while (1) {
-        osEventFlagsWait(read_temperature_event, 0x1, osFlagsWaitAny, osWaitForever);
+        osEventFlagsWait(read_temperature_event, 
+                        0x1, osFlagsWaitAny, osWaitForever);
+
+        // Toggle OK LED
+        HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
         
-        // Enable thermistor amplifiers
+        // Turn on amplifiers
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
         SetAmplifierState(true);
-        osDelay(5);
+        amplifier_users++;
+        osMutexRelease(amplifier_mutex_id);
 
-        // For adc0, manually read channels except 5 and 7
-        // Acquire and release mutex every time to avoid blocking current sensing for too long
-        uint8_t adc0_thermistor_channels[6] = {0, 1, 2, 3, 4, 6};
-        for (auto channel : adc0_thermistor_channels) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
+        // Wait for thermistor values to settle
+        osDelay(2);
 
-            if (adcs[0].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(0, channel)], channel)
-                != HAL_OK) {
+        // For adc0, configure sequence to read all channels except 5 and 7 (current sense channels)
+        // adc1 and adc2 are already configured to sequence all channels
+        // Start conversion on all ADCs
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        if (adcs[0].ConfigureSequence(0b01011111) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
+        }
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StartSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d start sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Wait for conversions to complete
+        // In next hardware revision, read ALERT pin instead of randomly waiting
+        // At 166.7kSPS, 8 channels w/ 16x oversampling takes 0.8ms to convert
+        osDelay(2);
+
+        // Stop sequence on all ADCs
+        for (int i = 0; i < 3; i++) {
+            if (adcs[i].StopSequence() != HAL_OK) {
+                osMutexAcquire(logger_mutex_id, osWaitForever);
+                Logger::LogError("ADC %d stop sequence failed", i);
+                osMutexRelease(logger_mutex_id);
+            }
+        }
+
+        // Read all channels
+        uint8_t adc0_channels[6] = {0, 1, 2, 3, 4, 6};
+        for (uint8_t channel : adc0_channels) {
+            if (adcs[0].ReadChannel(channel, 
+                                &thermistor_vals[
+                                MapADCChannelToThermistor(0, channel)])
+                                != HAL_OK) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
-
-            osMutexRelease(adc_mutex_id);
+            // Release mutex for adc0
+            osMutexRelease(adc0_mutex_id);
         }
-
-        // For adc1, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[1].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(1, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
+        for(int i = 1; i < 3; i++) {
+            for (int channel = 0; channel < 8; channel++) {
+                if (adcs[i].ReadChannel(channel, 
+                                    &thermistor_vals[
+                                    MapADCChannelToThermistor(i, channel)])
+                                    != HAL_OK) {
+                    osMutexAcquire(logger_mutex_id, osWaitForever);
+                    Logger::LogError("ADC%d channel %d read failed", i, channel);
+                    osMutexRelease(logger_mutex_id);
+                }
             }
-
-            osMutexRelease(adc_mutex_id);
         }
 
-        // For adc2, manually read all channels
-        for (int channel = 0; channel < 8; channel++) {
-            osMutexAcquire(adc_mutex_id, osWaitForever);
-
-            if (adcs[2].ConversionReadManual(&thermistor_vals[MapADCChannelToThermistor(2, channel)], channel)
-                != HAL_OK) {
-                osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC1 channel %d read failed", channel);
-                osMutexRelease(logger_mutex_id);
-            }
-
-            osMutexRelease(adc_mutex_id);
+        // Set adc0 to sequence channels 5 and 7 (for current thread)
+        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        if (adcs[0].ConfigureSequence(0b01010000) != HAL_OK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("ADC0 configure sequence failed");
+            osMutexRelease(logger_mutex_id);
         }
+        osMutexRelease(adc0_mutex_id);
 
-        // Disable thermistor amplifiers
-        SetAmplifierState(false);
-        osMutexRelease(adc_mutex_id);
+        // Turn off amplifiers if possible
+        osMutexAcquire(amplifier_mutex_id, osWaitForever);
+        amplifier_users--;
+        if (amplifier_users == 0)
+            SetAmplifierState(false);
+        osMutexRelease(amplifier_mutex_id);
 
         // Convert raw ADC values to temperature and find min and max temp
         for (int i = 1; i <= bms_config.NUM_THERMISTORS_SECONDARY; i++) {
@@ -335,7 +396,8 @@ void ReadTemperatureThread(void *argument) {
                 thermistor_unpopulated = true;
             if (thermistor_unpopulated) {
                 Logger::LogWarning("Thermistor %d unpopulated", i);
-                uint8_t status = BMSSecondaryFrame3::Instance().GetStatusFlags();
+                uint8_t status = 
+                        BMSSecondaryFrame3::Instance().GetStatusFlags();
                 status |= 0x1;
                 BMSSecondaryFrame3::Instance().SetStatusFlags(status);
                 CANController::Send(&BMSSecondaryFrame3::Instance());
@@ -376,12 +438,17 @@ void ReadTemperatureThread(void *argument) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
                 for (int i = 1; i <= 22; i++) {
                     etl::to_string(temps[i], float_buf, format_float, false);
-                    Logger::LogInfo("Thermistor %d temp: %s", i, float_buf.c_str());
+                    Logger::LogInfo("Thermistor %d temp: %s", 
+                                    i, float_buf.c_str());
                 }
-                etl::to_string(temps[max_index], float_buf, format_float, false);
-                Logger::LogInfo("Max Temp: %s on thermistor %d", float_buf.c_str(), max_index);
-                etl::to_string(temps[min_index], float_buf, format_float, false);
-                Logger::LogInfo("Min Temp: %s on thermistor %d", float_buf.c_str(), min_index);
+                etl::to_string(temps[max_index], 
+                                float_buf, format_float, false);
+                Logger::LogInfo("Max Temp: %s on thermistor %d", 
+                                float_buf.c_str(), max_index);
+                etl::to_string(temps[min_index], 
+                                float_buf, format_float, false);
+                Logger::LogInfo("Min Temp: %s on thermistor %d", 
+                                float_buf.c_str(), min_index);
                 osMutexRelease(logger_mutex_id);
             }
         }

@@ -58,37 +58,51 @@ void CAN_Modules_Init() {
 }
 
 void ADC_Modules_Init() {
+    // Common for all ADCs
     for (int i = 0; i < 3; i++) {
-        // Initialize ADC
+        // Initialize ADC and test I2C
         if (adcs[i].Init() != HAL_OK || adcs[i].TestI2C() != HAL_OK)
             Logger::LogError("ADC %d init failed", i);
         else
             Logger::LogInfo("ADC %d init success", i);
 
+        // Configure all channels as ADC inputs
+        if (adcs[i].ConfigurePinMode(0x0) != HAL_OK)
+            Logger::LogError("ADC %d configure pin mode failed", i);
+
+        // Configure auto-sequence
+        if (adcs[i].ConfigureSequenceMode(SeqMode_Type::AUTO) != HAL_OK)
+            Logger::LogError("ADC %d configure sequence mode failed", i);
+
+        // Configure sampling rate to 166.7 kSPS
+        if (adcs[i].ConfigureOpmode(false, 
+                                    ConvMode_Type::AUTONOMOUS, 
+                                    Osc_Type::HIGH_SPEED, 
+                                    0b0101) != HAL_OK)
+            Logger::LogError("ADC %d configure opmode failed", i);
+
         // Configure oversampling to 16x
-        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_16) != HAL_OK)
+        if (adcs[i].ConfigureOversampling(OsrCfg_Type::OSR_32) != HAL_OK)
             Logger::LogError("ADC %d configure oversampling failed", i);
 
-        // Set all ADCs to initiate conversion on request
-        if (adcs[i].ConfigureOpmode(false, ConvMode_Type::MANUAL) != HAL_OK)
-            Logger::LogError("ADC %d configure opmode failed", i);
+        // Enable statistics
+        if (adcs[i].ConfigureStatistics(true) != HAL_OK)
+            Logger::LogError("ADC %d configure statistics failed", i);
 
         // For all ADCs, append channel ID to data
         if (adcs[i].ConfigureData(false, DataCfg_AppendType::ID) != HAL_OK)
             Logger::LogError("ADC %d configure data failed", i);
     }
 
-    // For adc0, sequence channels 5, 7 for current sense
-    if (adcs[0].AutoSelectChannels((0x1 << 5) | (0x1 << 7)) != HAL_OK)
-       Logger::LogError("ADC 0 auto select channels failed");
+    // For adc0, sequence channels 5 and 7 for current measurement
+    if (adcs[0].ConfigureSequence(0b10100000) != HAL_OK)
+        Logger::LogError("ADC 0 configure sequence failed");
 
-    // For adc1, sequence all channels, all channels are thermistors
-    if (adcs[1].AutoSelectChannels(0xFF) != HAL_OK)
-        Logger::LogError("ADC 1 auto select channels failed");
-
-    // For adc2, sequence all channels, all channels are thermistors
-    if (adcs[2].AutoSelectChannels(0xFF) != HAL_OK)
-        Logger::LogError("ADC 2 auto select channels failed");
+    // For adc1 and adc2, sequence all channels
+    if (adcs[1].ConfigureSequenceAll() != HAL_OK)
+        Logger::LogError("ADC 1 configure sequence failed");
+    if (adcs[2].ConfigureSequenceAll() != HAL_OK)
+        Logger::LogError("ADC 2 configure sequence failed");
 }
 
 void CPP_UserSetup(void) {
@@ -108,8 +122,8 @@ void CPP_UserSetup(void) {
         Logger::LogInfo("BMS init success");
 
     // Set BMS to always auto balance
-    if (bms.ChangeBalancingStatus(false, true, true, true) != HAL_OK)
-        Logger::LogError("BMS set balance all failed");
+    // if (bms.ChangeBalancingStatus(false, true, true, true) != HAL_OK)
+    //     Logger::LogError("BMS set balance all failed");
 
     // Configure REG1 voltage to 3.3v
 
@@ -123,7 +137,8 @@ void CPP_UserSetup(void) {
 
 /* Controls power supply to thermistor amplifier ICs */
 void SetAmplifierState(bool state) {
-    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(AMP_EN_GPIO_Port, AMP_EN_Pin, 
+                      state ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 /* Selects contactor power supply between main 12V and supplemental battery */
@@ -137,16 +152,24 @@ void SetContactorSource(ContactorSource_Type source) {
 void SetContactorState(uint8_t contactor, bool state) {
     switch (contactor) {
         case 1:
-            HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, CONTACTOR1_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR1_CTRL_GPIO_Port, 
+                              CONTACTOR1_CTRL_Pin, 
+                              state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 2:
-            HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, CONTACTOR2_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR2_CTRL_GPIO_Port, 
+                              CONTACTOR2_CTRL_Pin, 
+                              state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 3:
-            HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, CONTACTOR3_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR3_CTRL_GPIO_Port, 
+                              CONTACTOR3_CTRL_Pin, 
+                              state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         case 4:
-            HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, CONTACTOR4_CTRL_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(CONTACTOR4_CTRL_GPIO_Port, 
+                              CONTACTOR4_CTRL_Pin, 
+                              state ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
         default:
             Logger::LogError("Invalid contactor number");

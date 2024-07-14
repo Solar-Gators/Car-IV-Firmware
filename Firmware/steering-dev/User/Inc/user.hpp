@@ -11,6 +11,7 @@
 #include "MPPTFrames.hpp"
 #include "DriverControls.hpp"
 #include "CustomBMSFrames.hpp"
+#include "PowerBoard.hpp"
 
 /* Externs */
 extern UI ui;

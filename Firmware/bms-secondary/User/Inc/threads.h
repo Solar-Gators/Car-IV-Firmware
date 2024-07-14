@@ -31,7 +31,8 @@ extern osEventFlagsId_t broadcast_event;
 extern osEventFlagsId_t error_event;
 
 /* Mutexes */
-extern osMutexId_t adc_mutex_id;
+extern osMutexId_t adc0_mutex_id;
+extern osMutexId_t amplifier_mutex_id;
 extern osMutexId_t logger_mutex_id;
 
 /* Callbacks */
