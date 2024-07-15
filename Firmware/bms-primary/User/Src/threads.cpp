@@ -83,7 +83,7 @@ static constexpr etl::format_spec format_int(10, 4, 0, false, false, false, fals
 extern IWDG_HandleTypeDef hiwdg;
 
 /* Setup periodic threads */
-static const uint32_t read_voltage_period = 50;
+static const uint32_t read_voltage_period = 100;
 osTimerAttr_t voltage_periodic_timer_attr = {
     .name = "Read Voltage Thread",
     .attr_bits = 0,
@@ -95,7 +95,7 @@ osTimerId_t voltage_timer_id = osTimerNew((osThreadFunc_t)ReadVoltageThread,
                                           NULL, 
                                           &voltage_periodic_timer_attr);
 
-static const uint32_t read_current_period = 25;
+static const uint32_t read_current_period = 50;
 osTimerAttr_t current_periodic_timer_attr = {
     .name = "Read Current Thread",
     .attr_bits = 0,
@@ -687,8 +687,10 @@ void ReadTemperatureThread(void *argument) {
                     min_index : low_temp_id;
 
         // Check for overtemperature conditions
-        if (BMSFrame1::Instance().GetPackCurrent() > 0 && 
-            high_temp > bms_config.MAX_DISCHARGE_TEMP) {
+        if ((pack_current < 0 && 
+            high_temp > bms_config.MAX_DISCHARGE_TEMP) ||
+            (pack_current > 0 && 
+            high_temp > bms_config.MAX_CHARGE_TEMP)) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 
@@ -698,16 +700,15 @@ void ReadTemperatureThread(void *argument) {
             Logger::LogError("High temperature on thermistor %d: %sC", 
                             high_temp_id, float_buf.c_str());
             osMutexRelease(logger_mutex_id);
-        }
-        else if (high_temp > bms_config.MAX_CHARGE_TEMP) {
+        } else if (high_temp > bms_config.MAX_DISCHARGE_TEMP) {
             BMSFrame3::Instance().SetHighTempFault(true);
             osEventFlagsSet(error_event, 0x1);
 
             etl::string<5> float_buf;
-            etl::to_string(low_temp / 100.0, float_buf, format_float, false);
+            etl::to_string(high_temp / 100.0, float_buf, format_float, false);
             osMutexAcquire(logger_mutex_id, osWaitForever);
-            Logger::LogError("Low temperature on thermistor %d: %sC", 
-                            low_temp_id, float_buf.c_str());
+            Logger::LogError("High temperature on thermistor %d: %sC", 
+                            high_temp_id, float_buf.c_str());
             osMutexRelease(logger_mutex_id);
         }
 
