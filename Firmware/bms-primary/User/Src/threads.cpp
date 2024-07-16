@@ -483,8 +483,15 @@ void ReadCurrentThread(void *argument) {
     float abs_current_l = current_l < 0 ? -current_l : current_l;
     pack_current = abs_current_l < 50.0 ? current_l : current_h;
 
+    static float prev_currents[10] = {0.0};
+    float avg_current = 0.0;
+    for (uint32_t i = 0; i < 10; i++) {
+        avg_current += prev_currents[i];
+    }
+    avg_current /= 10;
+
     // Check if discharge current exceeded
-    if (pack_current < -bms_config.MAX_DISCHARGE_CURRENT) {
+    if (avg_current < -bms_config.MAX_DISCHARGE_CURRENT) {
         // Set current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighDischargeCurrentFault(true);
@@ -499,7 +506,7 @@ void ReadCurrentThread(void *argument) {
     }
 
     // Check if charge current exceeded
-    if (pack_current > bms_config.MAX_CHARGE_CURRENT) {
+    if (avg_current > bms_config.MAX_CHARGE_CURRENT) {
         // Set charge current error bit
         // This error can only be cleared by a power cycle
         BMSFrame3::Instance().SetHighChargeCurrentFault(true);
@@ -512,6 +519,10 @@ void ReadCurrentThread(void *argument) {
                         float_buf.c_str());
         osMutexRelease(logger_mutex_id);
     }
+
+    for (uint32_t i = 10; i >= 1; i--)
+        prev_currents[i] = prev_currents[i-1];
+    prev_currents[0] = pack_current;
 
     // Update running total current integral
     // Convert current to μA, integrate for 0.08s

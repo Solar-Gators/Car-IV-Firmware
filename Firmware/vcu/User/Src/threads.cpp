@@ -398,6 +398,10 @@ void DriverControls0Callback(uint8_t *data) {
             Logger::LogError("Error syncing SD card\n");
         VCUFrame0::Instance().SetKillStatus(true);
         CANController::Send(&VCUFrame0::Instance());
+        while (1) {
+            HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
+            HAL_Delay(100);
+        }
     }
 
     // If not in kill state or BMS trip, 
@@ -438,11 +442,18 @@ void DriverControls0Callback(uint8_t *data) {
     osTimerStart(throttle_timer, 250);
 
     // Set brake light
+    // if (DriverControlsFrame0::GetBrake()) {
+    //     HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_SET);
+    //     HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_SET);
+    //     HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_SET);
+    // } 
     if (DriverControlsFrame0::GetBrake()) {
-        HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_SET);
+        if (!DriverControlsFrame1::GetLeftTurn() && !DriverControlsFrame1::GetHazards())
+            HAL_GPIO_WritePin(RL_LIGHT_EN_GPIO_Port, RL_LIGHT_EN_Pin, GPIO_PIN_SET);
+        if (!DriverControlsFrame1::GetRightTurn() && !DriverControlsFrame1::GetHazards())
+            HAL_GPIO_WritePin(RR_LIGHT_EN_GPIO_Port, RR_LIGHT_EN_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(RC_LIGHT_EN_GPIO_Port, RC_LIGHT_EN_Pin, GPIO_PIN_SET);
-    } 
+    }
 
     // Set MPPT enable
     SetMPPTState(DriverControlsFrame1::GetPVEnable());
@@ -487,7 +498,7 @@ void DriverControls1Callback(uint8_t *data) {
 void BMSFaultCallback(uint8_t *data) {
     uint32_t fault_flags = BMSFrame3::Instance().GetFaultFlags();
 
-    // fault_flags &= ~(0x1 << 7);     // Ignore kill switch fault, generated here
+    fault_flags &= ~(0x1 << 7);     // Ignore kill switch fault, generated here
 
     if (fault_flags) {
         Logger::LogError("BMS Fault: %lu\n", fault_flags);

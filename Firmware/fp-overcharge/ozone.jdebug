@@ -23,18 +23,18 @@ void OnProjectLoad (void) {
   // Dialog-generated settings
   //
   Project.SetDevice ("STM32L496RG");
-  Project.SetHostIF ("USB", "801042722");
+  Project.SetHostIF ("USB", "801046072");
   Project.SetTargetIF ("SWD");
   Project.SetTIFSpeed ("4 MHz");
-  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/vcu", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/vcu", "$(ProjectDir)");
+  Project.AddPathSubstitute ("C:/Dev/Car-IV-Firmware/Firmware/bms-secondary", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/dev/car-iv-firmware/firmware/bms-secondary", "$(ProjectDir)");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
   //
   // User settings
   //
   Edit.SysVar (VAR_RTT_ENABLED, 1);
   Project.SetOSPlugin ("$(ProjectDir)/../../Resources/Debug/FreeRTOSPlugin_ARM.js");
-  File.Open ("$(ProjectDir)/build/vcu.elf");
+  File.Open ("$(ProjectDir)/build/bms-secondary.elf");
 }
 
 /*********************************************************************

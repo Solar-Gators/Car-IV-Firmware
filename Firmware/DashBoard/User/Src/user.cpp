@@ -4,6 +4,7 @@
 #include <string>
 #include "IoTestFrame.hpp"
 #include "MotorControlFrame.hpp"
+#include "CustomBMSFrames.hpp"
 #include "ADS7138.hpp"
 
 using namespace std;
@@ -24,6 +25,10 @@ extern "C" I2C_HandleTypeDef hi2c2;
 
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
+
+Button left_turn_btn = Button(GPIOC, GPIO_PIN_12, 75, GPIO_PIN_SET, false);
+Button hazards_btn = Button(GPIOC, GPIO_PIN_11, 75, GPIO_PIN_SET, false);
+Button right_turn_btn = Button(GPIOC, GPIO_PIN_10, 75, GPIO_PIN_SET, false);
 
 
 ADS7138 adcs[1] = {ADS7138(&hi2c2, 0x10)};
@@ -51,6 +56,8 @@ void CAN_Modules_Init() {
     // Add CAN devices and CAN frames
     CANController::AddDevice(&candev1);
     CANController::AddDevice(&candev2);
+    CANController::AddRxMessage(&DriverControlsFrame1::Instance());
+    CANController::AddRxMessage(&BMSFrame3::Instance());
     CANController::AddFilterAll();
     CANController::Start();
 
@@ -87,6 +94,15 @@ void CPP_UserSetup(void) {
 
     ADC_Modules_Init();
 
+    // Buttons
+    left_turn_btn.RegisterNormalPressCallback(LeftTurnCallback);
+    hazards_btn.RegisterNormalPressCallback(HazardsCallback);
+    right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
+    hazards_btn.RegisterLongPressCallback(PVCallback, 800, false);
+
+    //DriverControlsFrame1::Instance().SetPVEnable(true);
+    CANController::Send(&DriverControlsFrame1::Instance());
+
     // 20Hz periodic timer
     osTimerStart(periodic_timer_id, 50);
 }
@@ -106,7 +122,9 @@ void PeriodicTask1(void *argument) {
     
     // Read shutdown status
     if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET){
-       DriverControlsFrame0::SetShutdownStatus((true));
+        osDelay(250);
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET)
+            DriverControlsFrame0::SetShutdownStatus((true));
     }
     else {
        DriverControlsFrame0::SetShutdownStatus((false));
@@ -114,7 +132,41 @@ void PeriodicTask1(void *argument) {
 
     CANController::Send(&DriverControlsFrame0::Instance());
 
+    DriverControlsFrame1::SetBMSError(true);
+    
+
     //heart beat
     if (counter++ % 10 == 0)
         HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
+}
+
+void LeftTurnCallback() {
+    Logger::LogInfo("Left turn pressed");
+    right_turn_btn.SetToggleState(false);
+    DriverControlsFrame1::Instance().SetLeftTurn(left_turn_btn.GetToggleState());
+    DriverControlsFrame1::Instance().SetRightTurn(right_turn_btn.GetToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
+}
+
+void HazardsCallback() {
+    Logger::LogInfo("Hazards pressed");
+    left_turn_btn.SetToggleState(false);
+    right_turn_btn.SetToggleState(false);
+    DriverControlsFrame1::Instance().SetHazards(hazards_btn.GetToggleState());
+    DriverControlsFrame1::Instance().SetPVEnable(true);
+    CANController::Send(&DriverControlsFrame1::Instance());
+}
+
+void RightTurnCallback() {
+    Logger::LogInfo("Right turn pressed");
+    left_turn_btn.SetToggleState(false);
+    DriverControlsFrame1::Instance().SetLeftTurn(left_turn_btn.GetToggleState());
+    DriverControlsFrame1::Instance().SetRightTurn(right_turn_btn.GetToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
+}
+
+void PVCallback() {
+    Logger::LogInfo("PV pressed");
+    //DriverControlsFrame1::Instance().SetPVEnable(hazards_btn.GetDoubleToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
 }

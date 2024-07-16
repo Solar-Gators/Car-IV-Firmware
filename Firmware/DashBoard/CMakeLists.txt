@@ -65,6 +65,7 @@ file(GLOB DRIVER_SOURCES
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/logger.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/sg_can.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/ADS7138.cpp
+    ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/button.cpp
     ${RESOURCES_DIR}/Drivers/SG_Drivers/Src/IMU.c)
     
     

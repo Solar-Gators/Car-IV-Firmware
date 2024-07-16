@@ -1,37 +1,29 @@
 
-
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:307, State=BP_STATE_ON
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:371:9, State=BP_STATE_DISABLED
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:382, State=BP_STATE_ON
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:478:5, State=BP_STATE_DISABLED
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:482:5, State=BP_STATE_DISABLED
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:497:5, State=BP_STATE_DISABLED
-Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:832:13, State=BP_STATE_DISABLED
-OpenDocument="tasks.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3552
-OpenDocument="main.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/Core/Src/main.c", Line=84
-OpenDocument="stm32l4xx_hal_i2c.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c", Line=6904
-OpenDocument="DriverControls.hpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Resources/Drivers/DataModules/DriverControls.hpp", Line=65
-OpenDocument="threads.cpp", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp", Line=678
-OpenDocument="startup_stm32l496xx.s", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/startup_stm32l496xx.s", Line=53
-OpenDocument="stm32l4xx_it.c", FilePath="/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/Core/Src/stm32l4xx_it.c", Line=88
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:312:9, State=BP_STATE_ON
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:376:9, State=BP_STATE_DISABLED
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:387:9, State=BP_STATE_ON
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:483:5, State=BP_STATE_DISABLED
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:484:5, State=BP_STATE_DISABLED
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:502:5, State=BP_STATE_DISABLED
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:566:5, State=BP_STATE_DISABLED
+Breakpoint=/Users/mshen/Dev/Car-IV-Firmware/Firmware/bms-primary/User/Src/threads.cpp:848:13, State=BP_STATE_DISABLED
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=LEFT, x=0, y=2, w=378, h=103, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Stack", DockArea=LEFT, x=0, y=2, w=378, h=91, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Registers 1", DockArea=BOTTOM, x=2, y=0, w=661, h=366, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
-OpenWindow="Disassembly", DockArea=LEFT, x=0, y=3, w=378, h=98, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=LEFT, x=0, y=3, w=378, h=91, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=378, h=168, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VectorCatchIndexMask=0
-OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=417, h=250, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=417, h=250, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=417, h=250, TabPos=1, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Functions", DockArea=LEFT, x=0, y=1, w=378, h=101, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Call Graph", DockArea=LEFT, x=0, y=3, w=378, h=98, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Global Data", DockArea=RIGHT, x=0, y=1, w=417, h=227, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Local Data", DockArea=RIGHT, x=0, y=1, w=417, h=227, TabPos=2, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=1, w=417, h=227, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Functions", DockArea=LEFT, x=0, y=1, w=378, h=91, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Call Graph", DockArea=LEFT, x=0, y=3, w=378, h=91, TabPos=0, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Memory Usage", DockArea=BOTTOM, x=2, y=0, w=661, h=366, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Terminal", DockArea=BOTTOM, x=1, y=0, w=476, h=382, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=331, h=382, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=417, h=222, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
+OpenWindow="FreeRTOS", DockArea=RIGHT, x=0, y=0, w=417, h=216, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, Showing="Task List"
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
-TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[159;165;100;100;100]
 TableHeader="Local Data", SortCol="Name", SortOrder="DESCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[192;151;134;100;144;27;100]
-TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[218;100;100;100;100;27;100]
+TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[159;165;100;100;100]
 TableHeader="Call Graph", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Stack Total";"Stack Local";"Code Total";"Code Local";"Depth";"Called From"], ColWidths=[321;114;116;113;115;100;100]
 TableHeader="Vector Catches", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;500]
 TableHeader="Break & Tracepoints", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[100;100;122;380]
@@ -41,4 +33,7 @@ TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[166;110;110;110;110;110;110;110;110;110]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
 TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;637]
+TableHeader="Global Data", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Location";"Size";"Type";"Access";"Scope"], ColWidths=[218;100;100;100;100;27;386]
 TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[100;144;402]
+WatchedExpression="high_temp", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="pack_current", Window=Watched Data 1

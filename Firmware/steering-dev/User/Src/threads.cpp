@@ -15,7 +15,7 @@ osTimerId_t read_buttons_periodic_timer_id = osTimerNew((osThreadFunc_t)ReadButt
                                                             &read_buttons_periodic_timer_attr);
 
 osTimerAttr_t update_ui_periodic_timer_attr = {
-    .name = "Read Buttons Thread",
+    .name = "Update UI Thread",
     .attr_bits = 0,
     .cb_mem = NULL,
     .cb_size = 0,
@@ -81,6 +81,9 @@ static uint32_t solar_power = 0;
 void UpdateUIPeriodic() {
     // Wheel diameter in miles/rotation
     static constexpr float WHEEL_DIAM_MI = (0.0010867658F);
+
+    // CANController::Send(&DriverControlsFrame0::Instance());
+    CANController::Send(&DriverControlsFrame1::Instance());
 
     osMutexAcquire(ui_mutex, osWaitForever);
 

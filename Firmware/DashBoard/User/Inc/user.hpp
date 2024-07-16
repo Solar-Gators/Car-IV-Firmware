@@ -11,6 +11,7 @@
 
 #include "sg_can.hpp"
 #include "ADS7138.hpp"
+#include "button.hpp"
 
 /* Datamodules */
 #include "DriverControls.hpp"
@@ -19,6 +20,10 @@
 extern "C" I2C_HandleTypeDef hi2c2;
 extern "C" ADC_HandleTypeDef hadc2;
 
+void LeftTurnCallback(void);
+void HazardsCallback(void);
+void RightTurnCallback(void);
+void PVCallback(void);
 
 
 #endif /* USER_HPP_ */

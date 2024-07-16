@@ -63,6 +63,15 @@ void Error_Handler(void);
 #define OK_LED_GPIO_Port GPIOA
 #define Main_Pin GPIO_PIN_6
 #define Main_GPIO_Port GPIOC
+#define BMS_Btn_Pin GPIO_PIN_10
+#define BMS_Btn_GPIO_Port GPIOC
+#define BMS_Btn_EXTI_IRQn EXTI15_10_IRQn
+#define MC_Btn_Pin GPIO_PIN_11
+#define MC_Btn_GPIO_Port GPIOC
+#define MC_Btn_EXTI_IRQn EXTI15_10_IRQn
+#define PV_Btn_Pin GPIO_PIN_12
+#define PV_Btn_GPIO_Port GPIOC
+#define PV_Btn_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
 
