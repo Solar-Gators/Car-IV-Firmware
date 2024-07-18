@@ -91,13 +91,13 @@ void UpdateUIPeriodic() {
     ui.UpdateSpeed(MitsubaFrame0::Instance().GetMotorRPM() * WHEEL_DIAM_MI * 60.0F);
 
     // Update battery voltage
-    ui.UpdateBattV(static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0);
+    ui.UpdateBattV((static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0)*2.6);
 
     // Update battery temperature
     ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() / 100.0);
 
     // Update net power
-    ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower());
+    ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower() * 2.6);
 
     // Update solar power
     uint32_t solar_power_old = solar_power;

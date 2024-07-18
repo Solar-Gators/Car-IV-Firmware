@@ -56,9 +56,11 @@ HAL_StatusTypeDef CAN_Modules_Init() {
 
 HAL_StatusTypeDef Buttons_Init() {
 	left_turn_btn.RegisterNormalPressCallback(LeftTurnCallback);
-	// left_turn_btn.RegisterLongPressCallback(HazardsCallback);
-	mode_btn.RegisterNormalPressCallback(RightTurnCallback);
-	mode_btn.RegisterLongPressCallback(HazardsCallback, 800, false);
+	left_turn_btn.RegisterLongPressCallback(HazardsCallback);
+
+	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
+
+	mode_btn.RegisterLongPressCallback(ModeCallback, 800, false);
 	regen_btn.RegisterNormalPressCallback(RegenCallback);
 	horn_btn.RegisterNormalPressCallback(HornCallback);
 	horn_btn.RegisterLongPressCallback(FanCallback, 800, false);
@@ -67,7 +69,7 @@ HAL_StatusTypeDef Buttons_Init() {
 	// TODO: Get rid of this once PV button is working
 	mc_btn.RegisterLongPressCallback(BMSResetCallback, 800, false);
 	
-	right_turn_btn.RegisterNormalPressCallback(RightTurnCallback);
+	
 	cruise_plus_btn.RegisterNormalPressCallback(CruisePlusCallback);
 	// cruise_minus_btn.RegisterNormalPressCallback(CruiseMinusCallback);
 	ptt_btn.RegisterNormalPressCallback(PTTCallback);

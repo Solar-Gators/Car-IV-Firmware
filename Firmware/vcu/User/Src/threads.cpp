@@ -201,7 +201,9 @@ void SendTelemetry(){
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame1::Instance());
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame2::Instance());
     TransceiverController.SendFrame(MPPTInputMeasurementsFrame3::Instance());
-    
+    TransceiverController.SendFrame(MPPTOutputMeasurementsFrame1::Instance());
+    TransceiverController.SendFrame(MPPTOutputMeasurementsFrame2::Instance());
+    TransceiverController.SendFrame(MPPTOutputMeasurementsFrame3::Instance());
     TransceiverController.SendFrame(BMSFrame0::Instance());
     TransceiverController.SendFrame(BMSFrame1::Instance());
     TransceiverController.SendFrame(BMSFrame2::Instance());
