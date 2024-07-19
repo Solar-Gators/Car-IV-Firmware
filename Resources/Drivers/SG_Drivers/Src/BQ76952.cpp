@@ -8,14 +8,14 @@ HAL_StatusTypeDef BQ76952::Init(I2C_HandleTypeDef *hi2c){
     volatile uint32_t delay = 100000;
     while(delay--);
 
-    DatamemWriteU1(BQ769X2_SET_PROT_ENABLED_A, 12);
+    // DatamemWriteU1(BQ769X2_SET_PROT_ENABLED_A, 12);
 
     manual_bal_enabled_ = 1; // default states of balancing
     auto_bal_charging_enabled_ = 1;
     auto_bal_relax_enabled_ = 0;
     auto_bal_sleep_enabled_ = 0;
 
-    return HAL_I2C_IsDeviceReady(hi2c_, BQ_I2C_ADDR_WRITE, 10, 50);
+    return HAL_I2C_IsDeviceReady(hi2c_, BQ_I2C_ADDR_WRITE, 100, 50);
 }
 
 HAL_StatusTypeDef BQ76952::Reset() {

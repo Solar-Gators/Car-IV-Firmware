@@ -92,7 +92,7 @@ void CPP_UserSetup(void);
   * @brief  The application entry point.
   * @retval int
   */
-int msain(void)
+int main(void)
 {
 
   /* USER CODE BEGIN 1 */
