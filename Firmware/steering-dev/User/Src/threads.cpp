@@ -93,7 +93,7 @@ void UpdateUIPeriodic() {
     // Update battery voltage
     ui.UpdateBattV((static_cast<float>(BMSFrame0::Instance().GetPackVoltage()) / 100.0)*2.6);
 
-    // Update battery temperature
+    // Update battery temperaturef
     ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() / 100.0);
 
     // Update net power
@@ -234,6 +234,8 @@ void RightTurnCallback() {
 
 void CruisePlusCallback() {
     Logger::LogInfo("Cruise plus pressed");
+    DriverControlsFrame1::Instance().SetPVEnable(cruise_plus_btn.GetToggleState());
+    CANController::Send(&DriverControlsFrame1::Instance());
 }
 
 void CruiseMinusCallback() {
