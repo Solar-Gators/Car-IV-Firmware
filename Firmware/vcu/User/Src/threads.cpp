@@ -400,10 +400,11 @@ void DriverControls0Callback(uint8_t *data) {
             Logger::LogError("Error syncing SD card\n");
         VCUFrame0::Instance().SetKillStatus(true);
         CANController::Send(&VCUFrame0::Instance());
-        while (1) {
-            HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
-            HAL_Delay(100);
-        }
+        HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
+        // while (1) {
+        //     HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
+        //     HAL_Delay(100);
+        // }
     }
 
     // If not in kill state or BMS trip, 

@@ -333,8 +333,13 @@ void ReadVoltageThread(void *argument) {
     // This function updates the cell voltages in the bms driver which 
     // can be read with GetCellVoltage()
     bms.ReadVoltages();
-    if (voltage_thread_counter % 100 == 0) {
+    if (voltage_thread_counter % 1000 == 0) {
         bms.Reset();
+        // Configure cell balancing with threshold of 10mV
+        bms.SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_SET_LVL, 0x000A);
+        uint16_t active_cells;
+        bms.SubcmdReadU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, &active_cells);
+        Logger::LogInfo("Active cells: %d", active_cells);
     }
 
     local_pack_voltage = 0;
@@ -905,16 +910,11 @@ void DriverControls1Callback(uint8_t *data) {
     if (DriverControlsFrame1::Instance().GetPVEnable() && 
         !BMSFrame3::Instance().GetContactorStatus(1)) {
         osMutexAcquire(contactor_mutex_id, osWaitForever);
-        // Close precharge contactor
-        SetContactorState(2, true);
-        HAL_Delay(500);
-        // Close MPPT contactor
+        // Close MPPT contactors
         SetContactorState(1, true);
-        HAL_Delay(250);
-        // Open precharge contactor
-        SetContactorState(2, false);
-        HAL_Delay(250);
         BMSFrame3::Instance().SetContactorStatus(1, true);
+        SetContactorState(2, true);
+        BMSFrame3::Instance().SetContactorStatus(2, true);
         osMutexRelease(contactor_mutex_id);
     }
     // If solar disabled and contactors currently closed, open contactors
@@ -922,6 +922,8 @@ void DriverControls1Callback(uint8_t *data) {
         osMutexAcquire(contactor_mutex_id, osWaitForever);
         SetContactorState(1, false);
         BMSFrame3::Instance().SetContactorStatus(1, false);
+        SetContactorState(2, false);
+        BMSFrame3::Instance().SetContactorStatus(2, false);
         osMutexRelease(contactor_mutex_id);
     }
 }

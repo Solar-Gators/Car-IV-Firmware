@@ -201,7 +201,12 @@ void ReadVoltageThread(void *argument) {
     // Update cell voltage values in bms
     bms.ReadVoltages();
     if (voltage_thread_counter % 100 == 0) {
+        uint16_t active_cells;
+        bms.SubcmdReadU2(BQ769X2_SUBCMD_CB_ACTIVE_CELLS, &active_cells);
+        Logger::LogError("Active cells: %d", active_cells);
         bms.Reset();
+        // Configure cell balancing with threshold of 10mV
+        bms.SubcmdCmdWriteU2(BQ769X2_SUBCMD_CB_SET_LVL, 0x000A);
     }
 
     for (int i = 0; i < bms_config.NUM_CELLS_SECONDARY; i++) {
