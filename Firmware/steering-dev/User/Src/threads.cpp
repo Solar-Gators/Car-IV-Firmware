@@ -97,7 +97,7 @@ void UpdateUIPeriodic() {
     ui.UpdateTemp(BMSFrame2::Instance().GetHighTemp() / 100.0);
 
     // Update net power
-    ui.UpdateNetPower(BMSFrame1::Instance().GetAveragePower() * 2.6);
+    ui.UpdateEfficiency(BMSFrame1::Instance().GetAveragePower() * 2.6);
 
     // Update solar power
     uint32_t solar_power_old = solar_power;
