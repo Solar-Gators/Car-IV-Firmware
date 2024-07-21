@@ -42,10 +42,10 @@ HAL_StatusTypeDef UI::Init() {
 	display_->DrawText(10, 180, "Batt:", RGB565_WHITE);
 	display_->DrawText(10, 199, "Aux:", RGB565_WHITE);
 	display_->DrawText(10, 218, "Temp:", RGB565_WHITE);
-    display_->DrawText(232, 135, "Wh/mi", RGB565_YELLOW);
-	display_->DrawText(232, 163, "W Net", RGB565_CYAN);
-	display_->DrawText(232, 191, "W Solar", RGB565_PINK);
-	display_->DrawText(232, 219, "W Motor", RGB565_DARK_GREEN);
+    display_->DrawText(232, 135, "W Net", RGB565_YELLOW);
+	display_->DrawText(232, 163, "W MPPT1", RGB565_CYAN);
+	display_->DrawText(232, 191, "W MPPT2", RGB565_PINK);
+	display_->DrawText(232, 219, "W MPPT3", RGB565_DARK_GREEN);
 
     return HAL_OK;
 }

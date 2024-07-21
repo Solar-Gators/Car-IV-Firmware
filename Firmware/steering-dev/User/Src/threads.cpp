@@ -101,10 +101,9 @@ void UpdateUIPeriodic() {
 
     // Update solar power
     uint32_t solar_power_old = solar_power;
-    solar_power = static_cast<uint32_t>(MPPTInputMeasurementsFrame1::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame1::Instance().GetInputVoltage());
-    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame2::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame2::GetInputVoltage());
-    solar_power += static_cast<uint32_t>(MPPTInputMeasurementsFrame3::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame3::GetInputVoltage());
-    ui.UpdateSolarPower(solar_power);
+    ui.UpdateSolarPower(static_cast<uint32_t>(MPPTInputMeasurementsFrame1::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame1::Instance().GetInputVoltage()));
+    ui.UpdateNetPower(static_cast<uint32_t>(MPPTInputMeasurementsFrame2::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame2::GetInputVoltage()));
+    ui.UpdateMotorPower(static_cast<uint32_t>(MPPTInputMeasurementsFrame3::Instance().GetInputCurrent() * MPPTInputMeasurementsFrame3::GetInputVoltage()));
 
     osMutexRelease(ui_mutex);
 }
