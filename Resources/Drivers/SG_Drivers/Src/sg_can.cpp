@@ -32,12 +32,15 @@ HAL_StatusTypeDef CANDevice::Start() {
 HAL_StatusTypeDef CANDevice::Send(CANFrame *msg) {
     // Put message in queue, blocking if queue is full
     // Acquire lock on message so contents cannot be modified before sending
-    //osMutexAcquire(msg->mutex_id_, osWaitForever);
+    osMutexAcquire(msg->mutex_id_, osWaitForever);
+
     if (osMessageQueuePut(tx_queue_, &msg, 0, TX_TIMEOUT) != osOK) {
         HandleTxTimeout();
         osMutexRelease(msg->mutex_id_);
         return HAL_ERROR;
     }
+    
+    osMutexRelease(msg->mutex_id_);
 
     return HAL_OK;
 }

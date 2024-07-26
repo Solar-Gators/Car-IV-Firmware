@@ -1,5 +1,8 @@
 # Ignore build directories
 **/build/
 
+# Ignore Ozone configuration files
+**/*.jdebug.user
+
 # Ignore automatically generated makefiles
 Makefile
