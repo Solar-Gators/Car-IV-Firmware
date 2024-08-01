@@ -4,5 +4,8 @@
 # Ignore Ozone configuration files
 **/*.jdebug.user
 
+# Ignore autogen FATFS directory
+**/FATFS/
+
 # Ignore automatically generated makefiles
 Makefile
