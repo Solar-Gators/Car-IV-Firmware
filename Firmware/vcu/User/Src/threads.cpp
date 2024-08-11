@@ -401,10 +401,6 @@ void DriverControls0Callback(uint8_t *data) {
         VCUFrame0::Instance().SetKillStatus(true);
         CANController::Send(&VCUFrame0::Instance());
         HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
-        // while (1) {
-        //     HAL_GPIO_TogglePin(OK_LED_GPIO_Port, OK_LED_Pin);
-        //     HAL_Delay(100);
-        // }
     }
 
     // If not in kill state or BMS trip, 
@@ -424,17 +420,16 @@ void DriverControls0Callback(uint8_t *data) {
         osMutexAcquire(throttle_mutex_id, osWaitForever);
         SetThrottle(0);
         if (DriverControlsFrame1::GetRegenEnable())
-            // TODO: Calculate max regen value
-            SetRegen(10000);
+            SetRegen(vcu_config.MAX_REGEN_VAL);
         osMutexRelease(throttle_mutex_id);
     }
     // If no regen or brake, set throttle to value and regen to 0
     else {
         uint16_t throttle = 0;
-        if (DriverControlsFrame0::GetThrottleVal() < 58000)
+        if (DriverControlsFrame0::GetThrottleVal() < vcu_config.MAX_THROTTLE_VAL)
             throttle = DriverControlsFrame0::GetThrottleVal();
         else
-            throttle = 58000;
+            throttle = vcu_config.MAX_THROTTLE_VAL;
         osMutexAcquire(throttle_mutex_id, osWaitForever);
         SetThrottle(throttle);
         SetRegen(0);

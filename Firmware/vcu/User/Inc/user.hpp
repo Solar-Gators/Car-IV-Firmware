@@ -30,6 +30,16 @@ extern bool kill_state; // Kill switch state
 extern bool bms_trip;   // BMS trip state
 extern bool sd_present; // SD card is inserted
 
+typedef struct {
+    uint16_t MAX_REGEN_VAL;
+    uint16_t MAX_THROTTLE_VAL;
+} VCUConfig_t;
+
+const VCUConfig_t vcu_config = {
+    .MAX_REGEN_VAL = 16,
+    .MAX_THROTTLE_VAL = 16,
+};
+
 bool SD_Init();
 void SetMotorState(bool state);
 void SetMotorMode(bool mode);

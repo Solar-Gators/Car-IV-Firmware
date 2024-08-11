@@ -54,17 +54,17 @@ public:
         mutex_id_ = osMutexNew(&mutex_attributes_);
     };
 
-    osStatus_t Lock(uint32_t timeout = osWaitForever){
+    inline osStatus_t Lock(uint32_t timeout = osWaitForever){
         return osMutexAcquire(mutex_id_, timeout);
     }
 
-    osStatus_t Unlock(){
+    inline osStatus_t Unlock(){
         return osMutexRelease(mutex_id_);
     }
 
     void LoadData(uint8_t data[], uint32_t len) {
-        this->len = len;
-        etl::mem_copy(&data[0], len, &this->data[0]);
+        uint32_t load_len = etl::min(len, this->len);
+        etl::mem_copy(&data[0], load_len, &this->data[0]);
     }
 
     uint32_t            can_id;             /* CAN ID, can be standard or extended */
@@ -108,7 +108,7 @@ protected:
     CAN_HandleTypeDef *hcan_;
     etl::map<uint32_t, CANFrame*, MAX_RX_MSGS>* rx_messages_;
     osMessageQueueId_t tx_queue_ = osMessageQueueNew(TX_QUEUE_SIZE, sizeof(CANFrame*), NULL);
-    etl::atomic<uint32_t> status_;      // TODO: handle this
+    etl::atomic<uint32_t> status_;
     osEventFlagsId_t rx_event_flag_ = osEventFlagsNew(NULL);
 
     /* Tx thread definitions */
@@ -148,7 +148,7 @@ protected:
     void HandleRx(void* argument);
 
     /* Tx timeout handler thread */
-    void HandleTxTimeout();     // TODO: Test reset functionality
+    void HandleTxTimeout();
 };
 
 /**
@@ -161,13 +161,16 @@ public:
     static HAL_StatusTypeDef AddRxMessage(CANFrame *msg, void (*rxCallback)(uint8_t*));
     static HAL_StatusTypeDef AddRxMessages(CANFrame *msg[], uint32_t num_msgs);
     static HAL_StatusTypeDef AddFilterAll();
-    static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, uint32_t rtr_mode, uint32_t priority);      // TODO:
-    static HAL_StatusTypeDef AddFilterIdRange(uint32_t can_id, uint32_t range, uint32_t id_type, uint32_t rtr_mode, uint32_t priority); // TODO
+    static HAL_StatusTypeDef AddFilterId(uint32_t can_id, uint32_t id_type, 
+                                         uint32_t rtr_mode, uint32_t priority);
+    static HAL_StatusTypeDef AddFilterIdRange(uint32_t can_id, uint32_t range, 
+                                              uint32_t id_type, uint32_t rtr_mode, 
+                                              uint32_t priority);
     static HAL_StatusTypeDef Start();
     static HAL_StatusTypeDef Send(CANFrame *msg);
     static HAL_StatusTypeDef SendOnDevice(CANDevice *device, CANFrame *msg);
     static HAL_StatusTypeDef GetMessage(uint32_t can_id, CANFrame *msg);
-    static HAL_StatusTypeDef GetDeviceStatus(CANDevice *device);    // TODO
+    static HAL_StatusTypeDef GetDeviceStatus(CANDevice *device);
     static void RxCallback(CAN_HandleTypeDef *hcan);
 protected:
     static inline etl::vector<CANDevice*, 3> devices_;

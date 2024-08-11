@@ -428,22 +428,19 @@ void ReadCurrentThread(void *argument) {
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_SET);
 
     // Turn on amplifier
-    osMutexAcquire(amplifier_mutex_id, osWaitForever);
+    osMutexAcquire(i2c4_mutex_id, osWaitForever);
     SetAmplifierState(true);
     amplifier_users++;
-    osMutexRelease(amplifier_mutex_id);
-
-    osDelay(5); // TODO: Figure out minimum value to allow current value to settle
 
     // Start sequence. adc0 is already set up to read current channels
     // Make sure to always acquire i2c4_mutex before adc0_mutex to prevent deadlock
-    osMutexAcquire(i2c4_mutex_id, osWaitForever);
-    osMutexAcquire(adc0_mutex_id, osWaitForever);
-    if (adcs[0].StartSequence() != HAL_OK) {
-        osMutexAcquire(logger_mutex_id, osWaitForever);
-        Logger::LogError("ADC0 start sequence failed");
-        osMutexRelease(logger_mutex_id);
-    }
+    // osMutexAcquire(i2c4_mutex_id, osWaitForever);
+    // osMutexAcquire(adc0_mutex_id, osWaitForever);
+    // if (adcs[0].StartSequence() != HAL_OK) {
+    //     osMutexAcquire(logger_mutex_id, osWaitForever);
+    //     Logger::LogError("ADC0 start sequence failed");
+    //     osMutexRelease(logger_mutex_id);
+    // }
 
     osDelay(1);
     
@@ -466,18 +463,14 @@ void ReadCurrentThread(void *argument) {
         osMutexRelease(logger_mutex_id);
     }
 
-    osMutexRelease(adc0_mutex_id);
-    osMutexRelease(i2c4_mutex_id);
-
     // Turn off current sensor
     HAL_GPIO_WritePin(CURRENT_EN_GPIO_Port, CURRENT_EN_Pin, GPIO_PIN_RESET);
 
     // Turn off amplifier if possible
-    osMutexAcquire(amplifier_mutex_id, osWaitForever);
     amplifier_users--;
     if (amplifier_users == 0)
         SetAmplifierState(false);
-    osMutexRelease(amplifier_mutex_id);
+    osMutexRelease(i2c4_mutex_id);
 
     // Convert ADC values to current
     float current_l = ADCToCurrentL(adc_vals[0]);
@@ -575,20 +568,21 @@ void ReadTemperatureThread(void *argument) {
                         osFlagsWaitAny, osWaitForever);
         
         // Turn on amplifiers
-        osMutexAcquire(amplifier_mutex_id, osWaitForever);
+        if (osMutexAcquire(i2c4_mutex_id, osWaitForever) != osOK) {
+            osMutexAcquire(logger_mutex_id, osWaitForever);
+            Logger::LogError("Failed to acquire amplifier mutex");
+            osMutexRelease(logger_mutex_id);
+        }
+
         SetAmplifierState(true);
         amplifier_users++;
-        osMutexRelease(amplifier_mutex_id);
-
-        // Wait for thermistor values to settle
-        osDelay(2);
 
         // For adc0, configure sequence to read all channels 
         // except 5 and 7 (current sense channels)
         // adc1 and adc2 are already configured to sequence all channels
         // Start conversion on all ADCs
-        osMutexAcquire(i2c4_mutex_id, osWaitForever);
-        osMutexAcquire(adc0_mutex_id, osWaitForever);
+        // osMutexAcquire(i2c4_mutex_id, osWaitForever);
+        // osMutexAcquire(adc0_mutex_id, osWaitForever);
         // if (adcs[0].ConfigureSequence(0b11111111) != HAL_OK) {
         //     osMutexAcquire(logger_mutex_id, osWaitForever);
         //     Logger::LogError("ADC0 configure sequence failed");
@@ -608,17 +602,25 @@ void ReadTemperatureThread(void *argument) {
         osDelay(2);
 
         // Stop sequence on all ADCs
-        for (int i = 0; i < 3; i++) {
-            if (adcs[i].StopSequence() != HAL_OK) {
+        // for (int i = 0; i < 3; i++) {
+        //     if (adcs[i].StopSequence() != HAL_OK) {
+        //         osMutexAcquire(logger_mutex_id, osWaitForever);
+        //         Logger::LogError("ADC %d stop sequence failed", i);
+        //         osMutexRelease(logger_mutex_id);
+        //     }
+        // }
+
+        // Read all channels on adc0
+        uint8_t adc0_channels[6] = {0, 1, 2, 3, 4, 6};
+
+        osMutexRelease(i2c4_mutex_id);
+        for (uint8_t channel : adc0_channels) {
+            if (osMutexAcquire(i2c4_mutex_id, osWaitForever) != osOK) {
                 osMutexAcquire(logger_mutex_id, osWaitForever);
-                Logger::LogError("ADC %d stop sequence failed", i);
+                Logger::LogError("Failed to acquire amplifier mutex");
                 osMutexRelease(logger_mutex_id);
             }
-        }
 
-        // Read all channels
-        uint8_t adc0_channels[6] = {0, 1, 2, 3, 4, 6};
-        for (uint8_t channel : adc0_channels) {
             if (adcs[0].ReadChannel(channel, 
                                 &thermistor_vals[
                                 MapADCChannelToThermistor(0, channel)])
@@ -627,10 +629,12 @@ void ReadTemperatureThread(void *argument) {
                 Logger::LogError("ADC0 channel %d read failed", channel);
                 osMutexRelease(logger_mutex_id);
             }
+
+            osMutexRelease(i2c4_mutex_id);
         }
         // Release mutex for adc0 and i2c4
-        osMutexRelease(adc0_mutex_id);
-        osMutexRelease(i2c4_mutex_id);
+        // osMutexRelease(adc0_mutex_id);
+        // osMutexRelease(i2c4_mutex_id);
 
         // Read all channels on adc1 and adc2
         for(int i = 1; i < 3; i++) {
@@ -662,11 +666,11 @@ void ReadTemperatureThread(void *argument) {
         // osMutexRelease(i2c4_mutex_id);
 
         // Turn off amplifiers if possible
-        osMutexAcquire(amplifier_mutex_id, osWaitForever);
+        osMutexAcquire(i2c4_mutex_id, osWaitForever);
         amplifier_users--;
         if (amplifier_users == 0)
             SetAmplifierState(false);
-        osMutexRelease(amplifier_mutex_id);
+        osMutexRelease(i2c4_mutex_id);
 
         // Get secondary BMS temperature data
         high_temp = BMSSecondaryFrame2::Instance().GetHighTemp();
