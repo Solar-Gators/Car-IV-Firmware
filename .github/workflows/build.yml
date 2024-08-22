@@ -30,6 +30,13 @@ jobs:
           cmake -S . -B build
           cmake --build build
           cd ../..
+
+      - name: Build DashBoard
+        run: |
+          cd Firmware/DashBoard
+          cmake -S . -B build
+          cmake --build build
+          cd ../..
           
       - name: Build nucleof072rb-base
         run: |
