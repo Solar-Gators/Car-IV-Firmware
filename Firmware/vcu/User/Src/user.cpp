@@ -24,6 +24,11 @@ bool kill_state = false;
 bool bms_trip = false;
 bool sd_present = false;
 
+const VCUConfig_t vcu_config = {
+    .MAX_REGEN_VAL = 16,
+    .MAX_THROTTLE_VAL = 16,
+};
+
 /* Initialize CAN frames and devices */
 CANDevice candev1 = CANDevice(&hcan1);
 CANDevice candev2 = CANDevice(&hcan2);
