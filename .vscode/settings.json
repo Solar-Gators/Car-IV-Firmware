@@ -43,7 +43,7 @@
         "memory": "cpp",
         "main.h": "c"
     },
-    "cmake.sourceDirectory": "C:/Dev/Car-IV-Firmware/Firmware/nucleol476rg-base",
+    "cmake.sourceDirectory": "C:/Users/andre/Documents/GitHub/Car-IV-Firmware/Firmware/bms-primary",
     "C_Cpp.default.compilerPath": "C:\\msys64\\mingw64\\bin\\arm-none-eabi-g++.exe",
     "editor.rulers": [96]
 }
