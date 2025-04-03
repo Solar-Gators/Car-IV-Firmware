@@ -138,3 +138,7 @@ float INA226::BusVoltage(){
 float INA226::ShuntVoltage(){
     return shunt_voltage_;
 }
+
+float INA226::Power(){
+    return power_;
+}
