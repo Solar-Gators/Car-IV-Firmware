@@ -42,6 +42,7 @@ public:
     float ShuntResistance();
     float BusVoltage();
     float ShuntVoltage();
+    float Power();
 private:
     HAL_StatusTypeDef ReadWordReg(uint8_t reg_addr, uint8_t *data);
     HAL_StatusTypeDef WriteWordReg(uint8_t reg_addr, uint16_t data);
